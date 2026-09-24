@@ -33,7 +33,7 @@ The results above fit both documents: the task with no folder ran remotely, and 
 
 1. **Folder-attached task that runs the check (chosen).** It does the real work and keeps everything in the folder. It probably depends on the computer being on.
 2. **Remote task that only reminds the user**, which was the design doc's fallback. It runs even when the laptop is off, but it can't save anything, so a check only happens once the user opens Claude.
-3. **Both:** a folder task that runs the check, plus a remote reminder when the folder task hasn't run for a while. Worth adding only if the overnight test shows folder tasks don't catch up on their own.
+3. **Both:** a folder task that runs the check, plus a remote reminder when the folder task hasn't run for a while. Worth adding only if folder tasks turn out to run too rarely in real use.
 
 ## Not tested, by choice
 
