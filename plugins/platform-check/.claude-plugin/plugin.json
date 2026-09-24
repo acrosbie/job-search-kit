@@ -1,0 +1,13 @@
+{
+  "name": "platform-check",
+  "version": "0.0.1",
+  "description": "Throwaway test plugin for job-search-kit phase 0. Say \"run the platform check\" in a task with a folder connected. Not the job-search kit.",
+  "author": {
+    "name": "job-search-kit",
+    "url": "https://github.com/acrosbie/job-search-kit"
+  },
+  "repository": "https://github.com/acrosbie/job-search-kit",
+  "keywords": [
+    "test"
+  ]
+}
