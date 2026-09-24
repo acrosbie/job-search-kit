@@ -6,7 +6,7 @@ Each file records one decision: what was decided, the evidence, what it changes 
 |---|---|---|
 | [1](0001-where-fetching-runs.md) | The engine fetches job boards inside Cowork, in the workspace that can see the user's folder; setup turns network access on | proposed |
 | [2](0002-how-the-jobs-page-works.md) | The jobs page is a Claude artifact whose buttons save; a plain page in the folder is the backup | proposed, one question for review |
-| [3](0003-how-checks-are-scheduled.md) | Periodic checks are scheduled tasks with the folder attached, and run the check themselves | provisional, overnight test running |
+| [3](0003-how-checks-are-scheduled.md) | Periodic checks are scheduled tasks with the folder attached, and run the check themselves | proposed |
 
 All three come from the phase 0 platform check (`plugins/platform-check`, run with `docs/platform-check/how-to-run.md`) on 2026-09-24, on Windows only.
 

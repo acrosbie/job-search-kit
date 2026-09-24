@@ -1,12 +1,12 @@
 # 3. How checks are scheduled
 
-- **Status:** provisional. The overnight test that decides it is running; see "Still open".
+- **Status:** proposed, awaiting review
 - **Date:** 2026-09-24
 - **Tested on:** Windows 11 Home, Claude Desktop, Pro plan. Not tested: Apple computers, Team and Enterprise plans.
 
-## Decision (provisional)
+## Decision
 
-Periodic checks are **Cowork scheduled tasks with the user's folder attached**, and they **run the check themselves** rather than only reminding the user. When one runs, it can do the whole job with nobody there: fetch the boards, read and write the folder, record the result. Until the overnight test shows otherwise, the kit assumes these tasks **run only while the computer is on and the Claude app is open**, and says so to the user. Every session also starts by catching up: if the last scan is older than the schedule says it should be, Claude runs one before anything else.
+Periodic checks are **Cowork scheduled tasks with the user's folder attached**, and they **run the check themselves** rather than only reminding the user. When one runs, it can do the whole job with nobody there: fetch the boards, read and write the folder, record the result. The kit assumes these tasks **run only while the computer is on and the Claude app is open**, and says so to the user. Every session also starts by catching up: if the last scan is older than the schedule says it should be, Claude runs one before anything else.
 
 Scheduled tasks **without** a folder aren't used for checks, because they can't save anything.
 
@@ -35,27 +35,15 @@ The results above fit both documents: the task with no folder ran remotely, and 
 2. **Remote task that only reminds the user**, which was the design doc's fallback. It runs even when the laptop is off, but it can't save anything, so a check only happens once the user opens Claude.
 3. **Both:** a folder task that runs the check, plus a remote reminder when the folder task hasn't run for a while. Worth adding only if the overnight test shows folder tasks don't catch up on their own.
 
-## Still open: the overnight test
+## Not tested, by choice
 
-Both tasks are left on hourly while the laptop is used normally, including closing the lid and quitting the app. Next day:
-
-- `scheduled-log.md` in the folder shows every folder-task run with its time.
-- Windows' own sleep and wake record (System log, Power-Troubleshooter event 1) shows when the laptop was asleep. Claude app quit and reopen times come from the tester.
-- A screenshot of the no-folder task's past runs shows whether it kept running while the laptop was off.
-
-How the result is read:
-
-| If folder-task runs… | Then |
-|---|---|
-| appear during sleep or while the app was closed | Tasks run unattended; drop the "only while on" wording |
-| are missing during sleep, and one appears right after waking or reopening | Tasks catch up; the decision above stands as written |
-| are missing and don't catch up | Add option 3's reminder, and lean on the session-start catch-up |
+Whether a folder task runs, catches up or is skipped while the laptop sleeps or the app is closed. It was left out because the design doesn't depend on it: each session catches up first, and the kit only promises that checks run while the computer is on. If it later turns out tasks do run unattended, that's a bonus, and the wording can relax.
 
 ## What this changes in the design doc
 
 These are proposed edits; the doc itself hasn't been changed.
 
-- **"How the schedule reaches a local folder":** replace "the scheduled task's job is to prompt the user" with a folder-attached task that runs the check, because phase 0 showed such a task reaches the folder directly. Add the "runs while your computer is on" caveat until the overnight test settles it.
+- **"How the schedule reaches a local folder":** replace "the scheduled task's job is to prompt the user" with a folder-attached task that runs the check, because phase 0 showed such a task reaches the folder directly. Add the "runs while your computer is on" caveat.
 - **Setup, periodic checks step:** create each scheduled task **with the folder attached**, and choose the approval option that doesn't stop to ask. Record which option that is on the form before phase 3.
 - **Working loop:** add the catch-up rule at the start of each session.
 - **Platform table:** "Scheduled tasks can't see the local folder" becomes "Scheduled tasks with a folder attached run on the user's computer and can see it; ones without a folder run remotely and can't save anything."
