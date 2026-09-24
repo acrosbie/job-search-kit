@@ -1,6 +1,6 @@
 # 2. How the jobs page works
 
-- **Status:** proposed, awaiting review, with one question for the reviewer (below)
+- **Status:** accepted 2026-09-24. The reviewer answered the question below: yes.
 - **Date:** 2026-09-24
 - **Tested on:** Windows 11 Home, Claude Desktop, Pro plan. Not tested: Apple computers, phones, the web version of Claude.
 

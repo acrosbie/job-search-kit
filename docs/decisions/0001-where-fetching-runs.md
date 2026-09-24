@@ -1,6 +1,6 @@
 # 1. Where fetching runs
 
-- **Status:** proposed, awaiting review
+- **Status:** accepted 2026-09-24
 - **Date:** 2026-09-24
 - **Tested on:** Windows 11 Home, Claude Desktop, Pro plan. Not tested: Apple computers, phones, Team and Enterprise plans.
 
@@ -68,7 +68,7 @@ These are proposed edits; the doc itself hasn't been changed.
 
 ## Still open
 
-- **Can a Pro user allow just the job-board domains?** The test went straight to All domains, and the options on the Pro settings screen weren't recorded. "Allow every site" is a much bigger ask of a stranger than "allow these 7". Five minutes to check; needed before phase 3 (setup).
+- **Can a Pro user allow just the job-board domains?** The test went straight to All domains, and the options on the Pro settings screen weren't recorded. "Allow every site" is a much bigger ask of a stranger than "allow these 7". Five minutes to check. Decided on 2026-09-24: test it at the start of phase 3 (setup).
 - **Does the laptop workspace obey the network setting?** It reached example.com, but by then the setting may already have been All domains.
 - **First-run delay:** the laptop workspace was "still downloading" on the first Cowork run and ready 5 minutes later. Setup should expect this.
 - The open bug reports about the network setting being ignored ([#93656](https://github.com/anthropics/claude-code/issues/93656), [#30112](https://github.com/anthropics/claude-code/issues/30112)) did not show up here, but setup needs a plain-language path for when a board fetch is refused.

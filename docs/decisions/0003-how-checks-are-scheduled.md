@@ -1,6 +1,6 @@
 # 3. How checks are scheduled
 
-- **Status:** proposed, awaiting review
+- **Status:** accepted 2026-09-24
 - **Date:** 2026-09-24
 - **Tested on:** Windows 11 Home, Claude Desktop, Pro plan. Not tested: Apple computers, Team and Enterprise plans.
 
