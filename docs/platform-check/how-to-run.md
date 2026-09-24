@@ -1,5 +1,7 @@
 # How to run the platform check (Windows)
 
+> **Phase 0 is finished.** The test plugin was removed from the repo after its decisions were accepted (`docs/decisions/`). To run it again, for example on a Mac, restore it with `git checkout platform-check-0.0.2 -- plugins/platform-check .claude-plugin/marketplace.json` and push, then follow the steps below.
+
 This is a test, not the kit. It answers three questions before anything real gets built:
 
 1. **Can Claude fetch job boards from inside Cowork**, or does fetching have to happen on your computer?

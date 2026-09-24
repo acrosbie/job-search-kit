@@ -5,14 +5,7 @@
     "url": "https://github.com/acrosbie/job-search-kit"
   },
   "metadata": {
-    "description": "job-search-kit: a free Cowork plugin for running an AI-assisted job search. Phase 0 holds only a throwaway platform-check plugin."
+    "description": "job-search-kit: a free Cowork plugin for running an AI-assisted job search. No plugins yet: the kit's plugin arrives in phase 2."
   },
-  "plugins": [
-    {
-      "name": "platform-check",
-      "source": "./plugins/platform-check",
-      "description": "Throwaway test plugin for phase 0. Checks how Cowork runs a script, reaches job boards, shows a page and runs scheduled tasks. Not the job-search kit.",
-      "version": "0.0.2"
-    }
-  ]
+  "plugins": []
 }
