@@ -250,11 +250,11 @@ def pick_output(folder, out):
     if folder and os.path.isdir(folder):
         target = os.path.join(folder, "platform-check")
         try:
+            # Opening state.json for append proves the folder is writable without changing or
+            # deleting anything. Cowork's shell on the user's computer may not delete files.
             os.makedirs(target, exist_ok=True)
-            probe = os.path.join(target, ".write-test")
-            with open(probe, "w", encoding="utf-8") as f:
-                f.write("ok")
-            os.remove(probe)
+            with open(os.path.join(target, "state.json"), "a", encoding="utf-8"):
+                pass
             return target, "direct: the script wrote into the connected folder"
         except Exception as e:
             reason = f"folder visible but not writable ({type(e).__name__}: {e})"
@@ -275,7 +275,7 @@ def bump_state(target, when, mode, where):
             with open(path, encoding="utf-8") as f:
                 state = json.load(f)
         except Exception:
-            pass
+            found = False  # empty (just created by the write test) or unreadable
     state["runs"] = int(state.get("runs", 0)) + 1
     state.setdefault("history", []).append({"when": when, "mode": mode, "ran on": where})
     with open(path, "w", encoding="utf-8", newline="\n") as f:

@@ -12,7 +12,7 @@
       "name": "platform-check",
       "source": "./plugins/platform-check",
       "description": "Throwaway test plugin for phase 0. Checks how Cowork runs a script, reaches job boards, shows a page and runs scheduled tasks. Not the job-search kit.",
-      "version": "0.0.1"
+      "version": "0.0.2"
     }
   ]
 }

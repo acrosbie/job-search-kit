@@ -12,20 +12,23 @@ Rules for every step:
 - Try each step once. If it fails, record the failure in plain words and move on. One retry is fine for an obvious typo in a path, nothing more.
 - Do not work around a failure with a different tool. If the script cannot reach a job board, do not fetch the board another way to make the result look better. The failure is the result.
 - Do not change any settings, install packages, or fetch anything the steps below don't name.
+- Never delete anything in the user's folder.
 - Never show the user a raw error dump. Say what failed in one sentence, and put the exact error text in the report file.
 - Plugin root as written in this skill: `${CLAUDE_PLUGIN_ROOT}`. Record in the report whether that line shows a real folder path or the placeholder text with the dollar sign.
 
 ## Finding things (every mode)
 
-1. **The connected folder.** The user connects a folder, normally named `Job Search (test)`. Find out two things and record both:
-   - whether your shell (the environment where you run commands) can see it, and at what path, for example by listing likely mount points or searching for a folder with that name;
+1. **Your shells.** You may have more than one place to run commands: one on Anthropic's servers, and one on the user's computer (a device shell). List every shell you have and record, for each, whether it's ready. If one says it is still setting up or downloading, record the message and don't wait for it.
+2. **The connected folder.** The user connects a folder, normally named `Job Search (test)`. Record:
+   - which of your shells can see it, and at what path, for example by listing likely mount points or searching for a folder with that name;
    - whether your file tools (read and write file) can reach it.
    If no folder is connected, say so. In scheduled mode with no folder, follow "Scheduled mode, no folder" below.
-2. **The script.** Try, in order, and record which one worked:
+3. **Where to run.** Run the script in a shell that can see the folder, if there is one. Otherwise use any ready shell and the copy route below.
+4. **The script.** In the shell you're running in, try in order, and record which one worked:
    - `${CLAUDE_PLUGIN_ROOT}/skills/platform-check/probe.py`
    - a search of the shell's filesystem for `probe.py` in a folder named `platform-check`
-   - reading `probe.py` from this skill with your file tools and writing it into a temp folder in the shell
-3. **Python.** Use `python3`; if it doesn't exist, `python`. Record the one you used.
+   - reading `probe.py` from this skill with your file tools and writing it into a temp folder in that shell
+5. **Python.** Use `python3`, but check that `python3 --version` prints a version (on Windows it can be a shortcut that runs nothing); otherwise `python`. Record the one you used.
 
 ## "run the platform check"
 
@@ -34,17 +37,19 @@ Rules for every step:
    **If it can't**, use the copy route: create `<temp>/platform-check-output` in the shell, copy `platform-check/state.json` from the connected folder into it with your file tools if that file exists, then run:
    `python3 "<script>" check --out "<temp>/platform-check-output"`
    and afterwards copy every file the script wrote (`run-*.json`, `run-*.md`, `My jobs (test).html`, `state.json`) into the connected folder's `platform-check` subfolder, replacing `state.json`.
-2. **Web fetch.** With your own web fetch tool (not the shell), fetch `https://boards-api.greenhouse.io/v1/boards/greenhouse/jobs`. Record whether it worked and how many jobs came back, or quote the refusal message.
-3. **Local connector.** If a tool named `fetch_board` is available (from the `platform-check-local` connector), call it with `token` set to `greenhouse` and record its full result. If it isn't available, record that, and list any tools or connectors you can see with "platform-check" in the name.
-4. **Report.** Write `platform-check/report-<YYYYMMDD-HHMMSS>.md` in the connected folder with:
+   If the script reports a fallback even though its shell can see the folder, do not replace `state.json`; record why instead.
+2. **The other shell.** If you have a second ready shell, run the script there too, with no folder: `python3 "<script>" check --out "<temp>/platform-check-other"`. Copy only its `run-*.md` into the folder's `platform-check` subfolder, renamed `run-<timestamp>-other-shell.md`. This records what each shell's network can reach.
+3. **Web fetch.** With your own web fetch tool (not the shell), fetch `https://boards-api.greenhouse.io/v1/boards/greenhouse/jobs`. Record whether it worked and how many jobs came back, or quote the refusal message.
+4. **Local connector.** If a tool named `fetch_board` is available (from the `platform-check-local` connector), call it with `token` set to `greenhouse` and record its full result. If it isn't available, record that, and list any tools or connectors you can see with "platform-check" in the name.
+5. **Report.** Write `platform-check/report-<YYYYMMDD-HHMMSS>.md` in the connected folder with:
    - date and time;
    - whether the plugin-root line above showed a real path or the placeholder;
-   - how the shell saw the folder (path, or "not visible"), and whether your file tools could reach it;
+   - each shell you had, whether it was ready, and whether it could see the folder (path, or "not visible"); whether your file tools could reach it;
    - which script route and which Python worked;
-   - the script's printed summary, pasted as is, and its output route;
+   - the script's printed summary, pasted as is, and its output route, plus the other shell's job-board results if you ran it there;
    - the web fetch result and the connector result;
    - anything else that surprised you, in plain words.
-5. **Tell the user**, in no more than eight short lines: which steps worked, which didn't, and that the full report is in `platform-check`. No jargon: say "the script could reach 7 of 7 job boards", not "egress succeeded".
+6. **Tell the user**, in no more than eight short lines: which steps worked, which didn't, and that the full report is in `platform-check`. No jargon: say "the script could reach 7 of 7 job boards", not "egress succeeded".
 
 ## "run the platform check in scheduled mode"
 
