@@ -1,0 +1,10 @@
+# Caches
+__pycache__/
+*.pyc
+node_modules/
+.DS_Store
+Thumbs.db
+
+# A user's folder never belongs in this repo. Setup creates "Job Search" outside it;
+# this line stops a copy from being committed by accident.
+Job Search*/
