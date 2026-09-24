@@ -10,7 +10,7 @@ It takes about an hour of your time, plus an afternoon of mostly waiting for Par
 
 **Screens may not match these steps exactly.** Anthropic is merging "Chat" and "Cowork" into one Claude, so menus are moving. If something isn't where a step says, write down what you saw instead. That's useful evidence too.
 
-**Screenshots:** press **Windows key + Shift + S** and drag over the area. Windows saves each one in `Pictures\Screenshots`. When you're done, move the ones for this test into the `platform-check` folder inside `Job Search (test)`.
+**Screenshots:** press **Windows key + Shift + S** and drag over the area. Windows saves each one in `Pictures\Screenshots` (or `OneDrive\Pictures\Screenshots` if you use OneDrive). When you're done, move the ones for this test into the `platform-check` folder inside `Job Search (test)`.
 
 ---
 
@@ -19,6 +19,8 @@ It takes about an hour of your time, plus an afternoon of mostly waiting for Par
 **A1. Install the Claude app.** Go to **claude.com/download**, download the Windows version, run it, and sign in with your paid Claude account. Allow the install if Windows asks.
 
 **A2. Check which screen you have.** Look at the message box at the bottom. If you see **Chat** and **Cowork** options, you have the older screen: whenever a step says "start a new task", pick **Cowork** first. If you don't see them, you have the new screen: just type in a new conversation. Write down which one you have.
+
+**Not the Code mode.** At the top left, next to the back and forward arrows, there are two small icons: a **speech bubble** and **`</>`**. Every test here happens with the **speech bubble** selected. The `</>` icon switches to Code mode, which runs things directly on your computer and would make every test look like it passed. If a report says it ran on "Windows" rather than "Linux", that run happened in Code mode.
 
 **A3. The test folder** is already made: `Job Search (test)` in your user folder (`C:\Users\<your name>\Job Search (test)`). It's empty. The test writes only into a `platform-check` folder inside it.
 
