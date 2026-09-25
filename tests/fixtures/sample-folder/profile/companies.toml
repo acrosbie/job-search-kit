@@ -1,0 +1,190 @@
+# Public job boards for the recorded sample in tests/recorded/sample. Board identifiers only.
+
+[[company]]
+name = "Mercury"
+slug = "mercury"
+ats = "greenhouse"
+token = "mercury"
+
+[[company]]
+name = "Anthropic"
+slug = "anthropic"
+ats = "greenhouse"
+token = "anthropic"
+
+[[company]]
+name = "Datadog"
+slug = "datadog"
+ats = "greenhouse"
+token = "datadog"
+
+[[company]]
+name = "DoorDash"
+slug = "doordash"
+ats = "greenhouse"
+token = "doordashusa"
+
+[[company]]
+name = "Betterment"
+slug = "betterment"
+ats = "greenhouse"
+token = "betterment"
+
+[[company]]
+name = "Lyft"
+slug = "lyft"
+ats = "greenhouse"
+token = "lyft"
+
+[[company]]
+name = "Pinterest"
+slug = "pinterest"
+ats = "greenhouse"
+token = "pinterest"
+
+[[company]]
+name = "Brex"
+slug = "brex"
+ats = "greenhouse"
+token = "brex"
+
+[[company]]
+name = "Ramp"
+slug = "ramp"
+ats = "ashby"
+token = "ramp"
+
+[[company]]
+name = "Braze"
+slug = "braze"
+ats = "greenhouse"
+token = "braze"
+
+[[company]]
+name = "Airbnb"
+slug = "airbnb"
+ats = "greenhouse"
+token = "airbnb"
+
+[[company]]
+name = "The Farmer's Dog"
+slug = "thefarmersdog"
+ats = "greenhouse"
+token = "thefarmersdog"
+
+[[company]]
+name = "Notion"
+slug = "notion"
+ats = "ashby"
+token = "notion"
+
+[[company]]
+name = "Replit"
+slug = "replit"
+ats = "ashby"
+token = "replit"
+
+[[company]]
+name = "Ashby"
+slug = "ashby"
+ats = "ashby"
+token = "ashby"
+
+[[company]]
+name = "Persona"
+slug = "persona"
+ats = "ashby"
+token = "persona"
+
+[[company]]
+name = "HappyCo"
+slug = "happyco"
+ats = "lever"
+token = "happyco"
+
+[[company]]
+name = "Dutch"
+slug = "dutch"
+ats = "lever"
+token = "dutch"
+
+[[company]]
+name = "Outreach"
+slug = "outreach"
+ats = "lever"
+token = "outreach"
+
+[[company]]
+name = "Spotify"
+slug = "spotify"
+ats = "lever"
+token = "spotify"
+
+[[company]]
+name = "Vuori"
+slug = "vuori"
+ats = "smartrecruiters"
+token = "VuoriInc"
+
+[[company]]
+name = "MaestroQA"
+slug = "maestroqa"
+ats = "smartrecruiters"
+token = "maestroqa"
+
+[[company]]
+name = "Workday"
+slug = "workdayinc"
+ats = "workday"
+host = "workday.wd5.myworkdayjobs.com"
+tenant = "workday"
+site = "Workday"
+
+[[company]]
+name = "F5"
+slug = "f5"
+ats = "workday"
+host = "ffive.wd5.myworkdayjobs.com"
+tenant = "ffive"
+site = "f5jobs"
+
+[[company]]
+name = "Opendoor"
+slug = "opendoor"
+ats = "rippling"
+token = "opendoor"
+
+[[company]]
+name = "GitHub"
+slug = "github"
+ats = "careers_api"
+host = "www.github.careers"
+
+[[company]]
+name = "Atlassian"
+slug = "atlassian"
+ats = "atlassian"
+
+[[company]]
+name = "Intuit"
+slug = "intuit"
+ats = "talentbrew"
+host = "jobs.intuit.com"
+
+[[company]]
+name = "Himalayas"
+slug = "himalayas"
+ats = "himalayas"
+queries = ["support operations", "head of support"]
+
+[[company]]
+name = "No Such Board"
+slug = "no-such-board"
+ats = "greenhouse"
+token = "no-such-board-for-testing"
+
+[[company]]
+name = "Initech"
+slug = "initech"
+ats = "manual"
+careers_url = "https://initech.example/careers"

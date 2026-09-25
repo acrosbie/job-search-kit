@@ -1,0 +1,38 @@
+# A made-up job seeker for the recorded-sample tests: a support manager in New York City who will
+# commute within the city, would take a Boston or Philadelphia job only if remote, doesn't want
+# quota-carrying roles, and has a $100K pay line. Not a real person.
+
+[you]
+timezone = "America/New_York"
+
+[titles]
+function = "customer support|support operations|customer experience|technical support|head of [\\w &]*support|customer care"
+level = "\\bmanager\\b|\\bdirector\\b|\\bhead\\b|\\blead\\b"
+exclude = "\\bsales\\b|account executive|associate|intern\\b|\\bengineer\\b|specialist|representative"
+
+[places]
+remote = "remote|anywhere|distributed"
+hybrid_ok = "new york|\\bnyc\\b|brooklyn|manhattan|jersey city|hoboken"
+remote_only = "philadelphia|boston|stamford|new haven"
+in_country = "alabama|alaska|arizona|arkansas|california|colorado|connecticut|delaware|florida|georgia|hawaii|idaho|illinois|indiana|iowa|kansas|kentucky|louisiana|maine|maryland|massachusetts|michigan|minnesota|mississippi|missouri|montana|nebraska|nevada|new hampshire|new jersey|new mexico|north carolina|north dakota|ohio|oklahoma|oregon|pennsylvania|rhode island|south carolina|south dakota|tennessee|texas|utah|vermont|virginia|washington|west virginia|wisconsin|wyoming|(?-i:\\b(AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY|DC)\\b)|chicago|austin|seattle|denver|san francisco|los angeles|atlanta|dallas|miami"
+country_wide = "united states|\\busa?\\b"
+abroad = "canada|toronto|vancouver|london|united kingdom|\\buk\\b|ireland|dublin|germany|berlin|france|paris|india|bangalore|bengaluru|singapore|australia|sydney|japan|tokyo|brazil|mexico|netherlands|amsterdam|spain|poland|israel|\\bemea\\b|\\bapac\\b|europe"
+
+[description]
+remote_language = "\\bremote\\b|work from home|remote[- ]first|anywhere in the (us|united states)"
+contract = "\\b(contract|temporary|interim)\\s+(role|position|assignment)\\b|\\bthis is a (contract|temporary)\\b"
+onsite_days = "\\b(4|5|four|five)\\s*\\+?\\s*days?\\s*(a|per)\\s*week\\b"
+onsite_place = "in[- ]?office|on[- ]?site|in the office|at (our|the) [\\w ,]{0,25}office"
+
+[[phrase_rejects]]
+name = "quota"
+phrases = "quota|book of business|renewal|upsell|expansion revenue|net revenue retention|\\bnrr\\b"
+min_distinct = 2
+same_as = { "net revenue retention" = "nrr" }
+
+[pay]
+reject_if_top_below = 100000
+
+[workday]
+country_facet = "^united states"
+max_total = 200

@@ -1,0 +1,347 @@
+{
+ "check_by_hand": [
+  "Initech"
+ ],
+ "counts": {
+  "boards": 29,
+  "dropped_location": 2,
+  "dropped_title": 4790,
+  "failed": 1,
+  "matched": 29,
+  "new": 19,
+  "read": 4822,
+  "rejected_by_rule": {
+   "location_in_country": 8,
+   "pay": 1,
+   "phrases:quota": 1
+  }
+ },
+ "failures": [
+  "no-such-board"
+ ],
+ "jobs_read_per_board": {
+  "airbnb": 156,
+  "anthropic": 623,
+  "ashby": 66,
+  "atlassian": 288,
+  "betterment": 29,
+  "braze": 328,
+  "brex": 258,
+  "datadog": 447,
+  "doordash": 461,
+  "dutch": 15,
+  "f5": 2,
+  "github": 78,
+  "happyco": 9,
+  "himalayas": 77,
+  "intuit": 535,
+  "lyft": 178,
+  "maestroqa": 1,
+  "mercury": 62,
+  "no-such-board": "",
+  "notion": 129,
+  "opendoor": 56,
+  "outreach": 28,
+  "persona": 16,
+  "pinterest": 157,
+  "ramp": 155,
+  "replit": 75,
+  "spotify": 81,
+  "thefarmersdog": 36,
+  "vuori": 298,
+  "workdayinc": 178
+ },
+ "misses": [],
+ "postings": {
+  "ashby-notion-8bb5da67-0b4d-4894-83eb-56d31e9bc662": {
+   "description": "081aa3e51c98",
+   "flag": "",
+   "location": "New York, New York; San Francisco, California; Remote",
+   "reason": "",
+   "rule": "",
+   "salary": "$230K to $260K",
+   "status": "new",
+   "title": "Customer Experience Strategy & Operations Lead"
+  },
+  "ashby-ramp-1285aefc-d2c4-4f7c-8357-6e8f97fb22d4": {
+   "description": "55e5f309a40f",
+   "flag": "",
+   "location": "New York, NY (HQ); San Francisco, CA; Remote (US); Remote",
+   "reason": "",
+   "rule": "",
+   "salary": "$190K to $290K",
+   "status": "new",
+   "title": "Director, Customer Experience"
+  },
+  "greenhouse-betterment-7996895": {
+   "description": "d8c121f1e7b3",
+   "flag": "you already applied here on 2026-09-15",
+   "location": "Betterment HQ - New York City",
+   "reason": "",
+   "rule": "",
+   "salary": "$155K to $185K",
+   "status": "new",
+   "title": "Director, Support Operations"
+  },
+  "greenhouse-betterment-8014433": {
+   "description": "548713587d47",
+   "flag": "",
+   "location": "Betterment HQ - New York City",
+   "reason": "",
+   "rule": "",
+   "salary": "$145K to $165K",
+   "status": "new",
+   "title": "Sr. Manager, Licensed Customer Experience"
+  },
+  "greenhouse-datadog-8014851": {
+   "description": "615b405332cb",
+   "flag": "location not stated",
+   "location": "Seoul, South Korea",
+   "reason": "",
+   "rule": "",
+   "salary": "",
+   "status": "new",
+   "title": "Manager I, Technical Support Engineering"
+  },
+  "greenhouse-datadog-8137139": {
+   "description": "6207488dd327",
+   "flag": "",
+   "location": "New York, New York, USA",
+   "reason": "",
+   "rule": "",
+   "salary": "$200K to $240K",
+   "status": "new",
+   "title": "Head of Global Executive Support"
+  },
+  "greenhouse-doordash-7983379": {
+   "description": "6bbb607f8093",
+   "flag": "",
+   "location": "San Francisco, CA; New York, NY; Tempe, AZ; Sunnyvale, CA; Ann Arbor, MI; Chicago, IL; Washington, DC; Seattle, WA; Los Angeles, CA",
+   "reason": "",
+   "rule": "",
+   "salary": "$170K to $250K",
+   "status": "new",
+   "title": "Director, Customer Experience Strategy & Operations"
+  },
+  "greenhouse-doordash-8220560": {
+   "description": "0ae8ef3d55ab",
+   "flag": "",
+   "location": "San Francisco, CA; Sunnyvale, CA; Seattle, WA; New York, NY; Chicago, IL; Austin, TX",
+   "reason": "",
+   "rule": "",
+   "salary": "$184K to $271K",
+   "status": "new",
+   "title": "Manager, Analytics, Customer Experience"
+  },
+  "greenhouse-lyft-8735399002": {
+   "description": "a026f6bbca6b",
+   "flag": "",
+   "location": "New York, NY; San Francisco, CA",
+   "reason": "",
+   "rule": "",
+   "salary": "$236K to $295K",
+   "status": "new",
+   "title": "Director of Product, Customer Care"
+  },
+  "greenhouse-lyft-8783214002": {
+   "description": "5cc1c7cf1f28",
+   "flag": "",
+   "location": "San Francisco, CA; New York, NY",
+   "reason": "",
+   "rule": "",
+   "salary": "$148K to $185K",
+   "status": "new",
+   "title": "Senior Product Manager, Customer Care AI"
+  },
+  "greenhouse-mercury-6144592004": {
+   "description": "c3dff61b0c61",
+   "flag": "",
+   "location": "San Francisco, CA, New York, NY, Portland, OR, or Remote within Canada or United States",
+   "reason": "",
+   "rule": "",
+   "salary": "$121K to $152K",
+   "status": "new",
+   "title": "Senior Customer Support Operations Readiness Program Manager"
+  },
+  "greenhouse-thefarmersdog-8530703002": {
+   "description": "c2d1a420b2b8",
+   "flag": "outside your area, check it's remote; in the office 4 or 5 days a week (\"and engagement. We ask all team members to be in office 4 - 5 days a week to build a colla\")",
+   "location": "Boca Raton, Florida, United States",
+   "reason": "Not a fit: it's in Boca Raton Florida United States, outside where you'd commute, and the posting doesn't say it's remote.",
+   "rule": "location_in_country",
+   "salary": "",
+   "status": "not_a_fit",
+   "title": "Director Customer Care, Operational Excellence"
+  },
+  "greenhouse-thefarmersdog-8769521002": {
+   "description": "b043e26f6442",
+   "flag": "outside your area, check it's remote; in the office 4 or 5 days a week (\"and engagement. We ask all team members to be in office 4 - 5 days a week to build a colla\")",
+   "location": "Nashville, Tennessee, United States",
+   "reason": "Not a fit: it's in Nashville Tennessee United States, outside where you'd commute, and the posting doesn't say it's remote.",
+   "rule": "location_in_country",
+   "salary": "",
+   "status": "not_a_fit",
+   "title": "Customer Care Manager, Nashville"
+  },
+  "greenhouse-thefarmersdog-8789251002": {
+   "description": "a5378a4b3f49",
+   "flag": "outside your area, check it's remote; in the office 4 or 5 days a week (\"and engagement. We ask all team members to be in office 4 - 5 days a week to build a colla\")",
+   "location": "Boca Raton, Florida, United States",
+   "reason": "Not a fit: it's in Boca Raton Florida United States, outside where you'd commute, and the posting doesn't say it's remote.",
+   "rule": "location_in_country",
+   "salary": "",
+   "status": "not_a_fit",
+   "title": "Customer Care Manager, Boca"
+  },
+  "himalayas-athos-commerce-director-of-customer-support": {
+   "description": "dfabeadee93f",
+   "flag": "",
+   "location": "United States; Remote",
+   "reason": "",
+   "rule": "",
+   "salary": "",
+   "status": "new",
+   "title": "Director of Customer Support"
+  },
+  "himalayas-bob-s-discount-furniture-director-customer-support-operations": {
+   "description": "cf67bde70229",
+   "flag": "",
+   "location": "United States; Remote",
+   "reason": "",
+   "rule": "",
+   "salary": "$115K to $140K",
+   "status": "new",
+   "title": "Director, Customer Support Operations"
+  },
+  "himalayas-boulevard-support-operations-manager": {
+   "description": "7fe9529b8e1f",
+   "flag": "",
+   "location": "United States; Remote",
+   "reason": "",
+   "rule": "",
+   "salary": "",
+   "status": "new",
+   "title": "Support Operations Manager"
+  },
+  "himalayas-instrumentl-customer-support-operations-team-lead": {
+   "description": "aaab2f6b752f",
+   "flag": "",
+   "location": "United States; Remote",
+   "reason": "",
+   "rule": "",
+   "salary": "$95K to $115K",
+   "status": "new",
+   "title": "Customer Support & Operations Team Lead"
+  },
+  "himalayas-new-york-life-insurance-co-corporate-vice-president-manager-agent-support-operations": {
+   "description": "e5ff31edee08",
+   "flag": "",
+   "location": "United States; Remote",
+   "reason": "",
+   "rule": "",
+   "salary": "$133K to $190K",
+   "status": "new",
+   "title": "Corporate Vice President - Manager, Agent Support Operations"
+  },
+  "himalayas-new-york-life-insurance-co-manager-proposal-support-operations": {
+   "description": "10f07a3d699b",
+   "flag": "",
+   "location": "United States; Remote",
+   "reason": "Not a fit: the posted pay tops out at $90K ($70K to $90K), below your $100K line.",
+   "rule": "pay",
+   "salary": "$70K to $90K",
+   "status": "not_a_fit",
+   "title": "Manager, Proposal Support Operations"
+  },
+  "himalayas-obsidian-security-head-of-customer-support": {
+   "description": "c13472786891",
+   "flag": "",
+   "location": "United States; Remote",
+   "reason": "",
+   "rule": "",
+   "salary": "$165K to $199K",
+   "status": "new",
+   "title": "Head of Customer Support"
+  },
+  "lever-dutch-ebb3eab7-4d59-4144-b814-f572cb590c6f": {
+   "description": "5bab70f62f6d",
+   "flag": "outside your area, check it's remote",
+   "location": "Oakland, California; hybrid",
+   "reason": "Not a fit: it's in Oakland California hybrid, outside where you'd commute, and the posting doesn't say it's remote.",
+   "rule": "location_in_country",
+   "salary": "$150K to $180K",
+   "status": "not_a_fit",
+   "title": "Director of Customer Experience"
+  },
+  "lever-happyco-6c940fb8-9809-4b77-9207-07de545180eb": {
+   "description": "9f7b5c7bdb88",
+   "flag": "",
+   "location": "New York  City; onsite",
+   "reason": "",
+   "rule": "",
+   "salary": "$90K to $120K",
+   "status": "new",
+   "title": "Customer Experience Manager"
+  },
+  "lever-happyco-8ce3ee8a-9bcd-479b-b79b-d246022ad6ad": {
+   "description": "3b50b9b936ce",
+   "flag": "",
+   "location": "United States; remote",
+   "reason": "Not a fit: the posting talks about renewal, upsell, which you said to avoid.",
+   "rule": "phrases:quota",
+   "salary": "",
+   "status": "not_a_fit",
+   "title": "Customer Experience Manager (CXM) – AI-Forward"
+  },
+  "talentbrew-intuit-21819": {
+   "description": "5186498aa14d",
+   "flag": "outside your area, check it's remote",
+   "location": "Atlanta, Georgia; Atlanta, Georgia; Mountain View, California; San Diego, California",
+   "reason": "Not a fit: it's in Atlanta Georgia Atlanta Georgia Mountain View California San Diego California, outside where you'd commute, and the posting doesn't say it's remote.",
+   "rule": "location_in_country",
+   "salary": "$193K to $261K",
+   "status": "not_a_fit",
+   "title": "Head of High Value Accountant Support"
+  },
+  "talentbrew-intuit-22419": {
+   "description": "6aa8f39d9b05",
+   "flag": "outside your area, check it's remote",
+   "location": "Mountain View, California; Atlanta, Georgia; San Diego, California",
+   "reason": "Not a fit: it's in Mountain View California Atlanta Georgia San Diego California, outside where you'd commute, and the posting doesn't say it's remote.",
+   "rule": "location_in_country",
+   "salary": "",
+   "status": "not_a_fit",
+   "title": "Head of Core & Premium Accountant Support"
+  },
+  "talentbrew-intuit-22985": {
+   "description": "9bcd179509a6",
+   "flag": "outside your area, check it's remote",
+   "location": "San Diego, California",
+   "reason": "Not a fit: it's in San Diego California, outside where you'd commute, and the posting doesn't say it's remote.",
+   "rule": "location_in_country",
+   "salary": "$190K to $257K",
+   "status": "not_a_fit",
+   "title": "Group Manager, TurboTax Assisted Customer Experience"
+  },
+  "talentbrew-intuit-23245": {
+   "description": "e48effa3548f",
+   "flag": "outside your area, check it's remote",
+   "location": "Mountain View, California",
+   "reason": "Not a fit: it's in Mountain View California, outside where you'd commute, and the posting doesn't say it's remote.",
+   "rule": "location_in_country",
+   "salary": "$168K to $227K",
+   "status": "not_a_fit",
+   "title": "Staff Customer Experience Manager - Mid-Market"
+  },
+  "workday-workdayinc-JR-0109564": {
+   "description": "2bbe68d8c064",
+   "flag": "outside your area, check it's remote",
+   "location": "USA, CA, Pleasanton; Flex",
+   "reason": "",
+   "rule": "",
+   "salary": "",
+   "status": "new",
+   "title": "Senior Manager, Product Management - Business Technology GTM | Customer Support"
+  }
+ }
+}
