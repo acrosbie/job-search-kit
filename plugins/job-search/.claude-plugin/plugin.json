@@ -1,0 +1,15 @@
+{
+  "name": "job-search",
+  "version": "0.1.0",
+  "description": "Set up and run an AI-assisted job search: find postings on public job boards, screen them against your own background and wishes, and track what you apply to. Your data stays in your Job Search folder.",
+  "author": {
+    "name": "job-search-kit",
+    "url": "https://github.com/acrosbie/job-search-kit"
+  },
+  "repository": "https://github.com/acrosbie/job-search-kit",
+  "keywords": [
+    "jobs",
+    "job search",
+    "careers"
+  ]
+}

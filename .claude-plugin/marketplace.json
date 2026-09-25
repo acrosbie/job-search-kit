@@ -5,7 +5,14 @@
     "url": "https://github.com/acrosbie/job-search-kit"
   },
   "metadata": {
-    "description": "job-search-kit: a free Cowork plugin for running an AI-assisted job search. No plugins yet: the kit's plugin arrives in phase 2."
+    "description": "job-search-kit: a free Cowork plugin for running an AI-assisted job search."
   },
-  "plugins": []
+  "plugins": [
+    {
+      "name": "job-search",
+      "source": "./plugins/job-search",
+      "description": "Find, screen and track jobs with Claude. Phase 2: the scan and triage skills.",
+      "version": "0.1.0"
+    }
+  ]
 }
