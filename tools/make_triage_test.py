@@ -87,6 +87,7 @@ def hold_out(folder, chosen):
             p.pop(x, None)
         p["status"] = "new"
     f.save_postings(state)
+    f.save_postings(state)  # again, so postings.backup.json doesn't keep the answers either
     kept = [d for d in f.read_decisions() if d["key"] not in keys]
     with open(f.decisions_log, "w", encoding="utf-8", newline="\n") as fh:
         fh.writelines(json.dumps(d, ensure_ascii=False) + "\n" for d in kept)

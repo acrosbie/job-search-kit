@@ -67,6 +67,9 @@ class TriageToolsTest(unittest.TestCase):
             self.assertEqual(postings[k]["status"], "new")
             self.assertNotIn("note", postings[k])
         self.assertFalse(any(d["key"] in keys for d in f.read_decisions()))  # the answers left the folder
+        with open(f.backup_json, encoding="utf-8") as fh:
+            backup = json.load(fh)["postings"]
+        self.assertTrue(all(backup[k]["status"] == "new" and "note" not in backup[k] for k in keys))  # and the backup
 
         # The kit's triage: right on everything except the overruled one, and one rule cited differently.
         for c in chosen:
