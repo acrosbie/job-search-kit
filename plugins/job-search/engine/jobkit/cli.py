@@ -6,6 +6,7 @@ says why).
 """
 
 import argparse
+import datetime as dt
 import json
 import os
 import re
@@ -40,7 +41,10 @@ def cmd_scan(a):
         net.use(net.Record(a.record))
     elif a.replay:
         net.use(net.Replay(a.replay))
-    _out(scan.run(a.folder, only=a.only))
+    clock = None
+    if a.as_of:  # replays compare dates, so they pin the clock
+        clock = Clock(settings.load(a.folder).timezone, fixed=dt.datetime.fromisoformat(a.as_of))
+    _out(scan.run(a.folder, only=a.only, clock=clock))
     return 0
 
 
@@ -145,6 +149,7 @@ def parser():
     g = s.add_mutually_exclusive_group()
     g.add_argument("--record", metavar="DIR", help="also save every board answer to this cassette folder")
     g.add_argument("--replay", metavar="DIR", help="read board answers from this cassette folder, not the network")
+    s.add_argument("--as-of", metavar="TIME", help="pretend it is this time (ISO, with offset); for replays")
     s.set_defaults(func=cmd_scan)
 
     s = sub.add_parser("show", help="print a saved posting")
