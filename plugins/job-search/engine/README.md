@@ -15,6 +15,7 @@ python3 run.py <command> --folder "<the user's Job Search folder>" [options]
 | Command | What it does | Prints |
 |---|---|---|
 | `scan [--only SLUG]` | Reads every board in `companies.toml`, saves new matches, applies the automatic rejects, logs the run | JSON summary (below) |
+| `queue` | The postings waiting for triage, each with applications to the same company within `[triage] cooldown_days` and the other queued postings from that company | JSON: `count`, `cooldown_days`, `postings` |
 | `show KEY` | A saved posting, as text | the posting |
 | `mark KEY STATUS --by claude\|user [--note TEXT] [--force]` | Records a verdict in `postings.json` and `decisions.log` | the logged row |
 | `add FILE` | Registers a posting saved by hand as `data/postings/manual-<company>-<short>.md`, with the same header a scan writes | the new record |
@@ -62,6 +63,7 @@ Every pattern is a case-insensitive regular expression; a missing or empty one m
 | `[[phrase_rejects]]` | `name`, `phrases`, `min_distinct`, `same_as`, `reason` | Reject when enough distinct phrases appear, for example quota language |
 | `[pay]` | `reject_if_top_below` (0 = off) | Reject when the posted range tops out below this |
 | `[workday]` | `country_facet`, `max_total` | Workday boards are narrowed to one country and capped |
+| `[triage]` | `cooldown_days` (default 30) | One application per company in this many days; `queue` reports what applies |
 | `[labels]` | `flag_*`, `reason_*` | Wording for every flag and reason. Plain-language defaults are in `jobkit/settings.py` |
 
 Rejects apply in this order, and the first one wins: location, phrase rules, pay.

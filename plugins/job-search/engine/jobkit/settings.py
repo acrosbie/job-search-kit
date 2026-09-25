@@ -11,6 +11,7 @@ pattern matches nothing, so a half-written file can't wave every job through.
     [[phrase_rejects]]  name, phrases, min_distinct, same_as, reason: reject when enough distinct phrases appear
     [pay]          reject_if_top_below (0 turns it off)
     [workday]      country_facet, max_total
+    [triage]       cooldown_days: one application per company in this many days (default 30)
     [labels]       wording for every flag and reason (defaults below)
 """
 
@@ -69,6 +70,7 @@ class Settings:
     phrase_rejects: list
     pay_top_below: int
     workday: dict
+    cooldown_days: int
     labels: dict
 
     def label(self, name, **values):
@@ -93,6 +95,7 @@ def parse(raw):
         phrase_rejects=rejects,
         pay_top_below=int(raw.get("pay", {}).get("reject_if_top_below", 0)),
         workday={"country_facet": wd.get("country_facet", ""), "max_total": int(wd.get("max_total", 2000))},
+        cooldown_days=int(raw.get("triage", {}).get("cooldown_days", 30)),
         labels={**DEFAULT_LABELS, **raw.get("labels", {})},
     )
 

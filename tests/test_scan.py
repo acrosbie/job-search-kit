@@ -136,3 +136,26 @@ class MarkTest(ScanBase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class QueueTest(ScanBase):
+    def test_queue_carries_cooldown_facts(self):
+        from jobkit import queue as triage_queue
+        self.scan()
+        apps = {"applications": [
+            {"company": "Acme", "role": "Head of Support Operations Manager", "urls": [], "applied": "2026-09-10",
+             "applied_date": "2026-09-10"},
+            {"company": "ACME", "role": "Old one", "urls": [], "applied": "2026-06-01", "applied_date": "2026-06-01"},
+            {"company": "Acme", "role": "LinkedIn one", "urls": [], "applied": "2w", "applied_date": ""},
+        ]}
+        with open(self.folder.applications_json, "w", encoding="utf-8") as f:
+            json.dump(apps, f)
+        q = triage_queue.queue(self.root, Clock("", fixed=FIXED))
+        self.assertEqual(q["count"], 3)
+        self.assertEqual(q["cooldown_days"], 30)
+        first = q["postings"][0]
+        self.assertEqual(first["description_file"], f"data/postings/{first['key']}.md")
+        recent = first["applied_recently_at_company"]
+        self.assertEqual([r["role"] for r in recent], ["Head of Support Operations Manager", "LinkedIn one"])
+        self.assertFalse(recent[1]["date_known"])
+        self.assertEqual(len(first["same_company_in_queue"]), 2)

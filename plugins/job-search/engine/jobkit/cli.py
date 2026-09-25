@@ -13,6 +13,7 @@ import re
 import sys
 
 from . import __version__, net, scan, settings, store
+from . import queue as triage_queue
 from .clock import Clock
 from .discover import discover
 from .text import salary_from
@@ -45,6 +46,11 @@ def cmd_scan(a):
     if a.as_of:  # replays compare dates, so they pin the clock
         clock = Clock(settings.load(a.folder).timezone, fixed=dt.datetime.fromisoformat(a.as_of))
     _out(scan.run(a.folder, only=a.only, clock=clock))
+    return 0
+
+
+def cmd_queue(a):
+    _out(triage_queue.queue(a.folder, _clock(a.folder)))
     return 0
 
 
@@ -151,6 +157,10 @@ def parser():
     g.add_argument("--replay", metavar="DIR", help="read board answers from this cassette folder, not the network")
     s.add_argument("--as-of", metavar="TIME", help="pretend it is this time (ISO, with offset); for replays")
     s.set_defaults(func=cmd_scan)
+
+    s = sub.add_parser("queue", help="the postings waiting for triage, with cooldown facts")
+    s.add_argument("--folder", required=True)
+    s.set_defaults(func=cmd_queue)
 
     s = sub.add_parser("show", help="print a saved posting")
     s.add_argument("--folder", required=True)
