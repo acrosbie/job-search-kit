@@ -20,7 +20,7 @@ Read each waiting posting the way a careful friend would: in full, against the u
 
 Read its description file (`description_file`) **in full**. Then:
 
-1. **Rules, in the order rules.md gives them.** For each one, find the line in the posting that decides it and quote it, or note "not stated". The first rule that fires makes the posting Not a fit; keep checking the rest only far enough to be sure.
+1. **Rules, in the order rules.md gives them.** For each one, find the line in the posting that decides it and quote it, or note "not stated". The first rule that fires makes the posting Not a fit; keep checking the rest only far enough to be sure. **Reject only on what a rule actually says**, including its "Doesn't count" notes: don't stretch a rule to cover a years bar, a preference or a nice-to-have it doesn't name.
 2. **What the user has done comes only from about-me.md.** If a posting requires something about-me.md records them as *not* having, that can fire a rule. If about-me.md doesn't mention it either way, **don't assume they lack it**: it's a question for them, which makes the posting Your call.
 3. **Cooldown.** The queue gives each posting `applied_recently_at_company` and `same_company_in_queue`. Apply the user's cooldown rule to those facts. When several postings at one company pass, only the best fit is Worth applying. The others are Your call ("second Acme job this month; the better fit is ..."), naming the best fit.
 4. **Flags**, as rules.md says. The scan may already have set some on the posting (`flag`), such as a place it couldn't read or four or five days in the office. Flags never reject on their own; rules.md says what to do with each.
