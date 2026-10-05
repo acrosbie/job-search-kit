@@ -13,7 +13,7 @@ import re
 import sys
 
 from . import __version__, net, scan, settings, store
-from . import configure
+from . import configure, titles
 from . import queue as triage_queue
 from .clock import Clock
 from .discover import discover
@@ -160,6 +160,21 @@ def cmd_companies(a):
     return 0
 
 
+def cmd_titles(a):
+    _out(titles.summary(a.folder, sample=a.sample, seed=a.seed))
+    return 0
+
+
+def cmd_try_titles(a):
+    try:
+        _out(titles.try_patterns(a.folder, function=a.function, level=a.level, exclude=a.exclude,
+                                 field_words=a.field_words, sample=a.sample, seed=a.seed))
+    except re.error as e:
+        print(f"that pattern doesn't work: {e}", file=sys.stderr)
+        return 3
+    return 0
+
+
 def cmd_discover(a):
     _out({"slug": a.slug, **discover(a.slug, page=a.page)})
     return 0
@@ -239,6 +254,20 @@ def parser():
     x.add_argument("--folder", required=True)
     x.add_argument("slug")
     s.set_defaults(func=cmd_companies)
+
+    s = sub.add_parser("titles", help="what the title filter keeps and nearly keeps, from the last scan's titles")
+    s.add_argument("--folder", required=True)
+    s.add_argument("--sample", type=int, default=10)
+    s.add_argument("--seed", type=int, default=1)
+    s.set_defaults(func=cmd_titles)
+
+    s = sub.add_parser("try-titles", help="what a change to the title patterns would gain and lose, without fetching")
+    s.add_argument("--folder", required=True)
+    for opt in ("--function", "--level", "--exclude", "--field-words"):
+        s.add_argument(opt)
+    s.add_argument("--sample", type=int, default=10)
+    s.add_argument("--seed", type=int, default=1)
+    s.set_defaults(func=cmd_try_titles)
 
     s = sub.add_parser("discover", help="which public job board a company uses")
     s.add_argument("slug")

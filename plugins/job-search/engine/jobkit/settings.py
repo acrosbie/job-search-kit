@@ -5,7 +5,8 @@ user never edits them. Every pattern is a case-insensitive regular expression. A
 pattern matches nothing, so a half-written file can't wave every job through.
 
     [you]          timezone
-    [titles]       function, level, exclude: a title needs a function word AND a level word, and no exclusion
+    [titles]       function, level, exclude: a title needs a function word AND a level word, and no exclusion;
+                   field_words: broader words of the user's field, for spotting titles the filter nearly kept
     [places]       remote, hybrid_ok, remote_only, in_country, country_wide, abroad (tested on the listed location)
     [description]  remote_language, contract, onsite_days, onsite_place (tested on the description)
     [[phrase_rejects]]  name, phrases, min_distinct, same_as, reason: reject when enough distinct phrases appear
@@ -57,6 +58,7 @@ class Settings:
     function: object
     level: object
     exclude: object
+    field_words: object
     remote: object
     hybrid_ok: object
     remote_only: object
@@ -88,6 +90,7 @@ def parse(raw):
         raw=raw,
         timezone=raw.get("you", {}).get("timezone", ""),
         function=_rx(t.get("function")), level=_rx(t.get("level")), exclude=_rx(t.get("exclude")),
+        field_words=_rx(t.get("field_words")),
         remote=_rx(p.get("remote")), hybrid_ok=_rx(p.get("hybrid_ok")), remote_only=_rx(p.get("remote_only")),
         in_country=_rx(p.get("in_country")), country_wide=_rx(p.get("country_wide")), abroad=_rx(p.get("abroad")),
         remote_language=_rx(d.get("remote_language")), contract=_rx(d.get("contract")),
