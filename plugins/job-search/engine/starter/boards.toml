@@ -1,0 +1,3593 @@
+# Starter job boards: public company job boards, read through each hiring system's public job feed.
+# Mostly technology companies, so they suit office roles at tech companies best. Setup copies them into
+# the user's profile/companies.toml, where companies can be added (found with `discover`) or dropped.
+# 583 of these 589 answered on 2026-10-05.
+
+[[company]]
+name = "1Password"
+slug = "1password"
+ats = "ashby"
+token = "1password"
+
+[[company]]
+name = "31st Union"
+slug = "31stunion"
+ats = "greenhouse"
+token = "31stunion"
+
+[[company]]
+name = "Abnormal Security"
+slug = "abnormalsecurity"
+ats = "greenhouse"
+token = "abnormalsecurity"
+
+[[company]]
+name = "Abridge"
+slug = "abridge"
+ats = "ashby"
+token = "abridge"
+
+[[company]]
+name = "Acorns"
+slug = "acorns"
+ats = "ashby"
+token = "acorns"
+
+[[company]]
+name = "Actian"
+slug = "actian"
+ats = "lever"
+token = "actian"
+
+[[company]]
+name = "ActiveCampaign"
+slug = "activecampaign"
+ats = "lever"
+token = "activecampaign"
+
+[[company]]
+name = "Adobe"
+slug = "adobe"
+ats = "workday"
+host = "adobe.wd5.myworkdayjobs.com"
+tenant = "adobe"
+site = "external_experienced"
+
+[[company]]
+name = "Adyen"
+slug = "adyen"
+ats = "greenhouse"
+token = "adyen"
+
+[[company]]
+name = "Affirm"
+slug = "affirm"
+ats = "greenhouse"
+token = "affirm"
+
+[[company]]
+name = "AfterShip"
+slug = "aftership"
+ats = "greenhouse"
+token = "aftership"
+
+[[company]]
+name = "Age of Learning"
+slug = "ageoflearning"
+ats = "greenhouse"
+token = "ageoflearninginc"
+
+[[company]]
+name = "Agiloft"
+slug = "agiloft"
+ats = "lever"
+token = "agiloft"
+
+[[company]]
+name = "Airbnb"
+slug = "airbnb"
+ats = "greenhouse"
+token = "airbnb"
+
+[[company]]
+name = "Airbyte"
+slug = "airbyte"
+ats = "ashby"
+token = "airbyte"
+
+[[company]]
+name = "Aircall"
+slug = "aircall"
+ats = "lever"
+token = "aircall"
+
+[[company]]
+name = "Airship"
+slug = "airship"
+ats = "greenhouse"
+token = "airship"
+
+[[company]]
+name = "Airslate"
+slug = "airslate"
+ats = "lever"
+token = "airslate"
+
+[[company]]
+name = "Airtable"
+slug = "airtable"
+ats = "greenhouse"
+token = "airtable"
+
+[[company]]
+name = "Airwallex"
+slug = "airwallex"
+ats = "ashby"
+token = "airwallex"
+
+[[company]]
+name = "Alchemy"
+slug = "alchemy"
+ats = "ashby"
+token = "alchemy"
+
+[[company]]
+name = "Algolia"
+slug = "algolia"
+ats = "greenhouse"
+token = "algolia"
+
+[[company]]
+name = "Alloy"
+slug = "alloy"
+ats = "greenhouse"
+token = "alloy"
+
+[[company]]
+name = "Allstate"
+slug = "allstate"
+ats = "workday"
+host = "allstate.wd5.myworkdayjobs.com"
+tenant = "allstate"
+site = "allstate_careers"
+
+[[company]]
+name = "AlphaSense"
+slug = "alphasense"
+ats = "greenhouse"
+token = "alphasense"
+
+[[company]]
+name = "Amplitude"
+slug = "amplitude"
+ats = "greenhouse"
+token = "amplitude"
+
+[[company]]
+name = "AmWINS Group"
+slug = "amwinsgroup"
+ats = "greenhouse"
+token = "amwins"
+
+[[company]]
+name = "Anaplan"
+slug = "anaplan"
+ats = "greenhouse"
+token = "anaplan"
+
+[[company]]
+name = "Anchorage Digital"
+slug = "anchoragedigital"
+ats = "lever"
+token = "anchorage"
+
+[[company]]
+name = "Andela"
+slug = "andela"
+ats = "ashby"
+token = "andela"
+
+[[company]]
+name = "Angi"
+slug = "angi"
+ats = "ashby"
+token = "angi"
+
+[[company]]
+name = "Anthropic"
+slug = "anthropic"
+ats = "greenhouse"
+token = "anthropic"
+
+[[company]]
+name = "Anyscale"
+slug = "anyscale"
+ats = "ashby"
+token = "anyscale"
+
+[[company]]
+name = "AppDirect"
+slug = "appdirect"
+ats = "greenhouse"
+token = "appdirect"
+
+[[company]]
+name = "Applied Intuition"
+slug = "appliedintuition"
+ats = "ashby"
+token = "applied"
+
+[[company]]
+name = "AppLovin"
+slug = "applovin"
+ats = "greenhouse"
+token = "applovin"
+
+[[company]]
+name = "Arctic Wolf"
+slug = "arcticwolf"
+ats = "workday"
+host = "arcticwolf.wd1.myworkdayjobs.com"
+tenant = "arcticwolf"
+site = "External"
+
+[[company]]
+name = "Articulate"
+slug = "articulate"
+ats = "lever"
+token = "articulate"
+
+[[company]]
+name = "Asana"
+slug = "asana"
+ats = "greenhouse"
+token = "asana"
+
+[[company]]
+name = "Ashby"
+slug = "ashby"
+ats = "ashby"
+token = "ashby"
+
+[[company]]
+name = "Assembled"
+slug = "assembled"
+ats = "ashby"
+token = "assembledhq"
+
+[[company]]
+name = "Assured"
+slug = "assured"
+ats = "ashby"
+token = "assured"
+
+[[company]]
+name = "Astera Labs"
+slug = "asteralabs"
+ats = "greenhouse"
+token = "asteralabs"
+
+[[company]]
+name = "Astranis"
+slug = "astranis"
+ats = "greenhouse"
+token = "astranis"
+
+[[company]]
+name = "Astronomer"
+slug = "astronomer"
+ats = "ashby"
+token = "astronomer"
+
+[[company]]
+name = "Atari"
+slug = "atari"
+ats = "greenhouse"
+token = "atariinc"
+
+[[company]]
+name = "Atlan"
+slug = "atlan"
+ats = "ashby"
+token = "atlan"
+
+[[company]]
+name = "Atlassian"
+slug = "atlassian"
+ats = "atlassian"
+
+[[company]]
+name = "Attentive"
+slug = "attentive"
+ats = "greenhouse"
+token = "attentive"
+
+[[company]]
+name = "Aura"
+slug = "aura"
+ats = "greenhouse"
+token = "aura"
+
+[[company]]
+name = "Aurora Solar"
+slug = "aurorasolar"
+ats = "ashby"
+token = "aurorasolar"
+
+[[company]]
+name = "Autodesk"
+slug = "autodesk"
+ats = "workday"
+host = "autodesk.wd1.myworkdayjobs.com"
+tenant = "autodesk"
+site = "Ext"
+
+[[company]]
+name = "Automox"
+slug = "automox"
+ats = "greenhouse"
+token = "automox"
+
+[[company]]
+name = "Away"
+slug = "away"
+ats = "ashby"
+token = "away"
+
+[[company]]
+name = "Azul Systems"
+slug = "azulsystems"
+ats = "lever"
+token = "azul"
+
+[[company]]
+name = "Babbel"
+slug = "babbel"
+ats = "ashby"
+token = "babbel"
+
+[[company]]
+name = "Backblaze"
+slug = "backblaze"
+ats = "greenhouse"
+token = "backblaze"
+
+[[company]]
+name = "Bandwidth"
+slug = "bandwidth"
+ats = "greenhouse"
+token = "bandwidth"
+
+[[company]]
+name = "Baseten"
+slug = "baseten"
+ats = "ashby"
+token = "baseten"
+
+[[company]]
+name = "BetterHelp"
+slug = "betterhelp"
+ats = "greenhouse"
+token = "betterhelp"
+
+[[company]]
+name = "Betterment"
+slug = "betterment"
+ats = "greenhouse"
+token = "betterment"
+
+[[company]]
+name = "BigID"
+slug = "bigid"
+ats = "greenhouse"
+token = "bigid"
+
+[[company]]
+name = "Bill.com"
+slug = "billcom"
+ats = "greenhouse"
+token = "billcom"
+
+[[company]]
+name = "BitGo"
+slug = "bitgo"
+ats = "greenhouse"
+token = "bitgo"
+
+[[company]]
+name = "Bitwarden"
+slug = "bitwarden"
+ats = "greenhouse"
+token = "bitwarden"
+
+[[company]]
+name = "Bland"
+slug = "bland"
+ats = "ashby"
+token = "bland"
+
+[[company]]
+name = "Block"
+slug = "block"
+ats = "greenhouse"
+token = "block"
+
+[[company]]
+name = "Blockstream"
+slug = "blockstream"
+ats = "ashby"
+token = "blockstream"
+
+[[company]]
+name = "Blue Bottle Coffee"
+slug = "bluebottlecoffee"
+ats = "lever"
+token = "bluebottlecoffee"
+
+[[company]]
+name = "Bombas"
+slug = "bombas"
+ats = "greenhouse"
+token = "bombas"
+
+[[company]]
+name = "Boulevard"
+slug = "boulevard"
+ats = "greenhouse"
+token = "boulevard"
+
+[[company]]
+name = "Box"
+slug = "box"
+ats = "greenhouse"
+token = "boxinc"
+
+[[company]]
+name = "Braintrust"
+slug = "braintrust"
+ats = "ashby"
+token = "braintrust"
+
+[[company]]
+name = "Brave Software"
+slug = "bravesoftware"
+ats = "greenhouse"
+token = "brave"
+
+[[company]]
+name = "Braze"
+slug = "braze"
+ats = "greenhouse"
+token = "braze"
+
+[[company]]
+name = "Brevo"
+slug = "brevo"
+ats = "lever"
+token = "brevo"
+
+[[company]]
+name = "Brex"
+slug = "brex"
+ats = "greenhouse"
+token = "brex"
+
+[[company]]
+name = "Brilliant"
+slug = "brilliant"
+ats = "lever"
+token = "brilliant"
+
+[[company]]
+name = "Brooklinen"
+slug = "brooklinen"
+ats = "ashby"
+token = "brooklinen"
+
+[[company]]
+name = "BuildOps"
+slug = "buildops"
+ats = "greenhouse"
+token = "buildops"
+
+[[company]]
+name = "Bungie"
+slug = "bungie"
+ats = "greenhouse"
+token = "bungie"
+
+[[company]]
+name = "Calendly"
+slug = "calendly"
+ats = "greenhouse"
+token = "calendly"
+
+[[company]]
+name = "Calm"
+slug = "calm"
+ats = "greenhouse"
+token = "calm"
+
+[[company]]
+name = "Cameo"
+slug = "cameo"
+ats = "greenhouse"
+token = "cameo"
+
+[[company]]
+name = "Canva"
+slug = "canva"
+ats = "smartrecruiters"
+token = "canva"
+
+[[company]]
+name = "Capital One"
+slug = "capitalone"
+ats = "workday"
+host = "capitalone.wd12.myworkdayjobs.com"
+tenant = "capitalone"
+site = "Capital_One"
+
+[[company]]
+name = "Carbon"
+slug = "carbon"
+ats = "greenhouse"
+token = "carbon"
+
+[[company]]
+name = "CarGurus"
+slug = "cargurus"
+ats = "greenhouse"
+token = "cargurus"
+
+[[company]]
+name = "Carrot Fertility"
+slug = "carrotfertility"
+ats = "greenhouse"
+token = "carrotfertility"
+
+[[company]]
+name = "Carta"
+slug = "carta"
+ats = "greenhouse"
+token = "carta"
+
+[[company]]
+name = "Carvana"
+slug = "carvana"
+ats = "greenhouse"
+token = "carvana"
+
+[[company]]
+name = "Celonis"
+slug = "celonis"
+ats = "greenhouse"
+token = "celonis"
+
+[[company]]
+name = "Cerebras"
+slug = "cerebras"
+ats = "ashby"
+token = "cerebras"
+
+[[company]]
+name = "Character.AI"
+slug = "character"
+ats = "ashby"
+token = "character"
+
+[[company]]
+name = "ChargePoint"
+slug = "chargepoint"
+ats = "greenhouse"
+token = "chargepoint"
+
+[[company]]
+name = "Chattermill"
+slug = "chattermill"
+ats = "ashby"
+token = "chattermill"
+
+[[company]]
+name = "Checkr"
+slug = "checkr"
+ats = "greenhouse"
+token = "checkr"
+
+[[company]]
+name = "Chime"
+slug = "chime"
+ats = "greenhouse"
+token = "chime"
+
+[[company]]
+name = "ChowNow"
+slug = "chownow"
+ats = "lever"
+token = "chownow"
+
+[[company]]
+name = "Chroma"
+slug = "chroma"
+ats = "ashby"
+token = "trychroma"
+
+[[company]]
+name = "Cigna"
+slug = "cigna"
+ats = "workday"
+host = "cigna.wd5.myworkdayjobs.com"
+tenant = "cigna"
+site = "cignacareers"
+
+[[company]]
+name = "CircleCI"
+slug = "circleci"
+ats = "greenhouse"
+token = "circleci"
+
+[[company]]
+name = "ClassDojo"
+slug = "classdojo"
+ats = "ashby"
+token = "classdojo"
+
+[[company]]
+name = "ClassPass"
+slug = "classpass"
+ats = "greenhouse"
+token = "classpass"
+
+[[company]]
+name = "ClickHouse"
+slug = "clickhouse"
+ats = "ashby"
+token = "clickhouse"
+
+[[company]]
+name = "ClickUp"
+slug = "clickup"
+ats = "ashby"
+token = "clickup"
+
+[[company]]
+name = "Cloudbeds"
+slug = "cloudbeds"
+ats = "greenhouse"
+token = "cloudbeds"
+
+[[company]]
+name = "Cloudflare"
+slug = "cloudflare"
+ats = "greenhouse"
+token = "cloudflare"
+
+[[company]]
+name = "Cloudinary"
+slug = "cloudinary"
+ats = "lever"
+token = "cloudinary"
+
+[[company]]
+name = "Clover Health"
+slug = "cloverhealth"
+ats = "greenhouse"
+token = "cloverhealth"
+
+[[company]]
+name = "Clubhouse"
+slug = "clubhouse"
+ats = "ashby"
+token = "clubhouse"
+
+[[company]]
+name = "Coalition"
+slug = "coalition"
+ats = "greenhouse"
+token = "coalition"
+
+[[company]]
+name = "Cockroach Labs"
+slug = "cockroachlabs"
+ats = "greenhouse"
+token = "cockroachlabs"
+
+[[company]]
+name = "Cognition"
+slug = "cognition"
+ats = "ashby"
+token = "cognition"
+
+[[company]]
+name = "Cohere"
+slug = "cohere"
+ats = "ashby"
+token = "cohere"
+
+[[company]]
+name = "Coinbase"
+slug = "coinbase"
+ats = "greenhouse"
+token = "coinbase"
+
+[[company]]
+name = "Collibra"
+slug = "collibra"
+ats = "greenhouse"
+token = "collibra"
+
+[[company]]
+name = "Column"
+slug = "column"
+ats = "ashby"
+token = "column"
+
+[[company]]
+name = "Comcast"
+slug = "comcast"
+ats = "workday"
+host = "comcast.wd115.myworkdayjobs.com"
+tenant = "comcast"
+site = "Comcast_Careers"
+
+[[company]]
+name = "Commercetools"
+slug = "commercetools"
+ats = "greenhouse"
+token = "commercetools"
+
+[[company]]
+name = "Commure"
+slug = "commure"
+ats = "ashby"
+token = "commure"
+
+[[company]]
+name = "Compass"
+slug = "compass"
+ats = "greenhouse"
+token = "urbancompass"
+
+[[company]]
+name = "Confluent"
+slug = "confluent"
+ats = "ashby"
+token = "confluent"
+
+[[company]]
+name = "Contentful"
+slug = "contentful"
+ats = "greenhouse"
+token = "contentful"
+
+[[company]]
+name = "Contentsquare"
+slug = "contentsquare"
+ats = "lever"
+token = "contentsquare"
+
+[[company]]
+name = "Coreweave"
+slug = "coreweave"
+ats = "greenhouse"
+token = "coreweave"
+
+[[company]]
+name = "Corgi"
+slug = "corgi"
+ats = "ashby"
+token = "corgi"
+
+[[company]]
+name = "Couchbase"
+slug = "couchbase"
+ats = "greenhouse"
+token = "couchbaseinc"
+
+[[company]]
+name = "Coupa"
+slug = "coupa"
+ats = "lever"
+token = "coupa"
+
+[[company]]
+name = "Coursera"
+slug = "coursera"
+ats = "greenhouse"
+token = "coursera"
+
+[[company]]
+name = "Cresta"
+slug = "cresta"
+ats = "greenhouse"
+token = "cresta"
+
+[[company]]
+name = "Cribl"
+slug = "cribl"
+ats = "greenhouse"
+token = "cribl"
+
+[[company]]
+name = "CrowdStrike"
+slug = "crowdstrike"
+ats = "workday"
+host = "crowdstrike.wd5.myworkdayjobs.com"
+tenant = "crowdstrike"
+site = "crowdstrikecareers"
+
+[[company]]
+name = "Culture Amp"
+slug = "cultureamp"
+ats = "greenhouse"
+token = "cultureamp"
+
+[[company]]
+name = "Current"
+slug = "current"
+ats = "greenhouse"
+token = "current"
+
+[[company]]
+name = "Cursor"
+slug = "cursor"
+ats = "ashby"
+token = "cursor"
+
+[[company]]
+name = "Customer.io"
+slug = "customerio"
+ats = "greenhouse"
+token = "customerio"
+
+[[company]]
+name = "Dandy"
+slug = "dandy"
+ats = "ashby"
+token = "dandy"
+
+[[company]]
+name = "Dashlane"
+slug = "dashlane"
+ats = "greenhouse"
+token = "dashlane"
+
+[[company]]
+name = "Databricks"
+slug = "databricks"
+ats = "greenhouse"
+token = "databricks"
+
+[[company]]
+name = "Datadog"
+slug = "datadog"
+ats = "greenhouse"
+token = "datadog"
+
+[[company]]
+name = "Dataiku"
+slug = "dataiku"
+ats = "greenhouse"
+token = "dataiku"
+
+[[company]]
+name = "Dave"
+slug = "dave"
+ats = "ashby"
+token = "dave"
+
+[[company]]
+name = "Decagon"
+slug = "decagon"
+ats = "ashby"
+token = "decagon"
+
+[[company]]
+name = "Degreed"
+slug = "degreed"
+ats = "greenhouse"
+token = "degreed"
+
+[[company]]
+name = "DELFI Diagnostics"
+slug = "delfidiagnostics"
+ats = "lever"
+token = "delfidiagnostics"
+
+[[company]]
+name = "Delinea"
+slug = "delinea"
+ats = "ashby"
+token = "delinea"
+
+[[company]]
+name = "Deputy"
+slug = "deputy"
+ats = "lever"
+token = "deputy"
+
+[[company]]
+name = "Descript"
+slug = "descript"
+ats = "greenhouse"
+token = "descript"
+
+[[company]]
+name = "Devoted Health"
+slug = "devotedhealth"
+ats = "smartrecruiters"
+token = "devotedhealth"
+
+[[company]]
+name = "Dialpad"
+slug = "dialpad"
+ats = "greenhouse"
+token = "dialpad"
+
+[[company]]
+name = "Discord"
+slug = "discord"
+ats = "greenhouse"
+token = "discord"
+
+[[company]]
+name = "Docker"
+slug = "docker"
+ats = "ashby"
+token = "docker"
+
+[[company]]
+name = "DocuSign"
+slug = "docusign"
+ats = "careers_api"
+host = "careers.docusign.com"
+
+[[company]]
+name = "DoorDash"
+slug = "doordash"
+ats = "greenhouse"
+token = "doordashusa"
+
+[[company]]
+name = "Dovetail"
+slug = "dovetail"
+ats = "ashby"
+token = "dovetail"
+
+[[company]]
+name = "Doximity"
+slug = "doximity"
+ats = "greenhouse"
+token = "doximity"
+
+[[company]]
+name = "Dragos"
+slug = "dragos"
+ats = "greenhouse"
+token = "dragos"
+
+[[company]]
+name = "Drata"
+slug = "drata"
+ats = "ashby"
+token = "drata"
+
+[[company]]
+name = "Dremio"
+slug = "dremio"
+ats = "greenhouse"
+token = "dremio"
+
+[[company]]
+name = "Dropbox"
+slug = "dropbox"
+ats = "greenhouse"
+token = "dropbox"
+
+[[company]]
+name = "Druva"
+slug = "druva"
+ats = "greenhouse"
+token = "druva"
+
+[[company]]
+name = "Duolingo"
+slug = "duolingo"
+ats = "greenhouse"
+token = "duolingo"
+
+[[company]]
+name = "Dust"
+slug = "dust"
+ats = "ashby"
+token = "dust"
+
+[[company]]
+name = "Dutch"
+slug = "dutch"
+ats = "lever"
+token = "dutch"
+
+[[company]]
+name = "EarnIn"
+slug = "earnin"
+ats = "greenhouse"
+token = "earnin"
+
+[[company]]
+name = "Eight Sleep"
+slug = "eightsleep"
+ats = "ashby"
+token = "eightsleep"
+
+[[company]]
+name = "Elastic"
+slug = "elastic"
+ats = "greenhouse"
+token = "elastic"
+
+[[company]]
+name = "Elation Health"
+slug = "elationhealth"
+ats = "greenhouse"
+token = "elationhealth"
+
+[[company]]
+name = "ElevenLabs"
+slug = "elevenlabs"
+ats = "ashby"
+token = "elevenlabs"
+
+[[company]]
+name = "Elsevier (RELX)"
+slug = "elsevier"
+ats = "workday"
+host = "relx.wd3.myworkdayjobs.com"
+tenant = "relx"
+site = "ElsevierJobs"
+
+[[company]]
+name = "Ema"
+slug = "ema"
+ats = "ashby"
+token = "ema"
+
+[[company]]
+name = "Emplifi"
+slug = "emplifi"
+ats = "greenhouse"
+token = "emplifi"
+
+[[company]]
+name = "Enterpret"
+slug = "enterpret"
+ats = "greenhouse"
+token = "enterpret"
+
+[[company]]
+name = "Epic Games"
+slug = "epicgames"
+ats = "greenhouse"
+token = "epicgames"
+
+[[company]]
+name = "Etched"
+slug = "etched"
+ats = "ashby"
+token = "etched"
+
+[[company]]
+name = "Ethos"
+slug = "ethos"
+ats = "greenhouse"
+token = "ethoslife"
+
+[[company]]
+name = "Eudia"
+slug = "eudia"
+ats = "greenhouse"
+token = "eudia"
+
+[[company]]
+name = "Everbridge"
+slug = "everbridge"
+ats = "lever"
+token = "everbridge"
+
+[[company]]
+name = "Everlaw"
+slug = "everlaw"
+ats = "greenhouse"
+token = "everlaw"
+
+[[company]]
+name = "Everlywell"
+slug = "everlywell"
+ats = "lever"
+token = "everlywell"
+
+[[company]]
+name = "Expedia"
+slug = "expedia"
+ats = "workday"
+host = "expedia.wd108.myworkdayjobs.com"
+tenant = "expedia"
+site = "search"
+
+[[company]]
+name = "Expensify"
+slug = "expensify"
+ats = "ashby"
+token = "expensify"
+
+[[company]]
+name = "Extreme Networks"
+slug = "extremenetworks"
+ats = "lever"
+token = "extremenetworks"
+
+[[company]]
+name = "F5"
+slug = "f5"
+ats = "workday"
+host = "ffive.wd5.myworkdayjobs.com"
+tenant = "ffive"
+site = "f5jobs"
+
+[[company]]
+name = "Faire"
+slug = "faire"
+ats = "greenhouse"
+token = "faire"
+
+[[company]]
+name = "Fastly"
+slug = "fastly"
+ats = "greenhouse"
+token = "fastly"
+
+[[company]]
+name = "Feedzai"
+slug = "feedzai"
+ats = "greenhouse"
+token = "feedzai"
+
+[[company]]
+name = "Figma"
+slug = "figma"
+ats = "greenhouse"
+token = "figma"
+
+[[company]]
+name = "Figure"
+slug = "figure"
+ats = "greenhouse"
+token = "figure"
+
+[[company]]
+name = "Figure AI"
+slug = "figureai"
+ats = "greenhouse"
+token = "figureai"
+
+[[company]]
+name = "Filevine"
+slug = "filevine"
+ats = "lever"
+token = "filevine"
+
+[[company]]
+name = "Fireblocks"
+slug = "fireblocks"
+ats = "greenhouse"
+token = "fireblocks"
+
+[[company]]
+name = "Fireworks AI"
+slug = "fireworks"
+ats = "ashby"
+token = "fireworks"
+
+[[company]]
+name = "Firstup"
+slug = "firstup"
+ats = "lever"
+token = "firstup"
+
+[[company]]
+name = "Five9"
+slug = "five9"
+ats = "greenhouse"
+token = "five9"
+
+[[company]]
+name = "Fivetran"
+slug = "fivetran"
+ats = "greenhouse"
+token = "fivetran"
+
+[[company]]
+name = "Flatiron Health"
+slug = "flatironhealth"
+ats = "greenhouse"
+token = "flatironhealth"
+
+[[company]]
+name = "Flexport"
+slug = "flexport"
+ats = "greenhouse"
+token = "flexport"
+
+[[company]]
+name = "FloQast"
+slug = "floqast"
+ats = "lever"
+token = "floqast"
+
+[[company]]
+name = "Forma"
+slug = "forma"
+ats = "ashby"
+token = "forma"
+
+[[company]]
+name = "Forter"
+slug = "forter"
+ats = "greenhouse"
+token = "forter"
+
+[[company]]
+name = "FourKites"
+slug = "fourkites"
+ats = "greenhouse"
+token = "fourkites"
+
+[[company]]
+name = "Freshworks"
+slug = "freshworks"
+ats = "smartrecruiters"
+token = "freshworks"
+
+[[company]]
+name = "Front"
+slug = "front"
+ats = "ashby"
+token = "frontcareers"
+
+[[company]]
+name = "FullStory"
+slug = "fullstory"
+ats = "ashby"
+token = "fullstory"
+
+[[company]]
+name = "Future"
+slug = "future"
+ats = "greenhouse"
+token = "future"
+
+[[company]]
+name = "Gainsight"
+slug = "gainsight"
+ats = "ashby"
+token = "gainsight"
+
+[[company]]
+name = "Gamma"
+slug = "gamma"
+ats = "ashby"
+token = "gamma"
+
+[[company]]
+name = "Gemini"
+slug = "gemini"
+ats = "greenhouse"
+token = "gemini"
+
+[[company]]
+name = "Genesys"
+slug = "genesys"
+ats = "workday"
+host = "genesys.wd1.myworkdayjobs.com"
+tenant = "genesys"
+site = "Genesys"
+
+[[company]]
+name = "GetYourGuide"
+slug = "getyourguide"
+ats = "greenhouse"
+token = "getyourguide"
+
+[[company]]
+name = "Ginkgo Bioworks"
+slug = "ginkgobioworks"
+ats = "greenhouse"
+token = "ginkgobioworks"
+
+[[company]]
+name = "GitHub"
+slug = "github"
+ats = "careers_api"
+host = "www.github.careers"
+
+[[company]]
+name = "GitLab"
+slug = "gitlab"
+ats = "greenhouse"
+token = "gitlab"
+
+[[company]]
+name = "Glean"
+slug = "glean"
+ats = "greenhouse"
+token = "gleanwork"
+
+[[company]]
+name = "Glossier"
+slug = "glossier"
+ats = "greenhouse"
+token = "glossier"
+
+[[company]]
+name = "GOAT Group"
+slug = "goatgroup"
+ats = "greenhouse"
+token = "goatgroup"
+
+[[company]]
+name = "GoodData.AI"
+slug = "gooddataai"
+ats = "ashby"
+token = "gooddata"
+
+[[company]]
+name = "GoodLeap"
+slug = "goodleap"
+ats = "lever"
+token = "goodleap"
+
+[[company]]
+name = "Goody"
+slug = "goody"
+ats = "ashby"
+token = "goody"
+
+[[company]]
+name = "Gopuff"
+slug = "gopuff"
+ats = "lever"
+token = "gopuff"
+
+[[company]]
+name = "Gorgias"
+slug = "gorgias"
+ats = "ashby"
+token = "gorgias"
+
+[[company]]
+name = "Grafana Labs"
+slug = "grafanalabs"
+ats = "greenhouse"
+token = "grafanalabs"
+
+[[company]]
+name = "Greenhouse"
+slug = "greenhouse"
+ats = "greenhouse"
+token = "greenhouse"
+
+[[company]]
+name = "Greenlight"
+slug = "greenlight"
+ats = "lever"
+token = "greenlight"
+
+[[company]]
+name = "Groupon"
+slug = "groupon"
+ats = "greenhouse"
+token = "groupon"
+
+[[company]]
+name = "Grove Collaborative"
+slug = "grovecollaborative"
+ats = "greenhouse"
+token = "grovecollaborative"
+
+[[company]]
+name = "Grubhub"
+slug = "grubhub"
+ats = "workday"
+host = "wonder.wd1.myworkdayjobs.com"
+tenant = "wonder"
+site = "Grubhub_Careers"
+
+[[company]]
+name = "Guild"
+slug = "guild"
+ats = "greenhouse"
+token = "guild"
+
+[[company]]
+name = "Gusto"
+slug = "gusto"
+ats = "greenhouse"
+token = "gusto"
+
+[[company]]
+name = "Gympass"
+slug = "gympass"
+ats = "greenhouse"
+token = "gympass"
+
+[[company]]
+name = "Handshake"
+slug = "handshake"
+ats = "ashby"
+token = "handshake"
+
+[[company]]
+name = "HappyCo"
+slug = "happyco"
+ats = "lever"
+token = "happyco"
+
+[[company]]
+name = "Harvey"
+slug = "harvey"
+ats = "ashby"
+token = "harvey"
+
+[[company]]
+name = "Headway"
+slug = "headway"
+ats = "ashby"
+token = "headway"
+
+[[company]]
+name = "Help Scout"
+slug = "helpscout"
+ats = "ashby"
+token = "helpscout"
+
+[[company]]
+name = "Hex"
+slug = "hex"
+ats = "ashby"
+token = "hex"
+
+[[company]]
+name = "HighLevel"
+slug = "gohighlevel"
+ats = "lever"
+token = "gohighlevel"
+
+[[company]]
+name = "Highnote"
+slug = "highnote"
+ats = "greenhouse"
+token = "highnote"
+
+[[company]]
+name = "HighRadius"
+slug = "highradius"
+ats = "greenhouse"
+token = "highradius"
+
+[[company]]
+name = "Hightouch"
+slug = "hightouch"
+ats = "greenhouse"
+token = "hightouch"
+
+[[company]]
+name = "HomeLight"
+slug = "homelight"
+ats = "greenhouse"
+token = "homelight"
+
+[[company]]
+name = "HoneyBook"
+slug = "honeybook"
+ats = "ashby"
+token = "honeybook"
+
+[[company]]
+name = "Honeycomb"
+slug = "honeycomb"
+ats = "greenhouse"
+token = "honeycomb"
+
+[[company]]
+name = "Hopper"
+slug = "hopper"
+ats = "ashby"
+token = "hopper"
+
+[[company]]
+name = "Houzz"
+slug = "houzz"
+ats = "lever"
+token = "houzz"
+
+[[company]]
+name = "Hover"
+slug = "hover"
+ats = "greenhouse"
+token = "hover"
+
+[[company]]
+name = "HPE (incl. Juniper)"
+slug = "hpe"
+ats = "workday"
+host = "hpe.wd5.myworkdayjobs.com"
+tenant = "hpe"
+site = "Jobsathpe"
+
+[[company]]
+name = "Huntress"
+slug = "huntress"
+ats = "greenhouse"
+token = "huntress"
+
+[[company]]
+name = "ID.me"
+slug = "idme"
+ats = "greenhouse"
+token = "idme"
+
+[[company]]
+name = "IDEO"
+slug = "ideo"
+ats = "greenhouse"
+token = "ideo"
+
+[[company]]
+name = "Illumio"
+slug = "illumio"
+ats = "ashby"
+token = "illumio"
+
+[[company]]
+name = "Imbue"
+slug = "imbue"
+ats = "greenhouse"
+token = "imbue"
+
+[[company]]
+name = "Included Health"
+slug = "includedhealth"
+ats = "lever"
+token = "includedhealth"
+
+[[company]]
+name = "Inflection AI"
+slug = "inflectionai"
+ats = "greenhouse"
+token = "inflectionai"
+
+[[company]]
+name = "Injective"
+slug = "injective"
+ats = "ashby"
+token = "injective"
+
+[[company]]
+name = "Instacart"
+slug = "instacart"
+ats = "greenhouse"
+token = "instacart"
+
+[[company]]
+name = "Instawork"
+slug = "instawork"
+ats = "greenhouse"
+token = "instawork"
+
+[[company]]
+name = "Intercom"
+slug = "intercom"
+ats = "greenhouse"
+token = "intercom"
+
+[[company]]
+name = "Intuit"
+slug = "intuit"
+ats = "talentbrew"
+host = "jobs.intuit.com"
+
+[[company]]
+name = "Invoca"
+slug = "invoca"
+ats = "greenhouse"
+token = "invoca"
+
+[[company]]
+name = "Iterable"
+slug = "iterable"
+ats = "greenhouse"
+token = "iterable"
+
+[[company]]
+name = "Jam City"
+slug = "jamcity"
+ats = "lever"
+token = "jamcity"
+
+[[company]]
+name = "Jamf"
+slug = "jamf"
+ats = "greenhouse"
+token = "jamf"
+
+[[company]]
+name = "JFrog"
+slug = "jfrog"
+ats = "greenhouse"
+token = "jfrog"
+
+[[company]]
+name = "Jobber"
+slug = "jobber"
+ats = "ashby"
+token = "jobber"
+
+[[company]]
+name = "Jumio"
+slug = "jumio"
+ats = "greenhouse"
+token = "jumio"
+
+[[company]]
+name = "JumpCloud"
+slug = "jumpcloud"
+ats = "lever"
+token = "jumpcloud"
+
+[[company]]
+name = "Justworks"
+slug = "justworks"
+ats = "greenhouse"
+token = "justworks"
+
+[[company]]
+name = "Kalshi"
+slug = "kalshi"
+ats = "ashby"
+token = "kalshi"
+
+[[company]]
+name = "Kayak"
+slug = "kayak"
+ats = "greenhouse"
+token = "kayak"
+
+[[company]]
+name = "Keeper Security"
+slug = "keepersecurity"
+ats = "greenhouse"
+token = "keepersecurity"
+
+[[company]]
+name = "Khan Academy"
+slug = "khanacademy"
+ats = "greenhouse"
+token = "khanacademy"
+
+[[company]]
+name = "Kin"
+slug = "kin"
+ats = "ashby"
+token = "kin"
+
+[[company]]
+name = "Klaviyo"
+slug = "klaviyo"
+ats = "greenhouse"
+token = "klaviyo"
+
+[[company]]
+name = "Knock"
+slug = "knock"
+ats = "greenhouse"
+token = "knock"
+
+[[company]]
+name = "Komodo Health"
+slug = "komodohealth"
+ats = "greenhouse"
+token = "komodohealth"
+
+[[company]]
+name = "Kore.ai"
+slug = "koreai"
+ats = "smartrecruiters"
+token = "koreai"
+
+[[company]]
+name = "Kustomer"
+slug = "kustomer"
+ats = "ashby"
+token = "kustomer"
+
+[[company]]
+name = "LangChain"
+slug = "langchain"
+ats = "ashby"
+token = "langchain"
+
+[[company]]
+name = "Lattice"
+slug = "lattice"
+ats = "greenhouse"
+token = "lattice"
+
+[[company]]
+name = "LaunchDarkly"
+slug = "launchdarkly"
+ats = "greenhouse"
+token = "launchdarkly"
+
+[[company]]
+name = "Lemonade"
+slug = "lemonade"
+ats = "ashby"
+token = "lemonade"
+
+[[company]]
+name = "Level AI"
+slug = "levelai"
+ats = "lever"
+token = "levelai"
+
+[[company]]
+name = "Levelpath"
+slug = "levelpath"
+ats = "ashby"
+token = "levelpath"
+
+[[company]]
+name = "Life360"
+slug = "life360"
+ats = "greenhouse"
+token = "life360"
+
+[[company]]
+name = "Lightdash"
+slug = "lightdash"
+ats = "ashby"
+token = "lightdash"
+
+[[company]]
+name = "Linear"
+slug = "linear"
+ats = "ashby"
+token = "linear"
+
+[[company]]
+name = "Lithic"
+slug = "lithic"
+ats = "greenhouse"
+token = "lithic"
+
+[[company]]
+name = "LiveKit"
+slug = "livekit"
+ats = "ashby"
+token = "livekit"
+
+[[company]]
+name = "LlamaIndex"
+slug = "llamaindex"
+ats = "ashby"
+token = "llamaindex"
+
+[[company]]
+name = "Loadsmart"
+slug = "loadsmart"
+ats = "lever"
+token = "loadsmart"
+
+[[company]]
+name = "Locus Robotics"
+slug = "locusrobotics"
+ats = "greenhouse"
+token = "locusrobotics"
+
+[[company]]
+name = "Logitech"
+slug = "logitech"
+ats = "workday"
+host = "logitech.wd5.myworkdayjobs.com"
+tenant = "logitech"
+site = "Logitech"
+
+[[company]]
+name = "LogRocket"
+slug = "logrocket"
+ats = "lever"
+token = "logrocket"
+
+[[company]]
+name = "Lokalise"
+slug = "lokalise"
+ats = "greenhouse"
+token = "lokalise"
+
+[[company]]
+name = "Loop Returns"
+slug = "loopreturns"
+ats = "lever"
+token = "loopreturns"
+
+[[company]]
+name = "Lorikeet"
+slug = "lorikeet"
+ats = "ashby"
+token = "lorikeet"
+
+[[company]]
+name = "Lucid Software"
+slug = "lucidsoftware"
+ats = "greenhouse"
+token = "lucidsoftware"
+
+[[company]]
+name = "Luma AI"
+slug = "lumaai"
+ats = "ashby"
+token = "lumaai"
+
+[[company]]
+name = "Lyft"
+slug = "lyft"
+ats = "greenhouse"
+token = "lyft"
+
+[[company]]
+name = "Lyra Health"
+slug = "lyrahealth"
+ats = "lever"
+token = "lyrahealth"
+
+[[company]]
+name = "MaestroQA"
+slug = "maestroqa"
+ats = "smartrecruiters"
+token = "maestroqa"
+
+[[company]]
+name = "Mastercard"
+slug = "mastercard"
+ats = "workday"
+host = "mastercard.wd1.myworkdayjobs.com"
+tenant = "mastercard"
+site = "CorporateCareers"
+
+[[company]]
+name = "MasterClass"
+slug = "masterclass"
+ats = "greenhouse"
+token = "masterclass"
+
+[[company]]
+name = "Match Group"
+slug = "matchgroup"
+ats = "lever"
+token = "matchgroup"
+
+[[company]]
+name = "Material Security"
+slug = "materialsecurity"
+ats = "ashby"
+token = "materialsecurity"
+
+[[company]]
+name = "Materialize"
+slug = "materialize"
+ats = "ashby"
+token = "materialize"
+
+[[company]]
+name = "Maven Clinic"
+slug = "mavenclinic"
+ats = "greenhouse"
+token = "mavenclinic"
+
+[[company]]
+name = "Melio"
+slug = "melio"
+ats = "greenhouse"
+token = "melio"
+
+[[company]]
+name = "Mercari"
+slug = "mercari"
+ats = "greenhouse"
+token = "mercari"
+
+[[company]]
+name = "Mercor"
+slug = "mercor"
+ats = "ashby"
+token = "mercor"
+
+[[company]]
+name = "Mercury"
+slug = "mercury"
+ats = "greenhouse"
+token = "mercury"
+
+[[company]]
+name = "Metabase"
+slug = "metabase"
+ats = "lever"
+token = "metabase"
+
+[[company]]
+name = "Middesk"
+slug = "middesk"
+ats = "ashby"
+token = "middesk"
+
+[[company]]
+name = "Mindbody"
+slug = "mindbody"
+ats = "greenhouse"
+token = "mindbody"
+
+[[company]]
+name = "Miro"
+slug = "miro"
+ats = "ashby"
+token = "miro"
+
+[[company]]
+name = "Misfits Market"
+slug = "misfitsmarket"
+ats = "greenhouse"
+token = "misfitsmarket"
+
+[[company]]
+name = "Mixpanel"
+slug = "mixpanel"
+ats = "greenhouse"
+token = "mixpanel"
+
+[[company]]
+name = "Modal"
+slug = "modal"
+ats = "ashby"
+token = "modal"
+
+[[company]]
+name = "Model N"
+slug = "modeln"
+ats = "lever"
+token = "modeln"
+
+[[company]]
+name = "Modern Health"
+slug = "modernhealth"
+ats = "greenhouse"
+token = "modernhealth"
+
+[[company]]
+name = "Modern Treasury"
+slug = "moderntreasury"
+ats = "ashby"
+token = "moderntreasury"
+
+[[company]]
+name = "MOLOCO"
+slug = "moloco"
+ats = "greenhouse"
+token = "moloco"
+
+[[company]]
+name = "MongoDB"
+slug = "mongodb"
+ats = "greenhouse"
+token = "mongodb"
+
+[[company]]
+name = "Monte Carlo"
+slug = "montecarlo"
+ats = "ashby"
+token = "montecarlodata"
+
+[[company]]
+name = "MoonPay"
+slug = "moonpay"
+ats = "lever"
+token = "moonpay"
+
+[[company]]
+name = "Morning Consult"
+slug = "morningconsult"
+ats = "ashby"
+token = "morningconsult"
+
+[[company]]
+name = "Motive"
+slug = "motive"
+ats = "greenhouse"
+token = "gomotive"
+
+[[company]]
+name = "Mozilla"
+slug = "mozilla"
+ats = "greenhouse"
+token = "mozilla"
+
+[[company]]
+name = "Multiverse"
+slug = "multiverse"
+ats = "ashby"
+token = "multiverse"
+
+[[company]]
+name = "Mural"
+slug = "mural"
+ats = "ashby"
+token = "mural"
+
+[[company]]
+name = "Narvar"
+slug = "narvar"
+ats = "greenhouse"
+token = "narvar"
+
+[[company]]
+name = "Nasdaq"
+slug = "nasdaq"
+ats = "workday"
+host = "nasdaq.wd1.myworkdayjobs.com"
+tenant = "nasdaq"
+site = "Global_External_Site"
+
+[[company]]
+name = "Navan"
+slug = "navan"
+ats = "greenhouse"
+token = "tripactions"
+
+[[company]]
+name = "Neon"
+slug = "neon"
+ats = "ashby"
+token = "neon"
+
+[[company]]
+name = "NetDocuments"
+slug = "netdocuments"
+ats = "greenhouse"
+token = "netdocuments"
+
+[[company]]
+name = "Netgear"
+slug = "netgear"
+ats = "ashby"
+token = "netgear"
+
+[[company]]
+name = "Netlify"
+slug = "netlify"
+ats = "greenhouse"
+token = "netlify"
+
+[[company]]
+name = "Netomi"
+slug = "netomi"
+ats = "lever"
+token = "netomi"
+
+[[company]]
+name = "Neuralink"
+slug = "neuralink"
+ats = "greenhouse"
+token = "neuralink"
+
+[[company]]
+name = "New Relic"
+slug = "newrelic"
+ats = "greenhouse"
+token = "newrelic"
+
+[[company]]
+name = "NewsBreak"
+slug = "newsbreak"
+ats = "greenhouse"
+token = "newsbreak"
+
+[[company]]
+name = "Newsela"
+slug = "newsela"
+ats = "greenhouse"
+token = "newsela"
+
+[[company]]
+name = "Nextdoor"
+slug = "nextdoor"
+ats = "greenhouse"
+token = "nextdoor"
+
+[[company]]
+name = "Nextiva"
+slug = "nextiva"
+ats = "greenhouse"
+token = "nextiva"
+
+[[company]]
+name = "NICE"
+slug = "nice"
+ats = "greenhouse"
+token = "nice"
+
+[[company]]
+name = "Nordstrom"
+slug = "nordstrom"
+ats = "workday"
+host = "nordstrom.wd501.myworkdayjobs.com"
+tenant = "nordstrom"
+site = "nordstrom_careers"
+
+[[company]]
+name = "Notion"
+slug = "notion"
+ats = "ashby"
+token = "notion"
+
+[[company]]
+name = "Observe.AI"
+slug = "observeai"
+ats = "greenhouse"
+token = "observeai"
+
+[[company]]
+name = "Odyssey"
+slug = "odyssey"
+ats = "ashby"
+token = "odyssey"
+
+[[company]]
+name = "OfferUp"
+slug = "offerup"
+ats = "greenhouse"
+token = "offerup"
+
+[[company]]
+name = "Okta"
+slug = "okta"
+ats = "greenhouse"
+token = "okta"
+
+[[company]]
+name = "Ollie"
+slug = "ollie"
+ats = "lever"
+token = "myollie"
+
+[[company]]
+name = "Olo"
+slug = "olo"
+ats = "lever"
+token = "olo"
+
+[[company]]
+name = "Omada Health"
+slug = "omadahealth"
+ats = "greenhouse"
+token = "omadahealth"
+
+[[company]]
+name = "Omni"
+slug = "omni"
+ats = "ashby"
+token = "omni"
+
+[[company]]
+name = "One Medical"
+slug = "onemedical"
+ats = "greenhouse"
+token = "onemedical"
+
+[[company]]
+name = "OneTrust"
+slug = "onetrust"
+ats = "greenhouse"
+token = "onetrust"
+
+[[company]]
+name = "Ooma"
+slug = "ooma"
+ats = "greenhouse"
+token = "ooma"
+
+[[company]]
+name = "OpenAI"
+slug = "openai"
+ats = "ashby"
+token = "openai"
+
+[[company]]
+name = "Opendoor"
+slug = "opendoor"
+ats = "rippling"
+token = "opendoor"
+
+[[company]]
+name = "OpenEvidence"
+slug = "openevidence"
+ats = "ashby"
+token = "openevidence"
+
+[[company]]
+name = "OpenSea"
+slug = "opensea"
+ats = "ashby"
+token = "opensea"
+
+[[company]]
+name = "OpenTable"
+slug = "opentable"
+ats = "greenhouse"
+token = "opentable"
+
+[[company]]
+name = "Oportun"
+slug = "oportun"
+ats = "greenhouse"
+token = "oportun"
+
+[[company]]
+name = "Orca Security"
+slug = "orcasecurity"
+ats = "greenhouse"
+token = "orcasecurity"
+
+[[company]]
+name = "Oscar Health"
+slug = "oscar"
+ats = "greenhouse"
+token = "oscar"
+
+[[company]]
+name = "Osmo"
+slug = "osmo"
+ats = "ashby"
+token = "osmo"
+
+[[company]]
+name = "Otter.ai"
+slug = "otterai"
+ats = "greenhouse"
+token = "otterai"
+
+[[company]]
+name = "Oura"
+slug = "oura"
+ats = "greenhouse"
+token = "oura"
+
+[[company]]
+name = "Outreach"
+slug = "outreach"
+ats = "lever"
+token = "outreach"
+
+[[company]]
+name = "Outschool"
+slug = "outschool"
+ats = "greenhouse"
+token = "outschool"
+
+[[company]]
+name = "Owner.com"
+slug = "ownercom"
+ats = "ashby"
+token = "owner"
+
+[[company]]
+name = "Oyster"
+slug = "oyster"
+ats = "ashby"
+token = "oyster"
+
+[[company]]
+name = "Pacific Fusion"
+slug = "pacificfusion"
+ats = "greenhouse"
+token = "pacificfusion"
+
+[[company]]
+name = "Paddle"
+slug = "paddle"
+ats = "ashby"
+token = "paddle"
+
+[[company]]
+name = "PagerDuty"
+slug = "pagerduty"
+ats = "greenhouse"
+token = "pagerduty"
+
+[[company]]
+name = "Palo Alto Networks"
+slug = "paloaltonetworks"
+ats = "workday"
+host = "paloaltonetworks.wd5.myworkdayjobs.com"
+tenant = "paloaltonetworks"
+site = "panwexternalcareers"
+
+[[company]]
+name = "PandaDoc"
+slug = "pandadoc"
+ats = "greenhouse"
+token = "pandadoc"
+
+[[company]]
+name = "Pantheon Systems"
+slug = "pantheonsystems"
+ats = "greenhouse"
+token = "pantheon"
+
+[[company]]
+name = "Parachute"
+slug = "parachute"
+ats = "greenhouse"
+token = "parachutehome"
+
+[[company]]
+name = "Parachute"
+slug = "parachutehome"
+ats = "greenhouse"
+token = "parachutehome"
+
+[[company]]
+name = "Parloa"
+slug = "parloa"
+ats = "greenhouse"
+token = "parloa"
+
+[[company]]
+name = "Patreon"
+slug = "patreon"
+ats = "ashby"
+token = "patreon"
+
+[[company]]
+name = "PAX Labs"
+slug = "paxlabs"
+ats = "greenhouse"
+token = "paxlabs"
+
+[[company]]
+name = "Paxos"
+slug = "paxos"
+ats = "ashby"
+token = "paxos"
+
+[[company]]
+name = "Payoneer"
+slug = "payoneer"
+ats = "greenhouse"
+token = "payoneer"
+
+[[company]]
+name = "Payscale"
+slug = "payscale"
+ats = "ashby"
+token = "payscale"
+
+[[company]]
+name = "Peloton"
+slug = "peloton"
+ats = "greenhouse"
+token = "peloton"
+
+[[company]]
+name = "Pendo"
+slug = "pendo"
+ats = "greenhouse"
+token = "pendo"
+
+[[company]]
+name = "Perplexity"
+slug = "perplexity"
+ats = "ashby"
+token = "perplexity"
+
+[[company]]
+name = "Persona"
+slug = "persona"
+ats = "ashby"
+token = "persona"
+
+[[company]]
+name = "Picsart"
+slug = "picsart"
+ats = "greenhouse"
+token = "picsart"
+
+[[company]]
+name = "Pigment"
+slug = "pigment"
+ats = "lever"
+token = "pigment"
+
+[[company]]
+name = "Pinecone"
+slug = "pinecone"
+ats = "ashby"
+token = "pinecone"
+
+[[company]]
+name = "Pinterest"
+slug = "pinterest"
+ats = "greenhouse"
+token = "pinterest"
+
+[[company]]
+name = "Plaid"
+slug = "plaid"
+ats = "ashby"
+token = "plaid"
+
+[[company]]
+name = "Plain"
+slug = "plain"
+ats = "ashby"
+token = "plain"
+
+[[company]]
+name = "PlanetScale"
+slug = "planetscale"
+ats = "greenhouse"
+token = "planetscale"
+
+[[company]]
+name = "Plume"
+slug = "plume"
+ats = "greenhouse"
+token = "plume"
+
+[[company]]
+name = "PolyAI"
+slug = "polyai"
+ats = "greenhouse"
+token = "polyai"
+
+[[company]]
+name = "Poolside"
+slug = "poolside"
+ats = "ashby"
+token = "poolside"
+
+[[company]]
+name = "Poshmark"
+slug = "poshmark"
+ats = "ashby"
+token = "poshmark"
+
+[[company]]
+name = "PostHog"
+slug = "posthog"
+ats = "ashby"
+token = "posthog"
+
+[[company]]
+name = "Postscript"
+slug = "postscript"
+ats = "greenhouse"
+token = "postscript"
+
+[[company]]
+name = "Prefect"
+slug = "prefect"
+ats = "ashby"
+token = "prefect"
+
+[[company]]
+name = "Prime Intellect"
+slug = "primeintellect"
+ats = "ashby"
+token = "primeintellect"
+
+[[company]]
+name = "project44"
+slug = "project44"
+ats = "greenhouse"
+token = "project44"
+
+[[company]]
+name = "PsiQuantum"
+slug = "psiquantum"
+ats = "greenhouse"
+token = "psiquantum"
+
+[[company]]
+name = "Public"
+slug = "public"
+ats = "greenhouse"
+token = "public"
+
+[[company]]
+name = "Pure Storage"
+slug = "purestorage"
+ats = "greenhouse"
+token = "purestorage"
+
+[[company]]
+name = "Qualtrics"
+slug = "qualtrics"
+ats = "greenhouse"
+token = "qualtrics"
+
+[[company]]
+name = "Quantifind"
+slug = "quantifind"
+ats = "greenhouse"
+token = "quantifind"
+
+[[company]]
+name = "Quantum Metric"
+slug = "quantummetric"
+ats = "lever"
+token = "quantummetric"
+
+[[company]]
+name = "Quince"
+slug = "quince"
+ats = "greenhouse"
+token = "quince"
+
+[[company]]
+name = "Quora"
+slug = "quora"
+ats = "ashby"
+token = "quora"
+
+[[company]]
+name = "Railway"
+slug = "railway"
+ats = "ashby"
+token = "railway"
+
+[[company]]
+name = "Ramp"
+slug = "ramp"
+ats = "ashby"
+token = "ramp"
+
+[[company]]
+name = "Reddit"
+slug = "reddit"
+ats = "greenhouse"
+token = "reddit"
+
+[[company]]
+name = "Redis Labs"
+slug = "redislabs"
+ats = "ashby"
+token = "redis"
+
+[[company]]
+name = "Remote"
+slug = "remotecom"
+ats = "greenhouse"
+token = "remotecom"
+
+[[company]]
+name = "Render"
+slug = "render"
+ats = "ashby"
+token = "render"
+
+[[company]]
+name = "Rent the Runway"
+slug = "renttherunway"
+ats = "greenhouse"
+token = "renttherunway"
+
+[[company]]
+name = "Replicant"
+slug = "replicant"
+ats = "ashby"
+token = "replicant"
+
+[[company]]
+name = "Replit"
+slug = "replit"
+ats = "ashby"
+token = "replit"
+
+[[company]]
+name = "Restaurant365"
+slug = "restaurant365"
+ats = "lever"
+token = "restaurant365"
+
+[[company]]
+name = "Riot Games"
+slug = "riotgames"
+ats = "greenhouse"
+token = "riotgames"
+
+[[company]]
+name = "Ripple"
+slug = "ripple"
+ats = "greenhouse"
+token = "ripple"
+
+[[company]]
+name = "Rippling"
+slug = "rippling"
+ats = "rippling"
+token = "rippling"
+
+[[company]]
+name = "Riskified"
+slug = "riskified"
+ats = "greenhouse"
+token = "riskified"
+
+[[company]]
+name = "Ritual"
+slug = "ritual"
+ats = "greenhouse"
+token = "ritual"
+
+[[company]]
+name = "River AI"
+slug = "riverai"
+ats = "greenhouse"
+token = "riverai"
+
+[[company]]
+name = "Ro"
+slug = "ro"
+ats = "lever"
+token = "ro"
+
+[[company]]
+name = "Robinhood"
+slug = "robinhood"
+ats = "greenhouse"
+token = "robinhood"
+
+[[company]]
+name = "Roblox"
+slug = "roblox"
+ats = "greenhouse"
+token = "roblox"
+
+[[company]]
+name = "Rocket Money"
+slug = "rocketmoney"
+ats = "greenhouse"
+token = "truebill"
+
+[[company]]
+name = "Rogo"
+slug = "rogo"
+ats = "ashby"
+token = "rogo"
+
+[[company]]
+name = "Roofstock"
+slug = "roofstock"
+ats = "greenhouse"
+token = "roofstock"
+
+[[company]]
+name = "Route"
+slug = "route"
+ats = "greenhouse"
+token = "route"
+
+[[company]]
+name = "Rover"
+slug = "rover"
+ats = "lever"
+token = "rover"
+
+[[company]]
+name = "Rubrik"
+slug = "rubrik"
+ats = "greenhouse"
+token = "rubrik"
+
+[[company]]
+name = "Ruggable"
+slug = "ruggable"
+ats = "greenhouse"
+token = "ruggable"
+
+[[company]]
+name = "Runway"
+slug = "runway"
+ats = "ashby"
+token = "runway"
+
+[[company]]
+name = "SafeBreach"
+slug = "safebreach"
+ats = "greenhouse"
+token = "safebreach"
+
+[[company]]
+name = "Salesforce"
+slug = "salesforce"
+ats = "workday"
+host = "salesforce.wd12.myworkdayjobs.com"
+tenant = "salesforce"
+site = "External_Career_Site"
+
+[[company]]
+name = "SambaNova"
+slug = "sambanova"
+ats = "greenhouse"
+token = "sambanovasystems"
+
+[[company]]
+name = "Samsara"
+slug = "samsara"
+ats = "greenhouse"
+token = "samsara"
+
+[[company]]
+name = "SandboxAQ"
+slug = "sandboxaq"
+ats = "ashby"
+token = "sandboxaq"
+
+[[company]]
+name = "Sanity"
+slug = "sanity"
+ats = "ashby"
+token = "sanity"
+
+[[company]]
+name = "Sardine"
+slug = "sardine"
+ats = "ashby"
+token = "sardine"
+
+[[company]]
+name = "Sauce Labs"
+slug = "saucelabs"
+ats = "greenhouse"
+token = "saucelabs"
+
+[[company]]
+name = "Scale AI"
+slug = "scaleai"
+ats = "greenhouse"
+token = "scaleai"
+
+[[company]]
+name = "Scopely"
+slug = "scopely"
+ats = "greenhouse"
+token = "scopely"
+
+[[company]]
+name = "Secureframe"
+slug = "secureframe"
+ats = "ashby"
+token = "secureframe"
+
+[[company]]
+name = "SeekOut"
+slug = "seekout"
+ats = "greenhouse"
+token = "seekout"
+
+[[company]]
+name = "Sendbird"
+slug = "sendbird"
+ats = "greenhouse"
+token = "sendbird"
+
+[[company]]
+name = "Sentry"
+slug = "sentry"
+ats = "ashby"
+token = "sentry"
+
+[[company]]
+name = "Serve Robotics"
+slug = "serverobotics"
+ats = "ashby"
+token = "serverobotics"
+
+[[company]]
+name = "ServiceNow"
+slug = "servicenow"
+ats = "smartrecruiters"
+token = "servicenow"
+
+[[company]]
+name = "ServiceTitan"
+slug = "servicetitan"
+ats = "smartrecruiters"
+token = "servicetitan"
+
+[[company]]
+name = "Shield AI"
+slug = "shieldai"
+ats = "lever"
+token = "shieldai"
+
+[[company]]
+name = "Siena AI"
+slug = "sienaai"
+ats = "ashby"
+token = "siena"
+
+[[company]]
+name = "Sierra"
+slug = "sierra"
+ats = "ashby"
+token = "sierra"
+
+[[company]]
+name = "Sift"
+slug = "sift"
+ats = "ashby"
+token = "sift"
+
+[[company]]
+name = "Sigma Computing"
+slug = "sigmacomputing"
+ats = "greenhouse"
+token = "sigmacomputing"
+
+[[company]]
+name = "Simile"
+slug = "simile"
+ats = "ashby"
+token = "simile"
+
+[[company]]
+name = "SimpliSafe"
+slug = "simplisafe"
+ats = "greenhouse"
+token = "simplisafe"
+
+[[company]]
+name = "SingleStore"
+slug = "singlestore"
+ats = "greenhouse"
+token = "singlestore"
+
+[[company]]
+name = "Sisense"
+slug = "sisense"
+ats = "ashby"
+token = "sisense"
+
+[[company]]
+name = "Skydio"
+slug = "skydio"
+ats = "ashby"
+token = "skydio"
+
+[[company]]
+name = "Smartling"
+slug = "smartling"
+ats = "greenhouse"
+token = "smartling"
+
+[[company]]
+name = "SmartRecruiters"
+slug = "smartrecruiters"
+ats = "smartrecruiters"
+token = "smartrecruiters"
+
+[[company]]
+name = "Smartsheet"
+slug = "smartsheet"
+ats = "greenhouse"
+token = "smartsheet"
+
+[[company]]
+name = "Snowflake"
+slug = "snowflake"
+ats = "ashby"
+token = "snowflake"
+
+[[company]]
+name = "Socket"
+slug = "socket"
+ats = "ashby"
+token = "socket"
+
+[[company]]
+name = "Socure"
+slug = "socure"
+ats = "ashby"
+token = "socure"
+
+[[company]]
+name = "SoFi"
+slug = "sofi"
+ats = "greenhouse"
+token = "sofi"
+
+[[company]]
+name = "Solstice"
+slug = "solstice"
+ats = "ashby"
+token = "solstice"
+
+[[company]]
+name = "Sonatus"
+slug = "sonatus"
+ats = "greenhouse"
+token = "sonatus"
+
+[[company]]
+name = "SonicWall"
+slug = "sonicwall"
+ats = "greenhouse"
+token = "sonicwall"
+
+[[company]]
+name = "Spotify"
+slug = "spotify"
+ats = "lever"
+token = "spotify"
+
+[[company]]
+name = "SpotOn"
+slug = "spoton"
+ats = "ashby"
+token = "spoton"
+
+[[company]]
+name = "Sprinklr"
+slug = "sprinklr"
+ats = "workday"
+host = "sprinklr.wd1.myworkdayjobs.com"
+tenant = "sprinklr"
+site = "Careers"
+
+[[company]]
+name = "Sprout Social"
+slug = "sproutsocial"
+ats = "greenhouse"
+token = "sproutsocial"
+
+[[company]]
+name = "Squarespace"
+slug = "squarespace"
+ats = "greenhouse"
+token = "squarespace"
+
+[[company]]
+name = "Starburst"
+slug = "starburst"
+ats = "greenhouse"
+token = "starburst"
+
+[[company]]
+name = "Stash"
+slug = "stash"
+ats = "greenhouse"
+token = "stashinvest"
+
+[[company]]
+name = "Stash"
+slug = "stashinvest"
+ats = "greenhouse"
+token = "stashinvest"
+
+[[company]]
+name = "Step"
+slug = "step"
+ats = "greenhouse"
+token = "step"
+
+[[company]]
+name = "Stitch Fix"
+slug = "stitchfix"
+ats = "greenhouse"
+token = "stitchfix"
+
+[[company]]
+name = "StockX"
+slug = "stockx"
+ats = "greenhouse"
+token = "stockx"
+
+[[company]]
+name = "Storyblok"
+slug = "storyblok"
+ats = "greenhouse"
+token = "storyblok"
+
+[[company]]
+name = "Strava"
+slug = "strava"
+ats = "ashby"
+token = "strava"
+
+[[company]]
+name = "Stripe"
+slug = "stripe"
+ats = "greenhouse"
+token = "stripe"
+
+[[company]]
+name = "Substack"
+slug = "substack"
+ats = "ashby"
+token = "substack"
+
+[[company]]
+name = "Substrate"
+slug = "substrate"
+ats = "ashby"
+token = "substrate"
+
+[[company]]
+name = "Sumo Logic"
+slug = "sumologic"
+ats = "greenhouse"
+token = "sumologic"
+
+[[company]]
+name = "Suno"
+slug = "suno"
+ats = "ashby"
+token = "suno"
+
+[[company]]
+name = "Supabase"
+slug = "supabase"
+ats = "ashby"
+token = "supabase"
+
+[[company]]
+name = "SurveyMonkey"
+slug = "surveymonkey"
+ats = "ashby"
+token = "surveymonkey"
+
+[[company]]
+name = "Sword Health"
+slug = "swordhealth"
+ats = "greenhouse"
+token = "swordhealth"
+
+[[company]]
+name = "Symphony"
+slug = "symphony"
+ats = "greenhouse"
+token = "symphony"
+
+[[company]]
+name = "Synack"
+slug = "synack"
+ats = "greenhouse"
+token = "synack"
+
+[[company]]
+name = "Synthesia"
+slug = "synthesia"
+ats = "ashby"
+token = "synthesia"
+
+[[company]]
+name = "Sysdig"
+slug = "sysdig"
+ats = "lever"
+token = "sysdig"
+
+[[company]]
+name = "T-Mobile"
+slug = "tmobile"
+ats = "workday"
+host = "tmobile.wd1.myworkdayjobs.com"
+tenant = "tmobile"
+site = "External"
+
+[[company]]
+name = "Tailscale"
+slug = "tailscale"
+ats = "greenhouse"
+token = "tailscale"
+
+[[company]]
+name = "Talkdesk"
+slug = "talkdesk"
+ats = "greenhouse"
+token = "talkdesk2"
+
+[[company]]
+name = "Talkspace"
+slug = "talkspace"
+ats = "greenhouse"
+token = "talkspace"
+
+[[company]]
+name = "Tanium"
+slug = "tanium"
+ats = "greenhouse"
+token = "tanium"
+
+[[company]]
+name = "Target"
+slug = "target"
+ats = "workday"
+host = "target.wd5.myworkdayjobs.com"
+tenant = "target"
+site = "targetcareers"
+
+[[company]]
+name = "TaskRabbit"
+slug = "taskrabbit"
+ats = "greenhouse"
+token = "taskrabbit"
+
+[[company]]
+name = "Tekion"
+slug = "tekion"
+ats = "ashby"
+token = "tekion"
+
+[[company]]
+name = "Temporal"
+slug = "temporal"
+ats = "ashby"
+token = "temporal"
+
+[[company]]
+name = "Tenable"
+slug = "tenable"
+ats = "greenhouse"
+token = "tenableinc"
+
+[[company]]
+name = "The Farmer's Dog"
+slug = "thefarmersdog"
+ats = "greenhouse"
+token = "thefarmersdog"
+
+[[company]]
+name = "Thinkific"
+slug = "thinkific"
+ats = "ashby"
+token = "thinkific"
+
+[[company]]
+name = "Thoropass"
+slug = "thoropass"
+ats = "greenhouse"
+token = "thoropass"
+
+[[company]]
+name = "Thrive Market"
+slug = "thrivemarket"
+ats = "greenhouse"
+token = "thrivemarket"
+
+[[company]]
+name = "Thumbtack"
+slug = "thumbtack"
+ats = "ashby"
+token = "thumbtack"
+
+[[company]]
+name = "Tia"
+slug = "tia"
+ats = "greenhouse"
+token = "tia"
+
+[[company]]
+name = "Tinybird"
+slug = "tinybird"
+ats = "lever"
+token = "tinybird"
+
+[[company]]
+name = "Toast"
+slug = "toast"
+ats = "greenhouse"
+token = "toast"
+
+[[company]]
+name = "Together AI"
+slug = "togetherai"
+ats = "greenhouse"
+token = "togetherai"
+
+[[company]]
+name = "Tonal"
+slug = "tonal"
+ats = "ashby"
+token = "tonal"
+
+[[company]]
+name = "Transmit Security"
+slug = "transmitsecurity"
+ats = "greenhouse"
+token = "transmitsecurity"
+
+[[company]]
+name = "Tripadvisor"
+slug = "tripadvisor"
+ats = "greenhouse"
+token = "tripadvisor"
+
+[[company]]
+name = "Turo"
+slug = "turo"
+ats = "workday"
+host = "turo.wd12.myworkdayjobs.com"
+tenant = "turo"
+site = "Turo_careers"
+
+[[company]]
+name = "Twilio"
+slug = "twilio"
+ats = "greenhouse"
+token = "twilio"
+
+[[company]]
+name = "Twitch"
+slug = "twitch"
+ats = "greenhouse"
+token = "twitch"
+
+[[company]]
+name = "Two Chairs"
+slug = "twochairs"
+ats = "greenhouse"
+token = "twochairs"
+
+[[company]]
+name = "Typeform"
+slug = "typeform"
+ats = "greenhouse"
+token = "typeform"
+
+[[company]]
+name = "Udemy"
+slug = "udemy"
+ats = "greenhouse"
+token = "udemy"
+
+[[company]]
+name = "UiPath"
+slug = "uipath"
+ats = "ashby"
+token = "uipath"
+
+[[company]]
+name = "Ultima Genomics"
+slug = "ultimagenomics"
+ats = "greenhouse"
+token = "ultimagenomics"
+
+[[company]]
+name = "Unit"
+slug = "unit"
+ats = "ashby"
+token = "unit"
+
+[[company]]
+name = "Unite Us"
+slug = "uniteus"
+ats = "greenhouse"
+token = "uniteus"
+
+[[company]]
+name = "Upgrade"
+slug = "upgrade"
+ats = "greenhouse"
+token = "upgrade"
+
+[[company]]
+name = "Upstart"
+slug = "upstart"
+ats = "greenhouse"
+token = "upstart"
+
+[[company]]
+name = "Upwork"
+slug = "upwork"
+ats = "greenhouse"
+token = "upwork"
+
+[[company]]
+name = "Vannevar Labs"
+slug = "vannevarlabs"
+ats = "greenhouse"
+token = "vannevarlabs"
+
+[[company]]
+name = "Vanta"
+slug = "vanta"
+ats = "ashby"
+token = "vanta"
+
+[[company]]
+name = "Vapi"
+slug = "vapi"
+ats = "ashby"
+token = "vapi"
+
+[[company]]
+name = "Veeva"
+slug = "veeva"
+ats = "lever"
+token = "veeva"
+
+[[company]]
+name = "Vercel"
+slug = "vercel"
+ats = "greenhouse"
+token = "vercel"
+
+[[company]]
+name = "Veriff"
+slug = "veriff"
+ats = "greenhouse"
+token = "veriff"
+
+[[company]]
+name = "Verkada"
+slug = "verkada"
+ats = "greenhouse"
+token = "verkada"
+
+[[company]]
+name = "Virta Health"
+slug = "virtahealth"
+ats = "ashby"
+token = "virtahealth"
+
+[[company]]
+name = "Vivint"
+slug = "vivint"
+ats = "smartrecruiters"
+token = "vivint"
+
+[[company]]
+name = "Vonage"
+slug = "vonage"
+ats = "greenhouse"
+token = "vonage"
+
+[[company]]
+name = "Vox Media"
+slug = "voxmedia"
+ats = "greenhouse"
+token = "voxmedia"
+
+[[company]]
+name = "VTS"
+slug = "vts"
+ats = "greenhouse"
+token = "vts"
+
+[[company]]
+name = "Vuori"
+slug = "vuori"
+ats = "smartrecruiters"
+token = "VuoriInc"
+
+[[company]]
+name = "WalkMe"
+slug = "walkme"
+ats = "lever"
+token = "walkme"
+
+[[company]]
+name = "Wayfair"
+slug = "wayfair"
+ats = "smartrecruiters"
+token = "wayfair"
+
+[[company]]
+name = "Wealthfront"
+slug = "wealthfront"
+ats = "lever"
+token = "wealthfront"
+
+[[company]]
+name = "Weave"
+slug = "weave"
+ats = "greenhouse"
+token = "weave"
+
+[[company]]
+name = "Weaviate"
+slug = "weaviate"
+ats = "ashby"
+token = "weaviate"
+
+[[company]]
+name = "Webflow"
+slug = "webflow"
+ats = "greenhouse"
+token = "webflow"
+
+[[company]]
+name = "Wheel"
+slug = "wheel"
+ats = "ashby"
+token = "wheel"
+
+[[company]]
+name = "WHOOP"
+slug = "whoop"
+ats = "ashby"
+token = "whoop"
+
+[[company]]
+name = "Wistia"
+slug = "wistia"
+ats = "ashby"
+token = "wistia"
+
+[[company]]
+name = "Workato"
+slug = "workato"
+ats = "greenhouse"
+token = "workato"
+
+[[company]]
+name = "Workday"
+slug = "workdayinc"
+ats = "workday"
+host = "workday.wd5.myworkdayjobs.com"
+tenant = "workday"
+site = "Workday"
+
+[[company]]
+name = "Workhuman"
+slug = "workhuman"
+ats = "ashby"
+token = "workhuman"
+
+[[company]]
+name = "Workiva"
+slug = "workiva"
+ats = "workday"
+host = "workiva.wd503.myworkdayjobs.com"
+tenant = "workiva"
+site = "careers"
+
+[[company]]
+name = "WorkOS"
+slug = "workos"
+ats = "ashby"
+token = "workos"
+
+[[company]]
+name = "Workstream"
+slug = "workstream"
+ats = "greenhouse"
+token = "workstream"
+
+[[company]]
+name = "Wrike"
+slug = "wrike"
+ats = "greenhouse"
+token = "wrike"
+
+[[company]]
+name = "Writer"
+slug = "writer"
+ats = "ashby"
+token = "writer"
+
+[[company]]
+name = "xAI"
+slug = "xai"
+ats = "greenhouse"
+token = "xai"
+
+[[company]]
+name = "Yotpo"
+slug = "yotpo"
+ats = "greenhouse"
+token = "yotpo"
+
+[[company]]
+name = "Yubico"
+slug = "yubico"
+ats = "greenhouse"
+token = "yubico"
+
+[[company]]
+name = "Yugabyte"
+slug = "yugabyte"
+ats = "greenhouse"
+token = "yugabyte"
+
+[[company]]
+name = "Zapier"
+slug = "zapier"
+ats = "ashby"
+token = "zapier"
+
+[[company]]
+name = "Zed"
+slug = "zed"
+ats = "ashby"
+token = "zed"
+
+[[company]]
+name = "Zendesk"
+slug = "zendesk"
+ats = "workday"
+host = "zendesk.wd1.myworkdayjobs.com"
+tenant = "zendesk"
+site = "zendesk"
+
+[[company]]
+name = "Zenefits"
+slug = "zenefits"
+ats = "smartrecruiters"
+token = "zenefits"
+
+[[company]]
+name = "Zenoti"
+slug = "zenoti"
+ats = "greenhouse"
+token = "zenoti"
+
+[[company]]
+name = "Zeta"
+slug = "zeta"
+ats = "lever"
+token = "zeta"
+
+[[company]]
+name = "Zimperium"
+slug = "zimperium"
+ats = "lever"
+token = "zimperium"
+
+[[company]]
+name = "Zocdoc"
+slug = "zocdoc"
+ats = "greenhouse"
+token = "zocdoc"
+
+[[company]]
+name = "Zoom"
+slug = "zoom"
+ats = "workday"
+host = "zoom.wd5.myworkdayjobs.com"
+tenant = "zoom"
+site = "Zoom"
+
+[[company]]
+name = "Zoox"
+slug = "zoox"
+ats = "lever"
+token = "zoox"
+
+[[company]]
+name = "Zowie"
+slug = "zowie"
+ats = "ashby"
+token = "zowie"
+
+[[company]]
+name = "Zscaler"
+slug = "zscaler"
+ats = "greenhouse"
+token = "zscaler"
+
+[[company]]
+name = "Zuora"
+slug = "zuora"
+ats = "greenhouse"
+token = "zuora"

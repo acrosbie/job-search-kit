@@ -1,0 +1,19 @@
+# Field pack: customer support, support operations and CX technology, at manager level and up,
+# plus the adjacent systems, knowledge, contact center and escalation roles. Every pattern was tuned
+# against tens of thousands of real titles in September 2026.
+
+[titles]
+function = "customer support|technical support|product support|premier support|support (operations|ops|systems|technology|tools|platform|engineering|experience|delivery|strategy|program|vendor)|head of [\\w &]*support|\\bescalations?\\b|cx (operations|ops|systems|technology|strategy|data|insights|analytics)|cx \\w+ (systems|strategy|operations|technology|data|insights|analytics)|cx manager|customer (operations|experience)|customer (care|service)\\b|user (operations|ops)|community support|\\bknowledge (management|manager|program|systems|architect|base|lead|and enablement|& enablement)\\b|cx knowledge|support knowledge|self[- ]service (ai|experience|operations|strategy|support)|\\bitsm\\b|it service (management|desk)|service desk (operations|&|and)|enterprise service management|\\bwfm\\b|workforce management|contact cent(er|re)|call cent(er|re)"
+level = "\\bmanager\\b|senior manager|sr\\.? manager|\\bmgr\\b|\\bhead\\b|\\bdirector\\b|\\blead\\b|\\badministrator\\b|\\barchitect\\b|\\bplanner\\b"
+exclude = "associate(?! director)|team lead|specialist|representative|\\bagent\\b|analyst|intern\\b|vice president|\\bvp\\b|customer success manager|account manager|\\bsales\\b|solutions? (architect|engineer|consultant)|^(?![^|]*\\b(manager|director|head)\\b)[^|]*engineer\\b(?!ing manager)|(?<!support )engineering manager|forward deployed|technician|helpdesk|help desk|\\bit support\\b|desktop support|marketing|demand generation|\\bdesign\\b|security|\\bux\\b|content|localization"
+field_words = "\\bsupport\\b|customer|\\bcx\\b|service desk|help ?desk|contact cent|call cent|escalation|knowledge|\\bcare\\b"
+
+[[phrase_rejects]]
+name = "quota and renewals"
+phrases = "book of business|renewal|upsell|quota|expansion revenue|net revenue retention|\\bnrr\\b"
+min_distinct = 2
+same_as = { "net revenue retention" = "nrr" }
+reason = "Not a fit: this reads as an account-management job carrying renewals or a quota ({hits})."
+
+[aggregator]
+queries = ["support operations", "customer support", "technical support", "customer experience operations", "cx operations", "support systems", "knowledge management", "escalation manager", "contact center", "workforce management", "customer care", "head of support"]

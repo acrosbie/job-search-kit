@@ -14,6 +14,7 @@ import sys
 
 from . import __version__, net, scan, settings, store
 from . import configure, titles
+from . import init as starter
 from . import queue as triage_queue
 from .clock import Clock
 from .discover import discover
@@ -175,6 +176,18 @@ def cmd_try_titles(a):
     return 0
 
 
+def cmd_init(a):
+    try:
+        _out(starter.init(a.folder, field=a.field, places=a.places, timezone=a.timezone))
+    except starter.AlreadySetUp as e:
+        print(str(e), file=sys.stderr)
+        return 3
+    except ValueError as e:
+        print(str(e), file=sys.stderr)
+        return 2
+    return 0
+
+
 def cmd_discover(a):
     _out({"slug": a.slug, **discover(a.slug, page=a.page)})
     return 0
@@ -254,6 +267,13 @@ def parser():
     x.add_argument("--folder", required=True)
     x.add_argument("slug")
     s.set_defaults(func=cmd_companies)
+
+    s = sub.add_parser("init", help="start a new user's folder from the starter boards and a field pack")
+    s.add_argument("--folder", required=True)
+    s.add_argument("--field", default="custom", help="a field pack (see starter/fields), or custom")
+    s.add_argument("--places", default="us")
+    s.add_argument("--timezone", default="", help="for example America/Denver")
+    s.set_defaults(func=cmd_init)
 
     s = sub.add_parser("titles", help="what the title filter keeps and nearly keeps, from the last scan's titles")
     s.add_argument("--folder", required=True)

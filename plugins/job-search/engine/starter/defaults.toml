@@ -1,0 +1,16 @@
+# Settings every user starts with. Setup changes them from the user's answers.
+
+[description]
+contract = "\\b(contract|contractor|contract-to-hire|fixed[- ]term|temporary|interim|fractional)\\s+(role|position|opportunity|engagement|assignment|basis|employee|worker)\\b|\\b(\\d+|six|nine|twelve|three)[- ]month\\s+(contract|engagement|assignment|fixed[- ]term)\\b|\\bthis is a (contract|temporary|fixed[- ]term|contract-to-hire)\\b|\\bw-?2 contract\\b|\\bstaff augmentation\\b|\\bcontract duration\\b|\\bemployment type:\\s*(contract|temporary|fixed[- ]term)\\b"
+onsite_days = "\\b(4|5|four|five)\\s*\\+?\\s*(on[- ]?site\\s+|in[- ]?office\\s+)?days?\\s*(a|per)\\s*week\\b"
+onsite_place = "in[- ]?office|on[- ]?site|from the (designated )?[\\w ]{0,20}office|at (our|the) [\\w ,]{0,25}office|in the office"
+
+[pay]
+reject_if_top_below = 0
+
+[workday]
+country_facet = "^united states"
+max_total = 2000
+
+[triage]
+cooldown_days = 30
