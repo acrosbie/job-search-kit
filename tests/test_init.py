@@ -75,6 +75,8 @@ class StarterDataTest(unittest.TestCase):
         self.assertIsNone(s.hybrid_ok)
         self.assertIsNone(s.remote_only)
         self.assertTrue(s.in_country.search("Denver CO"))
+        for city in ("Sunnyvale", "San Francisco", "Oakland"):  # big tech cities count as elsewhere, for everyone
+            self.assertTrue(s.in_country.search(city), city)
 
 
 if __name__ == "__main__":
