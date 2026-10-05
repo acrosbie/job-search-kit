@@ -33,20 +33,11 @@ sys.path.insert(0, os.path.join(REPO, "plugins", "job-search", "engine"))
 sys.dont_write_bytecode = True
 
 from jobkit.toml import load_file  # noqa: E402
+from jobkit.tomlwrite import value as toml_value  # noqa: E402
 
 # Reference config.toml [location] keys -> settings.toml [places] keys.
 PLACES = {"remote": "remote", "bay_core": "hybrid_ok", "bay_outer": "remote_only",
           "us": "in_country", "us_national": "country_wide", "drop": "abroad"}
-
-
-def toml_value(v):
-    if isinstance(v, bool):
-        return "true" if v else "false"
-    if isinstance(v, (int, float)):
-        return str(v)
-    if isinstance(v, dict):
-        return "{ " + ", ".join(f"{json.dumps(k)} = {toml_value(x)}" for k, x in v.items()) + " }"
-    return json.dumps(v, ensure_ascii=False)  # JSON strings and string lists are valid TOML
 
 
 def settings_toml(config, labels, timezone):
