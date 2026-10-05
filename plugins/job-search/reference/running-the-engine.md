@@ -7,7 +7,7 @@ The engine is the Python program in this plugin (`${CLAUDE_PLUGIN_ROOT}/engine`)
 The user connects a folder, usually called `Job Search`. It is theirs if it contains `profile/settings.toml`. Look for it with your file tools and your shells.
 
 - **No folder connected:** ask them to connect it. "Please connect your Job Search folder. Use the folder option next to the message box, then pick the folder."
-- **A folder is connected but has no `profile/settings.toml`:** it hasn't been set up. Say so plainly and don't run anything.
+- **A folder is connected but has no `profile/settings.toml`:** it hasn't been set up yet. Unless you're running setup, don't run anything; offer to set it up ("Say *set me up* and I'll walk you through it").
 
 ## 2. Pick where to run
 
