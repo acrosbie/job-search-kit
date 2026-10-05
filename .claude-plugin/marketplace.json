@@ -11,8 +11,8 @@
     {
       "name": "job-search",
       "source": "./plugins/job-search",
-      "description": "Find, screen and track jobs with Claude. Phase 2: the scan and triage skills.",
-      "version": "0.1.1"
+      "description": "Find, screen and track jobs with Claude: setup, scan and triage.",
+      "version": "0.2.0"
     }
   ]
 }

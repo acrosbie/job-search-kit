@@ -20,6 +20,12 @@ python3 run.py <command> --folder "<the user's Job Search folder>" [options]
 | `mark KEY STATUS --by claude\|user [--note TEXT] [--force]` | Records a verdict in `postings.json` and `decisions.log` | the logged row |
 | `add FILE` | Registers a posting saved by hand as `data/postings/manual-<company>-<short>.md`, with the same header a scan writes | the new record |
 | `discover SLUG [--page URL]` | Which public job board a company uses; with `--page`, also reads its careers page for an embedded board | JSON: `boards`, `embedded`, `unsupported` |
+| `init [--field support-cx\|custom] [--places us] [--timezone Area/City]` | Starts a new user's folder from `starter/`: the 589 starter boards, the defaults, a places pack and a field pack (`custom` leaves the title patterns empty for setup to build). Refuses a folder that already has a profile | JSON summary |
+| `settings show` / `settings set KEY VALUE` | Reads, or changes one setting by dotted key (`titles.function`, `places.hybrid_ok`, `pay.reject_if_top_below`, `labels.reason_pay`). Checked before saving: patterns compile, numbers are numbers, keys exist, labels use only their own placeholders | JSON |
+| `settings phrase-reject NAME --phrases P [--min-distinct N] [--reason T] [--same-as JSON]` | Adds or replaces one phrase rule | JSON |
+| `companies list` / `companies add --name --slug --ats [--token\|--host --tenant --site\|--query ...\|--careers-url]` / `companies drop SLUG` | Edits the watched companies one entry at a time; an entry must carry what its reader needs | JSON |
+| `titles [--sample N]` | From the last scan's `titles-latest.tsv`: what the title filter keeps, and near misses (a `field_words` word, or the function words without the level, or an exclusion), in places the user would take | JSON: counts and samples |
+| `try-titles [--function P] [--level P] [--exclude P] [--field-words P]` | What a change to the title patterns would gain and lose on the same titles, without fetching | JSON: counts and samples |
 | `version` | Engine and Python version | text |
 
 `scan` also takes `--record DIR` (save every board answer to a cassette folder), `--replay DIR` (read answers from one, with no network) and `--as-of TIME` (pin the clock, for replays).
@@ -31,6 +37,16 @@ python3 run.py <command> --folder "<the user's Job Search folder>" [options]
 - `rejected_postings`: the same, plus `rule` and `reason`, in the user's words.
 - `failures`: board, slug, error. A failed board keeps its old postings.
 - `check_by_hand`: companies with `ats = "manual"` and their careers URL.
+
+## Starter data
+
+`starter/` travels with the engine into the user's folder:
+- `boards.toml`: 589 public company job boards, identifiers only.
+- `defaults.toml`: patterns for contract work and days in the office, the cooldown, and Workday settings.
+- `places/us.toml`: US geography. The user's own commute is added at setup as `places.hybrid_ok` and `places.remote_only`.
+- `fields/support-cx.toml`: the finished support and CX field pack: titles, field words, a phrase rule and aggregator search phrases.
+
+Other fields get their title patterns from setup's field generator.
 
 ## The user's folder
 
@@ -57,7 +73,7 @@ Every pattern is a case-insensitive regular expression; a missing or empty one m
 | Section | Keys | Used for |
 |---|---|---|
 | `[you]` | `timezone` (for example `America/New_York`) | Dates the user reads |
-| `[titles]` | `function`, `level`, `exclude` | A title needs a function word **and** a level word, and no exclusion |
+| `[titles]` | `function`, `level`, `exclude`, `field_words` | A title needs a function word **and** a level word, and no exclusion. `field_words` only marks near misses |
 | `[places]` | `remote`, `hybrid_ok`, `remote_only`, `in_country`, `country_wide`, `abroad` | The listed location: `hybrid_ok` passes; `remote_only` and `in_country` pass only if the description says remote; `abroad` is dropped unless a home place is also listed |
 | `[description]` | `remote_language`, `contract`, `onsite_days`, `onsite_place` | Remote wording; flags for contract work and 4–5 days in the office (never rejects) |
 | `[[phrase_rejects]]` | `name`, `phrases`, `min_distinct`, `same_as`, `reason` | Reject when enough distinct phrases appear, for example quota language |
