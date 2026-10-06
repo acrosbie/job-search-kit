@@ -51,6 +51,8 @@ Quote every path: folder names often contain spaces.
 | `applications` | Every application, with its day count and what's due |
 | `record-choices FILE` | Record the clicks from the user's jobs page |
 | `page` | Write the jobs page files again (every change does this already) |
+| `review` | The weekly review's facts (the review skill) |
+| `replay`, `rule-evidence`, `change-rule`, `decline`, `requeue` | Changing a rule the careful way (the tune skill) |
 | `discover NAME` | Which public job board a company uses |
 
 **Exit codes:**
@@ -67,6 +69,9 @@ After installing or refreshing the engine, every skill catches up before doing a
 
 1. **The jobs page:** read and record any clicks the user made on it, as `${CLAUDE_PLUGIN_ROOT}/reference/jobs-page.md` says under "Reading the user's clicks".
 2. **Day 21:** run `due`. If `closed_now` lists anything, say so in one line: "No reply from Acme in three weeks, so I've marked it closed. Tell me if you hear from them." (The scan skill can skip this step: every scan runs it.)
+3. **Missed checks**, from the same `due` output. Scheduled checks run only while the computer is on and Claude is open, so one can be missed.
+   - **`scan_overdue`:** in the scan and triage skills, run a scan first (the scan skill's steps), saying so in one line: "Your morning check didn't run, so I'm checking now; it takes a few minutes." In any other skill, offer it in one line ("Your last check was 3 days ago; want me to check now?") and carry on with what they asked.
+   - **`review_ready`, or `review_due`:** offer it in one line: "Your weekly review is ready; want to go through it?" Start it only if they say yes (the review skill).
 
 Keep it short: the user asked for something else, so give the catch-up a line or two and move on.
 

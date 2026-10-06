@@ -62,6 +62,17 @@ def active(root, kind):
     return bool(folder.load_postings()["postings"])
 
 
+def setup_allowed(root):
+    """Setup builds the first rules from the user's answers, shown to them as it goes, and runs a
+    one-board scan early to prove the network works. Until the user's first decision on a job (the
+    first triage together, at the end of setup), its settings may skip the replay. After that, every
+    change is a change to rules the user has seen working, and goes through the guard."""
+    if any(d.get("by") == "user" for d in store.Folder(root).read_decisions()):
+        raise Refused("setup is over: the user has decided jobs already, so change this the careful way, "
+                      "with a replay (the tune skill)")
+    return True
+
+
 def summary(rep):
     """The replay, as it is kept with the change."""
     keep = ("kind", "at", "checked", "rejected_before", "rejected_after", "wanted", "would_pass")

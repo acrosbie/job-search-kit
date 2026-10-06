@@ -77,7 +77,7 @@ Never improve a claim. If they're vague, record it as vague.
 - **exclude:** look-alikes they don't want: neighbouring functions sharing a word (`account (manager|executive)` against accounting), interns, the seniority they've ruled out (`\bvp\b|vice president` if that's too senior), sales.
 - **field_words:** broader words of the field (`accounting|finance|payroll|audit|controller`). These don't keep anything; they're how calibration and the weekly review spot titles the filter nearly kept.
 
-Write each one with `run.py settings set --folder "<folder>" titles.function "<pattern>"` (likewise `titles.level`, `titles.exclude`, `titles.field_words`). The engine checks a pattern before saving it; if it refuses, fix it and try again. Don't trouble the user with the refusal.
+Write each one with `run.py settings set --folder "<folder>" titles.function "<pattern>" --setup` (likewise `titles.level`, `titles.exclude`, `titles.field_words`). `--setup` marks setup's own settings: the engine accepts them until the user's first decision on a job. After that, every rule change goes through the tune skill. The engine checks a pattern before saving it; if it refuses, fix it and try again. Don't trouble the user with the refusal.
 
 Record in `what-i-want.md` the field, the adjacent fields they'd take, and the fields they've ruled out, with their reasons. Tell them the titles aren't final: step 6 checks them against real postings.
 
@@ -105,10 +105,10 @@ Short, plain questions, one at a time, each with choices and "not sure". Save ev
 
 **Rules.** Build `profile/rules.md` from `${CLAUDE_PLUGIN_ROOT}/reference/rule-catalog.md`, keeping **only** the rules their answers call for. Each rule gets its plain name, when it fires, its "Doesn't count" notes, and the answer that created it, quoted and dated. Add the flags that apply. Under "Rules the scan applies before triage", list location, pay (if they chose reject) and any phrase rule.
 
-**Settings, through the engine** (`run.py settings set ...`):
+**Settings, through the engine** (`run.py settings set ... --setup`):
 - **`places.hybrid_ok`** and **`places.remote_only`** come from their commute. Draft the actual town names within their commute, and a ring further out that would work only if remote. Show both lists, ask them to correct them, then save each as a pattern, such as `denver|aurora|lakewood|englewood`. The rest of the country and abroad are already set.
 - **`pay.reject_if_top_below`:** their lowest pay as a yearly number, only if they chose "reject". If they chose "flag", leave it at 0 and make pay a flag in rules.md.
-- **Phrase rules**, with `run.py settings phrase-reject`, only for a kind of job that hides behind their titles and that they always turn down.
+- **Phrase rules**, with `run.py settings phrase-reject ... --setup`, only for a kind of job that hides behind their titles and that they always turn down.
 
 **Show them the result as one plain list:** "Here's what I'll screen out, and what I'll only point out to you." Ask what's wrong, and fix it before going on.
 
@@ -136,21 +136,25 @@ Test each change before saving it:
 ```
 run.py try-titles --folder "<folder>" --level "<new pattern>"
 ```
-Tell them in one line what it changes ("That adds 43 Senior Accountant jobs and loses none"). Save it with `settings set` when they agree. Do at most three rounds. Then say what's left: what the filter keeps and what it skips.
+Tell them in one line what it changes ("That adds 43 Senior Accountant jobs and loses none"). Save it with `settings set ... --setup` when they agree. Do at most three rounds. Then say what's left: what the filter keeps and what it skips.
 
-**Then go through the first batch together**, using the triage skill. Pick 5 to 10 of the newest postings if there are many. When they disagree with a verdict, ask why. If their reason is a rule ("too far", "no agency jobs"), propose the change in plain words, show it, and save it to rules.md or settings only when they say yes.
+**Then go through the first batch together**, using the triage skill. Pick 5 to 10 of the newest postings if there are many. When they disagree with a verdict, ask why. If their reason is a rule ("too far", "no agency jobs"), make the change with the tune skill, which shows what it would change on their saved jobs and saves it only when they say yes.
 
-## Step 7: a daily check
+## Step 7: scheduled checks
 
-Offer a daily scan: "Want me to check your job boards every morning?" If yes, ask what time. Then create a **scheduled task** with:
+**A daily check.** Offer: "Want me to check your job boards every morning?" If yes, ask what time. Then create a **scheduled task** with:
 - **this folder attached**;
 - the prompt **any new jobs?**;
-- daily, at their time;
+- daily, at their time (or on weekdays, if they prefer);
 - the approval option that doesn't stop to ask, if there is one.
+
+Save it: `run.py settings set schedule.scan daily` (or `weekdays`).
+
+**A weekly review.** Offer it in one sentence: "Once a week I can also get a short review ready: where you've overturned my verdicts, a spot-check of what the scan turned away, and your follow-ups. You go through it when it suits you. Want that?" If yes, ask which day and time. Then create a second scheduled task the same way, with the prompt **prepare my weekly review**, weekly. Save it: `run.py settings set schedule.review weekly`.
 
 Use your scheduling tool if you have one. Otherwise, walk them through **Scheduled** in the sidebar → **New task** → **Set up manually**, giving them each field to fill in.
 
-Tell them it runs while their computer is on and Claude is open. If it misses a day, the next check, or asking "any new jobs?", catches up.
+Tell them these run while their computer is on and Claude is open. If one is missed, the next conversation catches up.
 
 ## Step 8: wrap up
 
@@ -169,13 +173,14 @@ This folder is <their first name>'s job search, run with the job-search kit. Say
 - Paste a job link from LinkedIn or anywhere to have it screened too.
 - "I applied to Acme", "Acme replied" or "I have an interview" keeps track of your applications.
 - "What's due?" lists the follow-ups worth sending.
+- "Go through my review" goes through the weekly review: rules you've overturned, a spot-check, your follow-ups.
 - "Show me my jobs page" opens the page where you can mark jobs yourself. My jobs.html in this folder is the same page as a file.
 
 profile/   about you, what you want, and your screening rules
 data/      every job found, every decision, every application
 .kit/      the engine that reads the job boards (no need to open it)
 
-Set up on <date>. A daily check runs at <time> while this computer is on.
+Set up on <date>. A daily check runs at <time>, and a weekly review is prepared on <day>, while this computer is on.
 Your jobs page: <link>
 ```
 

@@ -63,6 +63,10 @@ If the user can't use the artifact, or prefers a file, point them to **My jobs.h
 
 When they paste text containing `[choices:`, write the pasted text as it is to `<folder>/data/page-choices.json` and run `record-choices` on it, as above. There's nothing to mark done: the file page keeps no clicks.
 
+## The weekly review notice
+
+When a scheduled check has prepared the weekly review, the page shows "Your weekly review is ready" at the top. There's nothing to do for it: the next conversation offers the review (catching up), and going through it clears the notice.
+
 ## Chat by number
 
 "Skip #12" or "I applied to 7" refers to the numbers on the page. Look the number up in `data/page.json` (`num` in `waiting`, `todo`, `applications` and `screened`) to find the posting's `key` or the application's `id`. Repeat the name back as you record it ("Skipped #12, Acme, Senior Accountant"), so a wrong number is caught.

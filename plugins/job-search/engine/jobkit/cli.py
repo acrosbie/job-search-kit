@@ -127,12 +127,13 @@ def cmd_settings(a):
         _out(configure.show(a.folder))
     elif a.action == "set":
         old, new = configure.set_value(a.folder, a.key, a.value, why=a.why or "", accept=a.accept_flips or (),
-                                       clock=_clock(a.folder))
+                                       clock=_clock(a.folder), setup=a.setup)
         _out({"setting": a.key, "was": old, "now": new})
     else:
         same_as = json.loads(a.same_as) if a.same_as else None
         _out(configure.phrase_reject(a.folder, a.name, a.phrases, a.min_distinct, a.reason, same_as,
-                                     why=a.why or "", accept=a.accept_flips or (), clock=_clock(a.folder)))
+                                     why=a.why or "", accept=a.accept_flips or (), clock=_clock(a.folder),
+                                     setup=a.setup))
     return 0
 
 
@@ -331,6 +332,7 @@ def parser():
     x.add_argument("value")
     x.add_argument("--why", help="the user's own words for a change to how jobs are screened")
     x.add_argument("--accept-flips", nargs="*", metavar="KEY", help="jobs the user agreed this change may turn away")
+    x.add_argument("--setup", action="store_true", help="setup's own settings, before the user has decided any job")
     x = acts.add_parser("phrase-reject")
     x.add_argument("--folder", required=True)
     x.add_argument("name")
@@ -340,6 +342,7 @@ def parser():
     x.add_argument("--same-as", help='JSON object, for example {"net revenue retention": "nrr"}')
     x.add_argument("--why", help="the user's own words for this rule")
     x.add_argument("--accept-flips", nargs="*", metavar="KEY", help="jobs the user agreed this rule may turn away")
+    x.add_argument("--setup", action="store_true", help="setup's own rule, before the user has decided any job")
     s.set_defaults(func=cmd_settings)
 
     s = sub.add_parser("replay", help="what a change to the scan's rules would do to every saved posting")

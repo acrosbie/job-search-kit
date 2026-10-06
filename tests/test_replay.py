@@ -21,7 +21,7 @@ INSTRUMENTL = "himalayas-instrumentl-customer-support-operations-"
 DUTCH = "lever-dutch-ebb3eab7-4d59-4144-b814-f572cb590c6f"
 
 
-class ReplayTest(unittest.TestCase):
+class ScannedBase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.scanned, _, _ = replay_sample()  # one scan of the recordings, copied for each test
@@ -37,6 +37,8 @@ class ReplayTest(unittest.TestCase):
     def key(self, prefix):
         return next(k for k in self.keys.values() if k.startswith(prefix))
 
+
+class ReplayTest(ScannedBase):
     def test_a_higher_pay_line(self):
         rep = replay.settings_change(self.root, CLOCK, sets=[("pay.reject_if_top_below", "120000")])
         self.assertEqual([f["key"] for f in rep["flips"]], [self.key(INSTRUMENTL)])  # $95K to $115K
@@ -61,7 +63,7 @@ class ReplayTest(unittest.TestCase):
             replay.settings_change(self.root, CLOCK)
 
 
-class GuardTest(ReplayTest):
+class GuardTest(ScannedBase):
     def save(self, value="120000", **kw):
         return configure.set_value(self.root, "pay.reject_if_top_below", value, clock=CLOCK, **kw)
 
@@ -115,6 +117,19 @@ class GuardTest(ReplayTest):
         with contextlib.redirect_stderr(io.StringIO()) as err:
             self.assertEqual(cli.main(["settings", "set", "--folder", self.root, "pay.reject_if_top_below", "130000"]), 3)
         self.assertIn("replay", err.getvalue())
+
+
+class SetupTest(ScannedBase):
+    def test_setup_until_the_users_first_decision(self):
+        # Setup's one-board network check has saved postings and titles; its own settings still go in.
+        configure.set_value(self.root, "places.hybrid_ok", "new york|brooklyn", setup=True)
+        configure.set_value(self.root, "titles.level", "\\bdirector\\b", setup=True)
+        configure.phrase_reject(self.root, "quota", "quota|book of business", setup=True)
+        self.assertEqual(self.folder.read_changes(), [])
+        verdicts.mark(self.root, self.key(INSTRUMENTL), "skipped", "user", clock=CLOCK)  # the first triage together
+        with self.assertRaises(Refused) as over:
+            configure.set_value(self.root, "places.hybrid_ok", "new york", setup=True)
+        self.assertIn("setup is over", str(over.exception))
 
 
 class SetupIsUnguardedTest(unittest.TestCase):

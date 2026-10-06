@@ -105,7 +105,7 @@ def coerce(key, raw_value):
     return section, name, new
 
 
-def set_value(folder, key, raw_value, why="", accept=(), clock=None):
+def set_value(folder, key, raw_value, why="", accept=(), clock=None, setup=False):
     """Set `section.key` to a value given as text. Returns (old, new).
 
     Once there are saved postings, a change to how they're screened needs a replay of exactly this
@@ -118,7 +118,7 @@ def set_value(folder, key, raw_value, why="", accept=(), clock=None):
     old = raw.get(section, {}).get(name)
     kind = changes.guard_kind(key)
     rep = None
-    if kind:
+    if kind and not (setup and changes.setup_allowed(folder)):
         clk = clock or Clock(settings.parse(raw).timezone)
         rep = changes.guard(folder, kind, lambda ch: _covers(ch, kind, key, new), accept, why, clk)
     raw.setdefault(section, {})[name] = new
@@ -152,14 +152,17 @@ def phrase_rule(name, phrases, min_distinct=2, reason="", same_as=None):
     return rule
 
 
-def phrase_reject(folder, name, phrases, min_distinct=2, reason="", same_as=None, why="", accept=(), clock=None):
+def phrase_reject(folder, name, phrases, min_distinct=2, reason="", same_as=None, why="", accept=(), clock=None,
+                  setup=False):
     """Add a phrase rule, or replace the one with the same name. Guarded like set_value."""
     rule = phrase_rule(name, phrases, min_distinct, reason, same_as)
     path = _paths(folder)[0]
     text = _read(path)
     raw = load_file(path)
     clk = clock or Clock(settings.parse(raw).timezone)
-    rep = changes.guard(folder, "settings", lambda ch: ch.get("phrase_reject") == rule, accept, why, clk)
+    rep = None
+    if not (setup and changes.setup_allowed(folder)):
+        rep = changes.guard(folder, "settings", lambda ch: ch.get("phrase_reject") == rule, accept, why, clk)
     old = next((r for r in raw.get("phrase_rejects", []) if r.get("name") == name), None)
     rules = [r for r in raw.get("phrase_rejects", []) if r.get("name") != name] + [rule]
     raw["phrase_rejects"] = rules

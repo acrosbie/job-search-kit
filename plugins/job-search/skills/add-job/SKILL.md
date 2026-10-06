@@ -51,7 +51,7 @@ For a link to a job board the engine reads (Greenhouse, Lever, Ashby, SmartRecru
    ```
    Use `link` when you read it from the link, `pasted` when the user pasted it.
 
-**If the output names an `application`,** the user had already told you they applied to this job. It's now joined to that application, so say so in one line ("I've added the posting to your Acme application").
+**If the output names an `application`,** the user had already told you they applied to this job. It's now joined to that application, so say so in one line ("I've added the posting to your Acme application"). Still judge it (step 2), and record your verdict without changing anything, so the monthly review can compare it with what happened: `mark <key> <verdict> --by claude --record-only --note "<note>"`.
 
 **Exit code 3, "already saved as …":** the job is already on their list. Say where it stands in one line, by its number ("That's #12, Acme, Senior Accountant. I marked it worth applying on 2 Oct."), and don't save it again. If they say it's a different job with the same title, run `add` again with `--anyway`.
 

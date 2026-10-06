@@ -58,7 +58,7 @@ Then keep their jobs page current (`${CLAUDE_PLUGIN_ROOT}/reference/jobs-page.md
 - Match "the third one" or "#12" to the job's number. Repeat the name back as you record it, so a wrong number is caught.
 - Record each one with `--by user` and their words as the note. Their verdict overrides Claude's, and the engine notes a reversal.
 - **"I applied" is recorded with the track skill's "I applied to …" steps** (`run.py apply`), which ask how they applied and whether it's a top pick. Only once they say they have applied. Never assume it.
-- When they give a reason that sounds like a rule ("too far", "no more contract work"), write it in the note as `candidate rule: <their words>`. Don't change any rule now; rule changes are proposed, tested on saved postings and agreed with the user first.
+- When they give a reason that sounds like a rule ("too far", "no more contract work"), write it in the note as `candidate rule: <their words>`. Don't change any rule now: the weekly review brings it up. If they ask to change the rule now, use the tune skill, which shows what the change would do to their saved jobs and saves it only after their yes.
 
 ## Don't
 
