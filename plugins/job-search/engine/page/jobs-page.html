@@ -37,6 +37,7 @@
   --warn: #e6b45f; --warn-soft: #33270f; --bad: #ee8f85; --bad-soft: #3a1a17; color-scheme: dark;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body { margin: 0; padding-inline: 16px; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); }
 .page { max-width: 52rem; margin: 0 auto; padding-block: 28px 64px; display: grid; gap: 36px; }
 h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
@@ -290,7 +291,9 @@ details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; 
     var html = [];
     html.push('<section aria-labelledby="h-waiting"><h2 id="h-waiting">Waiting on you <span class="count">' + data.waiting.length + "</span></h2>" +
       (data.waiting.length ? '<div class="list">' + data.waiting.map(function (j) { return jobCard(j, "waiting"); }).join("") + "</div>"
-        : '<p class="empty">Nothing waiting. New jobs appear here after each check.</p>') + "</section>");
+        : '<p class="empty">Nothing waiting. New jobs appear here after each check.</p>') +
+      (data.more_waiting ? '<p class="lede">And ' + data.more_waiting + " older ones not gone through yet, left off this page to keep it quick. Ask Claude to go through the new ones.</p>" : "") +
+      "</section>");
     html.push('<section aria-labelledby="h-todo"><h2 id="h-todo">To do <span class="count">' + data.todo.length + "</span></h2>" +
       '<p class="lede">Applications ' + ((data.tracking || {}).follow_up_after_days || 5) + " or more days old with no follow-up yet. With no reply after " +
       ((data.tracking || {}).presume_after_days || 21) + " days, an application closes as no reply; a reply after that still counts.</p>" +

@@ -26,6 +26,7 @@ TITLE_SLOT = "__PAGE_TITLE__"
 WAITING = ("worth_applying", "your_call", "new")
 SCREENED_DAYS = 14
 SCREENED_MAX = 60
+MAX_BYTES = 200_000
 # The skeleton a published artifact gets, so the file in the folder is a complete page too.
 DOCUMENT = ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>\n'
@@ -103,7 +104,7 @@ def build(root, clock):
     todo.sort(key=lambda t: (route_order[t["route"]], -(t["days"] or 0)))
 
     name = (s.raw.get("you", {}).get("name") or "").strip()
-    return {
+    return _fit({
         "version": __version__,
         "title": f"{name}'s job search" if name else "My job search",
         "as_of": clock.stamp(),
@@ -116,7 +117,31 @@ def build(root, clock):
         "todo": todo,
         "applications": apps_out,
         "screened": [{**job(k, v), "date": v.get("triaged") or v.get("first_seen", "")} for k, v in screened],
-    }
+        "more_waiting": 0,
+    })
+
+
+def _size(data):
+    return len(json.dumps(data, ensure_ascii=False).encode("utf-8"))
+
+
+def _fit(data):
+    """Keep the page's data under MAX_BYTES, because the page's storage takes at most 256 KiB in one
+    document. Screened-out jobs go first, then long notes are shortened, then the oldest jobs not yet
+    gone through are left off (counted in more_waiting, and still in the folder)."""
+    while _size(data) > MAX_BYTES and data["screened"]:
+        data["screened"] = data["screened"][:len(data["screened"]) // 2]
+    if _size(data) > MAX_BYTES:
+        for item in data["waiting"]:
+            item["note"] = item["note"][:280]
+    unread = [j for j in data["waiting"] if j["status"] == "new"]
+    while _size(data) > MAX_BYTES and unread:
+        drop = unread[len(unread) // 2:] or unread
+        dropped = {id(j) for j in drop}
+        data["waiting"] = [j for j in data["waiting"] if id(j) not in dropped]
+        data["more_waiting"] += len(drop)
+        unread = unread[:len(unread) // 2]
+    return data
 
 
 def _neg_date(s):

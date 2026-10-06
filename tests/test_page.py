@@ -71,6 +71,21 @@ class PageTest(ScanBase):
         self.assertNotIn("<script>alert(1)", html)
         self.assertEqual(html.count("</script>"), 2)  # the data block and the page's own script
 
+    def test_the_data_always_fits_the_pages_storage(self):
+        p = self.folder.load_postings()
+        for i in range(40):
+            p["postings"][f"manual-many-{i}"] = {"status": "new", "company": "Many", "title": f"Job {i}", "first_seen": "2026-09-24",
+                                                 "note": "x" * 2000, "flag": "", "location": "", "url": "", "salary": ""}
+        self.folder.save_postings(p)
+        self.addCleanup(setattr, page, "MAX_BYTES", page.MAX_BYTES)
+        page.MAX_BYTES = 20_000
+        d = page.build(self.root, CLOCK)
+        self.assertLessEqual(page._size(d), page.MAX_BYTES)
+        self.assertEqual(d["screened"], [])
+        self.assertGreater(d["more_waiting"], 0)
+        self.assertEqual(d["counts"]["waiting"], 43)  # the summary still counts them all
+        self.assertEqual(len(d["waiting"]) + d["more_waiting"], 43)
+
     def test_the_template_loads_nothing_from_elsewhere(self):
         template = read(page.TEMPLATE)
         for url in re.findall(r'(?:src|href)="(https?://[^"]+)"', template):
