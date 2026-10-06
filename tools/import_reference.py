@@ -33,6 +33,7 @@ sys.path.insert(0, os.path.join(REPO, "plugins", "job-search", "engine"))
 sys.dont_write_bytecode = True
 
 from jobkit.toml import load_file  # noqa: E402
+from jobkit.track import normalize as normalize_application  # noqa: E402
 from jobkit.tomlwrite import value as toml_value  # noqa: E402
 
 # Reference config.toml [location] keys -> settings.toml [places] keys.
@@ -92,7 +93,8 @@ def applied_date(cell, relative):
 
 def applications(pipeline_text, relative=None):
     """Rows of the first table under '## Applied', in the reference tracker's 8- or 9-column shape:
-    Company | Role | Fit | Level | Pay | Applied | (Followed up) | Status | Note."""
+    Company | Role | Fit | Level | Pay | Applied | (Followed up) | Status | Note. Each is written in the
+    kit's application shape (jobkit/track.py), with the tracker's own status words kept as status_was."""
     m = re.search(r"^## Applied\s*$(.*?)^## ", pipeline_text, re.M | re.S)
     if not m:
         return []
@@ -107,7 +109,7 @@ def applications(pipeline_text, relative=None):
             cells.insert(6, "")
         company, role, fit, level, pay, applied, followed, status, note = cells
         when, estimated = applied_date(applied, relative or {})
-        rows.append({
+        rows.append(normalize_application({
             "company": company,
             "role": _LINK.sub(r"\1", role).strip(),
             "urls": _LINK_URLS.findall(role),
@@ -116,7 +118,7 @@ def applications(pipeline_text, relative=None):
             "applied_date": when,
             "applied_date_estimated": estimated,
             "followed_up": followed, "status": status, "note": note,
-        })
+        }))
     return rows
 
 

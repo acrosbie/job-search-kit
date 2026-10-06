@@ -13,6 +13,9 @@ pattern matches nothing, so a half-written file can't wave every job through.
     [pay]          reject_if_top_below (0 turns it off)
     [workday]      country_facet, max_total
     [triage]       cooldown_days: one application per company in this many days (default 30)
+    [tracking]     follow_up_after_days (5), presume_after_days (21): when an application is due a follow-up,
+                   and when one with no reply becomes presumed rejected
+    [page]         url, version, route: the user's jobs page artifact, which Claude makes and keeps current
     [labels]       wording for every flag and reason (defaults below)
 """
 
@@ -31,10 +34,13 @@ DEFAULT_LABELS = {
     "flag_contract": "contract or temporary ({phrase})",
     "flag_onsite": 'in the office 4 or 5 days a week ("{quote}")',
     "flag_applied": "you already applied here on {applied}",
+    "flag_pasted": "the same job as one you pasted in on {date}",
+    "flag_title": "not one of the titles your search looks for",
     "reason_in_country": "Not a fit: it's in {location}, outside where you'd commute, and the posting doesn't say it's remote.",
     "reason_remote_only": "Not a fit: {location} only works for you if the job is remote, and the posting doesn't say it is.",
     "reason_phrase": "Not a fit: the posting talks about {hits}, which you said to avoid.",
     "reason_pay": "Not a fit: the posted pay tops out at ${top_k}K (${low_k}K to ${top_k}K), below your ${line_k}K line.",
+    "reason_abroad": "Not a fit: it's in {location}, outside the places you'd work.",
 }
 
 
@@ -73,6 +79,9 @@ class Settings:
     pay_top_below: int
     workday: dict
     cooldown_days: int
+    follow_up_after_days: int
+    presume_after_days: int
+    page: dict
     labels: dict
 
     def label(self, name, **values):
@@ -85,7 +94,7 @@ def parse(raw):
                             min_distinct=int(r.get("min_distinct", 2)), same_as=dict(r.get("same_as", {})),
                             reason=r.get("reason", ""))
                for r in raw.get("phrase_rejects", [])]
-    wd = raw.get("workday", {})
+    wd, tr = raw.get("workday", {}), raw.get("tracking", {})
     return Settings(
         raw=raw,
         timezone=raw.get("you", {}).get("timezone", ""),
@@ -99,6 +108,9 @@ def parse(raw):
         pay_top_below=int(raw.get("pay", {}).get("reject_if_top_below", 0)),
         workday={"country_facet": wd.get("country_facet", ""), "max_total": int(wd.get("max_total", 2000))},
         cooldown_days=int(raw.get("triage", {}).get("cooldown_days", 30)),
+        follow_up_after_days=int(tr.get("follow_up_after_days", 5)),
+        presume_after_days=int(tr.get("presume_after_days", 21)),
+        page={"url": "", "version": "", "route": "", **raw.get("page", {})},
         labels={**DEFAULT_LABELS, **raw.get("labels", {})},
     )
 

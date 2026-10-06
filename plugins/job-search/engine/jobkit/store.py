@@ -3,14 +3,17 @@
     data/postings.json        every matched posting and its status, plus each board's health
     data/postings.backup.json the previous postings.json, rewritten before every save
     data/postings/<key>.md    one saved description per posting
-    data/applications.json    every application (read here only for the "already applied" flag)
+    data/applications.json    every application and what happened next (see track.py)
+    data/applications.backup.json  the previous applications.json
     data/decisions.log        every verdict, by rule, Claude or the user; one JSON object a line, append-only
     data/runs.log             one JSON object per scan, append-only
     data/titles-latest.tsv    every title read on the last scan, for testing a title change on real data
+    data/page.json            what the jobs page shows (see page.py)
+    My jobs.html              the jobs page as a file, at the top of the folder
 
 Nothing here deletes a file. Cowork's workspace on the user's computer isn't allowed to, and
 replacing a file by renaming over it may count as deleting. Files are written in place, after the
-new content is complete, with the previous postings.json kept as a backup.
+new content is complete, with the previous postings.json and applications.json kept as backups.
 """
 
 import json
@@ -28,6 +31,9 @@ class Folder:
         self.backup_json = os.path.join(self.data, "postings.backup.json")
         self.descriptions = os.path.join(self.data, "postings")
         self.applications_json = os.path.join(self.data, "applications.json")
+        self.applications_backup_json = os.path.join(self.data, "applications.backup.json")
+        self.page_json = os.path.join(self.data, "page.json")
+        self.page_html = os.path.join(root, "My jobs.html")
         self.decisions_log = os.path.join(self.data, "decisions.log")
         self.runs_log = os.path.join(self.data, "runs.log")
         self.titles_tsv = os.path.join(self.data, "titles-latest.tsv")
@@ -136,9 +142,16 @@ class Folder:
     # ------------------------------------------------------------ applications
 
     def load_applications(self):
+        """The records as written. track.load() is the same list with older shapes brought up to date."""
         if not os.path.exists(self.applications_json):
             return []
         return json.loads(self._read(self.applications_json)).get("applications", [])
+
+    def save_applications(self, applications):
+        text = json.dumps({"applications": applications}, indent=1, ensure_ascii=False)
+        if os.path.exists(self.applications_json):
+            self._write(self.applications_backup_json, self._read(self.applications_json))
+        self._write(self.applications_json, text)
 
 
 def _norm_title(s):

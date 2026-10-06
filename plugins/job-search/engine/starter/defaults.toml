@@ -14,3 +14,15 @@ max_total = 2000
 
 [triage]
 cooldown_days = 30
+
+# Follow up an application this many days after sending it; with no reply this many days after, it is
+# presumed rejected (never one with a reply, screen, interview or offer).
+[tracking]
+follow_up_after_days = 5
+presume_after_days = 21
+
+# The user's jobs page, made by Claude in their own Claude account.
+[page]
+url = ""
+version = ""
+route = ""

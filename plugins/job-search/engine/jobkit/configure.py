@@ -10,6 +10,7 @@ import re
 
 from . import settings, tomlwrite
 from .boards import READERS
+from .errors import Refused
 from .toml import load_file
 
 PATTERN, NUMBER, TEXT = "pattern", "number", "text"
@@ -22,24 +23,22 @@ KNOWN = {
     "pay": {"reject_if_top_below": NUMBER},
     "workday": {"country_facet": PATTERN, "max_total": NUMBER},
     "triage": {"cooldown_days": NUMBER},
+    "tracking": {"follow_up_after_days": NUMBER, "presume_after_days": NUMBER},
+    "page": {"url": TEXT, "version": TEXT, "route": TEXT},
     "labels": {k: TEXT for k in settings.DEFAULT_LABELS},
 }
 
 # The placeholders each label may use.
 LABEL_FIELDS = {
-    "flag_contract": {"phrase"}, "flag_onsite": {"quote"}, "flag_applied": {"applied"},
+    "flag_contract": {"phrase"}, "flag_onsite": {"quote"}, "flag_applied": {"applied"}, "flag_pasted": {"date"},
     "reason_in_country": {"location"}, "reason_remote_only": {"location"}, "reason_phrase": {"hits"},
-    "reason_pay": {"top_k", "low_k", "line_k"},
+    "reason_pay": {"top_k", "low_k", "line_k"}, "reason_abroad": {"location"},
 }
 
 # What each board system needs in its companies.toml entry.
 NEEDS = {"greenhouse": ("token",), "ashby": ("token",), "lever": ("token",), "smartrecruiters": ("token",),
          "rippling": ("token",), "workday": ("host", "tenant", "site"), "careers_api": ("host",),
          "talentbrew": ("host",), "atlassian": (), "himalayas": ("queries",), "manual": ("careers_url",)}
-
-
-class Refused(ValueError):
-    """A change that would make the settings wrong. The message says why, in plain words."""
 
 
 def _paths(folder):

@@ -13,15 +13,13 @@ import re
 import sys
 
 from . import __version__, net, scan, settings, store
-from . import configure, titles
+from . import configure, titles, track, verdicts
 from . import init as starter
 from . import queue as triage_queue
 from .clock import Clock
 from .discover import discover
+from .errors import NotFound, Refused
 from .text import salary_from
-
-# A verdict that contradicts an earlier one, for spotting when the user overturns Claude or a rule.
-OPPOSED = {"worth_applying": {"not_a_fit", "skipped"}, "not_a_fit": {"worth_applying", "applied"}}
 
 
 def _out(obj):
@@ -66,36 +64,39 @@ def cmd_show(a):
 
 
 def cmd_mark(a):
-    folder = store.Folder(a.folder)
-    state = folder.load_postings()
-    entry = state["postings"].get(a.key)
-    if not entry:
-        print(f"unknown key {a.key}", file=sys.stderr)
-        return 1
-    if a.status == "applied" and a.by != "user":
-        print("only the user marks a posting applied", file=sys.stderr)
-        return 3
-    earlier = [d for d in folder.read_decisions() if d.get("key") == a.key]
-    if a.by != "user" and any(d.get("by") == "user" for d in earlier) and not a.force:
-        last = [d for d in earlier if d.get("by") == "user"][-1]
-        print(f"the user already decided this one ({last.get('verdict')} on {last.get('date')}); their decision stands",
-              file=sys.stderr)
-        return 3
-    clk = _clock(a.folder)
-    reversal = ""
-    if a.by == "user" and earlier and a.status in OPPOSED.get(earlier[-1].get("verdict"), set()):
-        reversal = earlier[-1].get("verdict")
-    entry["status"] = a.status
-    entry["triaged"] = clk.today()
-    if a.note:
-        entry["note"] = a.note
-    folder.save_postings(state)
-    row = {"at": clk.stamp(), "date": clk.today(), "key": a.key, "company": entry["company"], "title": entry["title"],
-           "verdict": a.status, "reason": a.note, "by": a.by}
-    if reversal:
-        row["reverses"] = reversal
-    folder.log_decision(row)
-    _out(row)
+    if a.status == "applied":
+        if a.by != "user":
+            raise Refused("only the user marks a posting applied")
+        _out(track.apply(a.folder, _clock(a.folder), key=a.key, note=a.note))
+        return 0
+    _out(verdicts.mark(a.folder, a.key, a.status, a.by, note=a.note, force=a.force, clock=_clock(a.folder)))
+    return 0
+
+
+def _yes_no(v):
+    return None if v is None else v == "yes"
+
+
+def cmd_apply(a):
+    _out(track.apply(a.folder, _clock(a.folder), key=a.key or "", company=a.company or "", role=a.role or "",
+                     url=a.url or "", date=a.date or "", estimated=a.estimated, channel=a.channel or "",
+                     top_pick=_yes_no(a.top_pick), contact=a.contact or "", note=a.note or "", choice=a.choice or ""))
+    return 0
+
+
+def cmd_track(a):
+    _out(track.track(a.folder, _clock(a.folder), a.id, status=a.status or "", date=a.date or "", note=a.note or "",
+                     contact=a.contact, top_pick=_yes_no(a.top_pick), channel=a.channel, choice=a.choice or ""))
+    return 0
+
+
+def cmd_applications(a):
+    _out({"applications": track.listing(a.folder, _clock(a.folder))})
+    return 0
+
+
+def cmd_due(a):
+    _out(track.due(a.folder, _clock(a.folder)))
     return 0
 
 
@@ -229,6 +230,41 @@ def parser():
     s.add_argument("--force", action="store_true", help="overwrite the user's own decision (only when they ask)")
     s.set_defaults(func=cmd_mark)
 
+    s = sub.add_parser("apply", help="record that the user applied (the user only)")
+    s.add_argument("--folder", required=True)
+    s.add_argument("key", nargs="?", help="the posting's key; or give --company and --role")
+    s.add_argument("--company")
+    s.add_argument("--role")
+    s.add_argument("--url")
+    s.add_argument("--date", help="YYYY-MM-DD, the day they applied (default today)")
+    s.add_argument("--estimated", action="store_true", help="the date is only roughly known")
+    s.add_argument("--channel", choices=track.CHANNELS)
+    s.add_argument("--top-pick", choices=("yes", "no"))
+    s.add_argument("--contact")
+    s.add_argument("--note")
+    s.add_argument("--choice", help="the id of the jobs-page click this came from")
+    s.set_defaults(func=cmd_apply)
+
+    s = sub.add_parser("track", help="record what happened to an application")
+    s.add_argument("--folder", required=True)
+    s.add_argument("id", help="the application's id or its posting's key")
+    s.add_argument("status", nargs="?", choices=tuple(x for x in track.STATUSES if x != "presumed_rejected") + ("followed_up",))
+    s.add_argument("--date", help="YYYY-MM-DD, the day it happened (default today)")
+    s.add_argument("--note")
+    s.add_argument("--contact", help="a person at the company the user named")
+    s.add_argument("--top-pick", choices=("yes", "no"))
+    s.add_argument("--channel", choices=track.CHANNELS)
+    s.add_argument("--choice", help="the id of the jobs-page click this came from")
+    s.set_defaults(func=cmd_track)
+
+    s = sub.add_parser("applications", help="every application, with its day count and what's due")
+    s.add_argument("--folder", required=True)
+    s.set_defaults(func=cmd_applications)
+
+    s = sub.add_parser("due", help="close applications at day 21, then list the follow-ups due")
+    s.add_argument("--folder", required=True)
+    s.set_defaults(func=cmd_due)
+
     s = sub.add_parser("add", help="register a posting saved by hand")
     s.add_argument("--folder", required=True)
     s.add_argument("file")
@@ -310,6 +346,9 @@ def main(argv):
     except FileNotFoundError as e:
         print(f"missing file: {e.filename}", file=sys.stderr)
         return 1
-    except configure.Refused as e:
+    except NotFound as e:
+        print(str(e), file=sys.stderr)
+        return 1
+    except Refused as e:
         print(str(e), file=sys.stderr)
         return 3

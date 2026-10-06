@@ -9,7 +9,7 @@ import sys
 import tempfile
 import unittest
 
-from jobkit import settings, store
+from jobkit import settings, store, track
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools"))
 import import_reference  # noqa: E402
@@ -150,6 +150,7 @@ class ImportTest(unittest.TestCase):
                          ("Head of Support", "1w", "2026-09-05", True))
         posting = {"company": "Acme", "title": "Support Operations Manager", "url": ""}
         self.assertEqual(store.application_for(posting, apps)["applied"], "2026-09-10")
+        self.assertTrue(all(a["id"] and a["status"] in track.STATUSES and a["history"] for a in apps))
 
     def test_postings_and_decisions(self):
         out = os.path.join(self.dir, "kit")
