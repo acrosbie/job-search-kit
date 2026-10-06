@@ -9,6 +9,7 @@
     data/runs.log             one JSON object per scan, append-only
     data/titles-latest.tsv    every title read on the last scan, for testing a title change on real data
     data/page.json            what the jobs page shows (see page.py)
+    data/jobs-page.html       the jobs page with its data built in, for Claude to publish
     My jobs.html              the jobs page as a file, at the top of the folder
 
 Nothing here deletes a file. Cowork's workspace on the user's computer isn't allowed to, and
@@ -33,6 +34,7 @@ class Folder:
         self.applications_json = os.path.join(self.data, "applications.json")
         self.applications_backup_json = os.path.join(self.data, "applications.backup.json")
         self.page_json = os.path.join(self.data, "page.json")
+        self.page_publish_html = os.path.join(self.data, "jobs-page.html")
         self.page_html = os.path.join(root, "My jobs.html")
         self.decisions_log = os.path.join(self.data, "decisions.log")
         self.runs_log = os.path.join(self.data, "runs.log")

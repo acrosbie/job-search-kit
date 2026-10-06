@@ -1,0 +1,464 @@
+<title>__PAGE_TITLE__</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Mono:wght@500&family=Public+Sans:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+/* Layout: one reading column. A summary line, then the three lists the user acts on (waiting on you,
+   to do, applications), then what was screened out, then the choices waiting to reach Claude.
+   Statuses are rubber-stamp labels in the stamp-pad blue of an application form. */
+:root {
+  --bg: #f2f5f8;
+  --surface: #ffffff;
+  --ink: #16202a;
+  --muted: #5a6672;
+  --line: #d6dde4;
+  --accent: #2a4fa3;
+  --accent-soft: #e2e9f7;
+  --good: #1d774a;
+  --good-soft: #e0f1e7;
+  --warn: #8f5500;
+  --warn-soft: #faefd9;
+  --bad: #a03a31;
+  --bad-soft: #f7e2df;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Public Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f151b; --surface: #17202a; --ink: #e5ebf0; --muted: #98a5b1; --line: #29343f;
+    --accent: #93abf0; --accent-soft: #1d2943; --good: #6cc69a; --good-soft: #14301f;
+    --warn: #e6b45f; --warn-soft: #33270f; --bad: #ee8f85; --bad-soft: #3a1a17; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f151b; --surface: #17202a; --ink: #e5ebf0; --muted: #98a5b1; --line: #29343f;
+  --accent: #93abf0; --accent-soft: #1d2943; --good: #6cc69a; --good-soft: #14301f;
+  --warn: #e6b45f; --warn-soft: #33270f; --bad: #ee8f85; --bad-soft: #3a1a17; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; padding-inline: 16px; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); }
+.page { max-width: 52rem; margin: 0 auto; padding-block: 28px 64px; display: grid; gap: 36px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(1.7rem, 4vw, 2.3rem); line-height: 1.15; letter-spacing: -0.01em; }
+h2 { font-size: 1.25rem; display: flex; align-items: baseline; gap: 10px; }
+h2 .count { font: 500 0.85rem var(--mono); color: var(--muted); }
+h3 { font-size: 1.05rem; line-height: 1.3; }
+a { color: var(--accent); text-underline-offset: 2px; }
+a:hover { text-decoration-thickness: 2px; }
+p { margin: 0; }
+.muted { color: var(--muted); }
+.mono, .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.num { font-size: 0.82rem; color: var(--muted); }
+header { display: grid; gap: 10px; }
+.summary { color: var(--muted); }
+.summary strong { color: var(--ink); font-weight: 600; }
+.mode { padding: 10px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); font-size: 0.92rem; }
+.mode.warn { border-color: var(--warn); background: var(--warn-soft); }
+.sections { display: grid; gap: 36px; min-width: 0; }
+section { display: grid; gap: 14px; min-width: 0; }
+.lede { color: var(--muted); max-width: 65ch; }
+.list { display: grid; gap: 12px; }
+.item { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; display: grid; gap: 8px; min-width: 0; }
+.item.chosen { border-style: dashed; }
+.item-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+.meta { color: var(--muted); font-size: 0.92rem; overflow-wrap: anywhere; }
+.note { max-width: 65ch; overflow-wrap: anywhere; }
+.flag { font-size: 0.9rem; color: var(--warn); }
+.stamp { display: inline-block; font: 600 0.7rem/1 var(--body); letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 4px 7px 3px; border: 1.5px solid currentColor; border-radius: 3px; white-space: nowrap; }
+.s-worth, .s-offer, .s-interview, .s-screen, .s-replied { color: var(--good); background: var(--good-soft); }
+.s-call, .s-new, .s-applied { color: var(--accent); background: var(--accent-soft); }
+.s-closing, .s-find { color: var(--warn); background: var(--warn-soft); }
+.s-out, .s-rejected, .s-presumed, .s-withdrawn, .s-closed { color: var(--muted); background: transparent; }
+.s-send { color: var(--good); background: var(--good-soft); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+button, select, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; border: 1px solid var(--line); background: var(--bg); border-radius: 5px; padding: 6px 12px; min-height: 36px; }
+button:hover { border-color: var(--accent); }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 600; }
+button.link { border: 0; background: none; padding: 0; min-height: 0; color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visible, summary:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px; }
+.panel { display: grid; gap: 10px; padding: 12px; border-radius: 5px; background: var(--bg); border: 1px solid var(--line); }
+.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 10px; }
+label { display: grid; gap: 4px; font-size: 0.88rem; color: var(--muted); }
+select, input, textarea { background: var(--surface); border: 1px solid var(--line); border-radius: 5px; padding: 7px 9px; min-width: 0; width: 100%; }
+.chosen-line { font-size: 0.92rem; color: var(--accent); }
+.apps { display: grid; gap: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+.app { display: grid; grid-template-columns: 3.2rem minmax(0, 1fr) auto; gap: 4px 12px; padding: 12px 14px; border-top: 1px solid var(--line); align-items: start; }
+.app:first-child { border-top: 0; }
+.app .when { grid-column: 2; color: var(--muted); font-size: 0.9rem; }
+.app .side { grid-column: 3; grid-row: 1; justify-self: end; }
+.app .more { grid-column: 2 / -1; }
+@media (max-width: 34rem) {
+  .app { grid-template-columns: 2.6rem minmax(0, 1fr); }
+  .app .side { grid-column: 2; grid-row: auto; justify-self: start; }
+}
+details { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px 16px; }
+summary { cursor: pointer; font-family: var(--display); font-weight: 600; font-size: 1.05rem; }
+details .list { margin-top: 12px; gap: 0; }
+details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; padding-inline: 0; }
+.empty { padding: 18px; border: 1px dashed var(--line); border-radius: 6px; color: var(--muted); }
+.choices { position: sticky; bottom: env(safe-area-inset-bottom, 0px); background: var(--surface); border: 1px solid var(--accent);
+  border-radius: 6px; padding: 14px 16px; display: grid; gap: 10px; box-shadow: 0 6px 24px rgb(0 0 0 / 0.12); }
+.choices ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 4px; }
+.choices textarea { min-height: 7rem; font: 0.8rem/1.4 var(--mono); }
+.error { color: var(--bad); }
+@media (prefers-reduced-motion: no-preference) { button { transition: border-color 0.12s; } }
+</style>
+
+<div class="page">
+  <header>
+    <h1 id="title">Your job search</h1>
+    <p class="summary" id="summary">Loading your jobs.</p>
+    <p class="mode" id="mode" hidden></p>
+  </header>
+  <main id="app" class="sections"></main>
+  <section class="choices" id="choices" hidden></section>
+</div>
+
+<script type="application/json" id="jobs-data">__JOBS_DATA__</script>
+<script>
+(function () {
+  "use strict";
+
+  var ACTIONS = {
+    want: "Want it", skip: "Skip", applied: "I applied", followed_up: "I followed up", replied: "They replied",
+    screen: "Screen booked", interview: "Interview", offer: "Offer", rejected: "Turned down", withdrawn: "I withdrew",
+    contact: "Contact"
+  };
+  var VERDICT = {
+    worth_applying: ["Worth applying", "s-worth"], your_call: ["Your call", "s-call"], "new": ["New", "s-new"],
+    not_a_fit: ["Not a fit", "s-out"]
+  };
+  var STATUS = {
+    applied: ["Applied", "s-applied"], replied: ["Replied", "s-replied"], screen: ["Screen", "s-screen"],
+    interview: ["Interview", "s-interview"], offer: ["Offer", "s-offer"], rejected: ["Turned down", "s-rejected"],
+    presumed_rejected: ["No reply", "s-presumed"], withdrawn: ["Withdrew", "s-withdrawn"], closed: ["Closed", "s-closed"]
+  };
+  var ROUTE = { send: ["Follow up", "s-send"], find_person: ["Find a person", "s-find"], close: ["Nothing to send", "s-closing"] };
+  var CHANNELS = [["", "Not sure"], ["company_site", "On the company's site"], ["linkedin", "Through LinkedIn"],
+                  ["referral", "Through someone I know"], ["other", "Some other way"]];
+  var data = null;
+  try { data = JSON.parse(document.getElementById("jobs-data").textContent); } catch (e) { data = null; }
+  // Clicks kept in this browser belong to this copy of the page; a newer copy starts afresh.
+  var LOCAL = "job-search-choices " + (data ? data.as_of : "");
+  var mode = "file";          // "file": opened from the folder; "saving": an artifact whose clicks save
+  var clicks = null;          // the store's collection of clicks, when saving
+  var choices = {};           // id -> choice
+  var open = null;            // {kind, ref, action} of the panel being filled in
+  var draft = {};             // what has been typed into that panel
+  var problem = "";
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function day(iso) {
+    if (!iso) return "";
+    var d = new Date(String(iso).slice(0, 10) + "T12:00:00");
+    return isNaN(d) ? iso : d.toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  }
+  function stamp(pair) { return '<span class="stamp ' + pair[1] + '">' + esc(pair[0]) + "</span>"; }
+  function newId() { return "c-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7); }
+
+  function latestFor(field, value) {
+    var best = null;
+    Object.keys(choices).forEach(function (id) {
+      var c = choices[id];
+      if (c[field] === value && (!best || c.at > best.at)) best = c;
+    });
+    return best;
+  }
+
+  // ---------------------------------------------------------------- rendering
+
+  function panel(kind, ref, action) {
+    if (!open || open.kind !== kind || open.ref !== ref || open.action !== action) return "";
+    var f = [];
+    if (action === "applied") {
+      f.push('<label for="f-channel">How did you apply?<select id="f-channel" data-field="channel">' +
+        CHANNELS.map(function (c) { return '<option value="' + c[0] + '"' + (draft.channel === c[0] ? " selected" : "") + ">" + c[1] + "</option>"; }).join("") +
+        "</select></label>");
+      f.push('<label for="f-top">One of your top picks?<select id="f-top" data-field="top_pick">' +
+        [["", "Not sure"], ["yes", "Yes"], ["no", "No"]].map(function (c) { return '<option value="' + c[0] + '"' + (draft.top_pick === c[0] ? " selected" : "") + ">" + c[1] + "</option>"; }).join("") +
+        "</select></label>");
+    }
+    if (kind === "app") {
+      f.push('<label for="f-contact">A person there (optional)<input id="f-contact" data-field="contact" maxlength="80" placeholder="Their name" value="' + esc(draft.contact || "") + '"></label>');
+    }
+    var hint = action === "skip" ? "Why? (optional, it helps tune your rules)" : "Anything to add? (optional)";
+    f.push('<label for="f-note">' + hint + '<input id="f-note" data-field="note" maxlength="300" value="' + esc(draft.note || "") + '"></label>');
+    return '<div class="panel"><div class="fields">' + f.join("") + '</div><div class="actions">' +
+      '<button type="button" class="primary" data-save>Save: ' + esc(ACTIONS[action]) + '</button>' +
+      '<button type="button" data-cancel>Cancel</button></div></div>';
+  }
+
+  function chosenLine(c) {
+    if (!c) return "";
+    var state = c.recorded ? "recorded by Claude" : (mode === "saving" ? "saved; Claude records it next time you talk" : "not saved yet; copy your choices below");
+    return '<p class="chosen-line">You chose: ' + esc(ACTIONS[c.action] || c.action) + " (" + state + ")" +
+      (c.recorded ? "" : ' <button type="button" class="link" data-undo="' + esc(c.id) + '">Undo</button>') + "</p>";
+  }
+
+  function jobCard(j, kind) {
+    var verdict = VERDICT[j.status] || ["", ""];
+    var c = latestFor("key", j.key);
+    var meta = [esc(j.company), esc(j.location || "place not stated"), j.salary ? esc(j.salary) : "pay not stated",
+                "found " + day(j.first_seen)];
+    var note = j.note || (j.status === "new" ? "Not gone through yet. Ask Claude to go through the new ones." : "");
+    var buttons = kind === "screened" ? ["want"] : ["want", "skip", "applied"];
+    return '<article class="item' + (c && !c.recorded ? " chosen" : "") + '">' +
+      '<div class="item-head"><span class="num">#' + esc(j.num) + "</span>" + stamp(verdict) + "</div>" +
+      "<h3>" + (j.url ? '<a href="' + esc(j.url) + '" target="_blank" rel="noopener">' + esc(j.title) + "</a>" : esc(j.title)) + "</h3>" +
+      '<p class="meta">' + meta.join(" · ") + "</p>" +
+      (note ? '<p class="note">' + esc(note) + "</p>" : "") +
+      (j.flag ? '<p class="flag">Note: ' + esc(j.flag) + "</p>" : "") +
+      (j.gone ? '<p class="flag">No longer on the company\'s job board since ' + day(j.gone) + ".</p>" : "") +
+      chosenLine(c) +
+      '<div class="actions">' + buttons.map(function (a) {
+        return '<button type="button" data-open="' + a + '" data-kind="job" data-ref="' + esc(j.key) + '">' + ACTIONS[a] + "</button>";
+      }).join("") + "</div>" +
+      buttons.map(function (a) { return panel("job", j.key, a); }).join("") +
+      "</article>";
+  }
+
+  function appRow(a) {
+    var st = STATUS[a.status] || [a.status, "s-closed"];
+    var c = latestFor("app", a.id);
+    var when = "applied " + day(a.applied_date) + (a.estimated ? " (about)" : "") +
+      (a.days != null ? ', day <span class="mono">' + a.days + "</span>" : "") +
+      (a.status === "applied" && a.closes_on ? " · closes " + day(a.closes_on) + " if no reply" : "") +
+      (a.contact ? " · contact " + esc(a.contact) : "") +
+      (a.followed_up ? " · followed up " + day(a.followed_up) : "");
+    var live = ["applied", "replied", "screen", "interview", "offer", "presumed_rejected"].indexOf(a.status) >= 0;
+    var options = ["replied", "screen", "interview", "offer", "rejected", "withdrawn", "followed_up", "contact"];
+    var picked = open && open.kind === "app" && open.ref === a.id ? open.action : "";
+    return '<div class="app"><span class="num">' + (a.num ? "#" + esc(a.num) : "") + "</span>" +
+      '<div><strong>' + esc(a.company) + "</strong>, " +
+      (a.url ? '<a href="' + esc(a.url) + '" target="_blank" rel="noopener">' + esc(a.role) + "</a>" : esc(a.role)) + "</div>" +
+      '<span class="side">' + stamp(st) + "</span>" +
+      '<p class="when">' + when + "</p>" +
+      '<div class="more">' + chosenLine(c) +
+      (live ? '<label for="what-' + esc(a.id) + '">What happened?<select id="what-' + esc(a.id) + '" data-what="' + esc(a.id) + '">' +
+        '<option value="">Choose…</option>' + options.map(function (o) {
+          return '<option value="' + o + '"' + (picked === o ? " selected" : "") + ">" + (o === "contact" ? "Add a contact" : ACTIONS[o]) + "</option>";
+        }).join("") + "</select></label>" : "") +
+      (picked ? panel("app", a.id, picked) : "") + "</div></div>";
+  }
+
+  function todoItem(t) {
+    var r = ROUTE[t.route];
+    var what = t.route === "send"
+      ? "Day " + t.days + ". Follow up with " + esc(t.contact) + ": ask Claude to draft a short note, then send it yourself."
+      : t.route === "find_person"
+        ? "Day " + t.days + ". A top pick with nobody to follow up with. Look for the person who would manage this role, and add their name."
+        : "Day " + t.days + ". Nothing to send without a contact. It closes on " + day(t.closes_on) + " if there's no reply.";
+    return '<article class="item"><div class="item-head"><span class="num">' + (t.num ? "#" + esc(t.num) : "") + "</span>" + stamp(r) + "</div>" +
+      "<h3>" + esc(t.company) + ", " + esc(t.role) + "</h3><p class=\"note\">" + what + "</p>" +
+      '<div class="actions"><button type="button" data-open="followed_up" data-kind="app" data-ref="' + esc(t.id) + '">I followed up</button>' +
+      (t.route !== "send" ? '<button type="button" data-open="contact" data-kind="app" data-ref="' + esc(t.id) + '">Add a contact</button>' : "") +
+      "</div>" + panel("app", t.id, "followed_up") + panel("app", t.id, "contact") + "</article>";
+  }
+
+  function render() {
+    var app = document.getElementById("app");
+    document.getElementById("mode").hidden = false;
+    var modeEl = document.getElementById("mode");
+    modeEl.className = "mode" + (mode === "file" ? " warn" : "");
+    modeEl.innerHTML = mode === "saving"
+      ? "Your clicks save on this page. Claude records them the next time you talk to it."
+      : "This copy of the page can't save your clicks. Make your choices, then use <strong>Copy my choices</strong> at the bottom and paste them into Claude. You can also tell Claude by number, such as “skip #12”.";
+    if (problem) modeEl.innerHTML += '<br><span class="error">' + esc(problem) + "</span>";
+
+    if (!data) {
+      document.getElementById("summary").textContent = "";
+      app.innerHTML = '<p class="empty">Your jobs appear here after Claude next checks your job boards. Ask Claude “show me my jobs page” to fill it in.</p>';
+      renderChoices();
+      return;
+    }
+    document.getElementById("title").textContent = data.title || "Your job search";
+    var k = data.counts || {};
+    document.getElementById("summary").innerHTML = "As of " + esc(day(data.as_of)) + ", " +
+      esc(new Date(data.as_of).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })) + ": " +
+      "<strong>" + (k.waiting || 0) + "</strong> waiting on you, <strong>" + (k.to_do || 0) + "</strong> to do, <strong>" +
+      (k.open || 0) + "</strong> open applications.";
+
+    var html = [];
+    html.push('<section aria-labelledby="h-waiting"><h2 id="h-waiting">Waiting on you <span class="count">' + data.waiting.length + "</span></h2>" +
+      (data.waiting.length ? '<div class="list">' + data.waiting.map(function (j) { return jobCard(j, "waiting"); }).join("") + "</div>"
+        : '<p class="empty">Nothing waiting. New jobs appear here after each check.</p>') + "</section>");
+    html.push('<section aria-labelledby="h-todo"><h2 id="h-todo">To do <span class="count">' + data.todo.length + "</span></h2>" +
+      '<p class="lede">Applications ' + ((data.tracking || {}).follow_up_after_days || 5) + " or more days old with no follow-up yet. With no reply after " +
+      ((data.tracking || {}).presume_after_days || 21) + " days, an application closes as no reply; a reply after that still counts.</p>" +
+      (data.todo.length ? '<div class="list">' + data.todo.map(todoItem).join("") + "</div>" : '<p class="empty">Nothing due.</p>') + "</section>");
+    html.push('<section aria-labelledby="h-apps"><h2 id="h-apps">Applications <span class="count">' + data.applications.length + "</span></h2>" +
+      (data.applications.length ? '<div class="apps">' + data.applications.map(appRow).join("") + "</div>"
+        : '<p class="empty">No applications yet. When you apply, tell Claude or press I applied on the job.</p>') + "</section>");
+    if (data.screened.length) {
+      html.push('<details><summary>Screened out in the last two weeks (' + data.screened.length + ")</summary>" +
+        '<p class="lede" style="margin-top:8px">Each with the reason. Press Want it on any you disagree with; your rules get reviewed against these.</p>' +
+        '<div class="list">' + data.screened.map(function (j) { return jobCard(j, "screened"); }).join("") + "</div></details>");
+    }
+    var wasOpen = document.querySelector("details") && document.querySelector("details").open;
+    app.innerHTML = html.join("");
+    if (wasOpen || (open && open.kind === "job" && data.screened.some(function (j) { return j.key === open.ref; }))) {
+      var d = app.querySelector("details"); if (d) d.open = true;
+    }
+    renderChoices();
+  }
+
+  function pending() {
+    return Object.keys(choices).map(function (id) { return choices[id]; })
+      .filter(function (c) { return !c.recorded; }).sort(function (a, b) { return a.at < b.at ? -1 : 1; });
+  }
+
+  function choiceText(list) {
+    var lines = ["My job choices:"];
+    list.forEach(function (c) {
+      var bits = [];
+      if (c.channel) bits.push(CHANNELS.filter(function (x) { return x[0] === c.channel; })[0][1].toLowerCase());
+      if (c.top_pick) bits.push(c.top_pick === "yes" ? "a top pick" : "not a top pick");
+      if (c.contact) bits.push("contact " + c.contact);
+      if (c.note) bits.push("“" + c.note + "”");
+      lines.push("- " + (c.num ? "#" + c.num + " " : "") + c.label + ": " + ACTIONS[c.action] + (bits.length ? " (" + bits.join(", ") + ")" : ""));
+    });
+    lines.push("[choices: " + JSON.stringify(list) + "]");
+    return lines.join("\n");
+  }
+
+  function renderChoices() {
+    var box = document.getElementById("choices");
+    var list = pending();
+    box.hidden = !list.length;
+    if (!list.length) { box.innerHTML = ""; return; }
+    var items = "<ul>" + list.map(function (c) {
+      return "<li>" + (c.num ? '<span class="mono">#' + esc(c.num) + "</span> " : "") + esc(c.label) + ": " + esc(ACTIONS[c.action]) + "</li>";
+    }).join("") + "</ul>";
+    box.innerHTML = mode === "saving"
+      ? "<strong>Saved, waiting for Claude (" + list.length + ")</strong>" + items +
+        '<p class="muted">Claude records these the next time you talk to it.</p>'
+      : "<strong>Your choices (" + list.length + ")</strong>" + items +
+        '<div class="actions"><button type="button" class="primary" data-copy>Copy my choices</button></div>' +
+        '<p class="muted" id="copy-note">Then paste them into Claude.</p>' +
+        '<textarea id="copy-text" readonly hidden aria-label="Your choices, to copy"></textarea>';
+  }
+
+  // ---------------------------------------------------------------- saving
+
+  function labelFor(kind, ref) {
+    var list = kind === "job" ? data.waiting.concat(data.screened) : data.applications;
+    var x = list.filter(function (i) { return (kind === "job" ? i.key : i.id) === ref; })[0] || {};
+    return { num: x.num || null, label: (x.company || "") + ", " + (x.title || x.role || "") };
+  }
+
+  function saveLocal() {
+    try { localStorage.setItem(LOCAL, JSON.stringify(choices)); } catch (e) { /* a private window: kept until the page closes */ }
+  }
+
+  function loadLocal() {
+    try { choices = JSON.parse(localStorage.getItem(LOCAL) || "{}") || {}; } catch (e) { choices = {}; }
+  }
+
+  function save() {
+    var l = labelFor(open.kind, open.ref);
+    var c = { id: newId(), at: new Date().toISOString(), action: open.action, num: l.num, label: l.label,
+              note: (draft.note || "").trim(), channel: draft.channel || "", top_pick: draft.top_pick || "",
+              contact: (draft.contact || "").trim(), recorded: "" };
+    c[open.kind === "job" ? "key" : "app"] = open.ref;
+    if (c.action === "contact" && !c.contact) { problem = "Add the person's name before saving."; render(); return; }
+    choices[c.id] = c;
+    open = null; draft = {}; problem = "";
+    if (mode === "saving") {
+      clicks.doc(c.id).set(c).catch(function (e) {
+        problem = "That click didn't save" + (e && e.code === "quota_exceeded" ? ": this page's storage is full." : ". Try again, or tell Claude in chat.");
+        delete choices[c.id]; render();
+      });
+    } else {
+      saveLocal();
+    }
+    render();
+  }
+
+  function undo(id) {
+    var c = choices[id];
+    if (!c || c.recorded) return;
+    delete choices[id];
+    if (mode === "saving") clicks.doc(id).delete().catch(function () { problem = "Couldn't undo that one. Tell Claude in chat instead."; render(); });
+    else saveLocal();
+    render();
+  }
+
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("button");
+    if (!t) return;
+    if (t.hasAttribute("data-open")) {
+      open = { kind: t.getAttribute("data-kind"), ref: t.getAttribute("data-ref"), action: t.getAttribute("data-open") };
+      draft = {}; problem = ""; render();
+      var first = document.querySelector(".panel select, .panel input"); if (first) first.focus();
+    } else if (t.hasAttribute("data-save")) {
+      save();
+    } else if (t.hasAttribute("data-cancel")) {
+      open = null; draft = {}; render();
+    } else if (t.hasAttribute("data-undo")) {
+      undo(t.getAttribute("data-undo"));
+    } else if (t.hasAttribute("data-copy")) {
+      var text = choiceText(pending());
+      var area = document.getElementById("copy-text");
+      var done = function () { document.getElementById("copy-note").textContent = "Copied. Now paste them into Claude."; };
+      var fallback = function () {
+        area.hidden = false; area.value = text; area.focus(); area.select();
+        document.getElementById("copy-note").textContent = "Select all of this text, copy it, and paste it into Claude.";
+      };
+      try { navigator.clipboard.writeText(text).then(done, fallback); } catch (err) { fallback(); }
+    }
+  });
+  document.addEventListener("input", function (e) {
+    var f = e.target.getAttribute && e.target.getAttribute("data-field");
+    if (f) draft[f] = e.target.value;
+  });
+  document.addEventListener("change", function (e) {
+    var f = e.target.getAttribute("data-field");
+    if (f) { draft[f] = e.target.value; return; }
+    var app = e.target.getAttribute("data-what");
+    if (app) {
+      open = e.target.value ? { kind: "app", ref: app, action: e.target.value } : null;
+      draft = {}; problem = ""; render();
+    }
+  });
+
+  // ---------------------------------------------------------------- connecting to the page's storage
+
+  function newer(a, b) { return !b || Date.parse(a.as_of || 0) > Date.parse(b.as_of || 0); }
+
+  function connect() {
+    var c = window.claude;
+    if (!c || typeof c.use !== "function") { loadLocal(); render(); return; }
+    Promise.all([c.use("db"), c.use("user")]).then(function (got) {
+      var db = got[0], user = got[1];
+      if (!db || !user) { loadLocal(); render(); return null; }
+      return user.id().then(function (uid) {
+        if (!uid) { loadLocal(); render(); return; }
+        var pageDoc = db.doc("data/users/" + uid + "/page");
+        clicks = pageDoc.collection("clicks");
+        mode = "saving";
+        pageDoc.onSnapshot(function (snap) {
+          var d = snap.exists ? snap.data() : null;
+          if (d && d.waiting && newer(d, data)) { data = d; render(); }
+        }, function () {});
+        clicks.onSnapshot(function (qs) {
+          var next = {};
+          qs.docs.forEach(function (doc) { var v = doc.data(); next[doc.id] = Object.assign({}, v, { id: doc.id }); });
+          choices = next; render();
+        }, function () { mode = "file"; loadLocal(); render(); });
+        render();
+      });
+    }).catch(function () { loadLocal(); render(); });
+  }
+
+  render();
+  connect();
+})();
+</script>

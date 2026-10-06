@@ -19,9 +19,9 @@ def last_user_decision(decisions, key):
     return mine[-1] if mine else None
 
 
-def mark(root, key, status, by, note="", force=False, clock=None, choice=""):
+def mark(root, key, status, by, note="", force=False, clock=None, choice="", at=""):
     """Record one verdict and return the decisions.log row. `choice` is the id of a click on the jobs
-    page, kept so the same click is never recorded twice."""
+    page, kept so the same click is never recorded twice, and `at` the time it was made (default now)."""
     folder = store.Folder(root)
     state = folder.load_postings()
     entry = state["postings"].get(key)
@@ -39,12 +39,13 @@ def mark(root, key, status, by, note="", force=False, clock=None, choice=""):
     reversal = ""
     if by == "user" and earlier and status in OPPOSED.get(earlier[-1].get("verdict"), set()):
         reversal = earlier[-1].get("verdict")
+    at = at or clk.stamp()
     entry["status"] = status
-    entry["triaged"] = clk.today()
+    entry["triaged"] = at[:10]
     if note:
         entry["note"] = note
     folder.save_postings(state)
-    row = {"at": clk.stamp(), "date": clk.today(), "key": key, "company": entry["company"], "title": entry["title"],
+    row = {"at": at, "date": at[:10], "key": key, "company": entry["company"], "title": entry["title"],
            "verdict": status, "reason": note, "by": by}
     if reversal:
         row["reverses"] = reversal

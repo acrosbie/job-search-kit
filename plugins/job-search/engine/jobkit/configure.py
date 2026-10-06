@@ -16,7 +16,7 @@ from .toml import load_file
 PATTERN, NUMBER, TEXT = "pattern", "number", "text"
 
 KNOWN = {
-    "you": {"timezone": TEXT},
+    "you": {"timezone": TEXT, "name": TEXT},
     "titles": {"function": PATTERN, "level": PATTERN, "exclude": PATTERN, "field_words": PATTERN},
     "places": {k: PATTERN for k in ("remote", "hybrid_ok", "remote_only", "in_country", "country_wide", "abroad")},
     "description": {k: PATTERN for k in ("remote_language", "contract", "onsite_days", "onsite_place")},

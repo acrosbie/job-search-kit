@@ -130,8 +130,8 @@ def level_of(role, s):
     return m.group(0).strip().lower() if m else ""
 
 
-def _event(clock, when, note="", choice="", **what):
-    e = {"date": when, "at": clock.stamp(), **what, "by": "user"}
+def _event(clock, when, note="", choice="", at="", **what):
+    e = {"date": when, "at": at or clock.stamp(), **what, "by": "user"}
     if note:
         e["note"] = note
     if choice:
@@ -140,9 +140,10 @@ def _event(clock, when, note="", choice="", **what):
 
 
 def apply(root, clock, key="", company="", role="", url="", date="", estimated=False, channel="", top_pick=None,
-          contact="", note="", choice=""):
+          contact="", note="", choice="", at=""):
     """Record that the user applied. With a posting's key, the posting is marked applied by the user
-    as well. Saying so twice updates the one record rather than adding a second."""
+    as well. Saying so twice updates the one record rather than adding a second. `choice` and `at`
+    are the id and time of a click on the jobs page this came from."""
     s = settings.load(root)
     folder = store.Folder(root)
     today = clock.today()
@@ -169,12 +170,12 @@ def apply(root, clock, key="", company="", role="", url="", date="", estimated=F
              "applied_date": when, "applied_date_estimated": bool(estimated), "channel": channel,
              "top_pick": top_pick, "level": level_of(role, s),
              "posted_pay": (posting or {}).get("salary", ""), "contact": contact, "followed_up": "",
-             "status": "applied", "history": [_event(clock, when, note, choice, status="applied")], "note": note}
+             "status": "applied", "history": [_event(clock, when, note, choice, at, status="applied")], "note": note}
         applications.append(a)
     else:
         if date and when != a["applied_date"]:
             a["applied_date"], a["applied_date_estimated"] = when, bool(estimated)
-            a["history"].append(_event(clock, today, choice=choice, event="applied_date", value=when))
+            a["history"].append(_event(clock, today, choice=choice, at=at, event="applied_date", value=when))
         for field, value in (("channel", channel), ("contact", contact)):
             if value:
                 a[field] = value
@@ -184,12 +185,12 @@ def apply(root, clock, key="", company="", role="", url="", date="", estimated=F
             a["urls"].append(url)
 
     if posting is not None and posting.get("status") != "applied":
-        verdicts.mark(root, key, "applied", "user", note=note, clock=clock, choice=choice)
+        verdicts.mark(root, key, "applied", "user", note=note, clock=clock, choice=choice, at=at)
     save(root, applications)
     return {**a, "created": created}
 
 
-def track(root, clock, ident, status="", date="", note="", contact=None, top_pick=None, channel=None, choice=""):
+def track(root, clock, ident, status="", date="", note="", contact=None, top_pick=None, channel=None, choice="", at=""):
     """Record what happened to an application: a new status, a follow-up, a contact, or a correction."""
     applications = load(root)
     a = find(applications, ident)
@@ -201,27 +202,27 @@ def track(root, clock, ident, status="", date="", note="", contact=None, top_pic
         raise Refused("nothing to record: give a status, a contact, a top pick, how they applied, or a note")
     if status == "followed_up":
         a["followed_up"] = when
-        a["history"].append(_event(clock, when, note, choice, event="followed_up"))
+        a["history"].append(_event(clock, when, note, choice, at, event="followed_up"))
     elif status == "presumed_rejected":
         raise Refused("presumed rejected is set by the day-21 close; if they turned the user down, it's rejected")
     elif status:
         if status not in STATUSES:
             raise Refused(f"a status is one of {', '.join(STATUSES)}, or followed_up")
         a["status"] = status
-        a["history"].append(_event(clock, when, note, choice, status=status))
+        a["history"].append(_event(clock, when, note, choice, at, status=status))
     elif note:
-        a["history"].append(_event(clock, when, note, choice, event="note"))
+        a["history"].append(_event(clock, when, note, choice, at, event="note"))
     if contact is not None:
         a["contact"] = contact.strip()
-        a["history"].append(_event(clock, today, choice=choice, event="contact", value=a["contact"]))
+        a["history"].append(_event(clock, today, choice=choice, at=at, event="contact", value=a["contact"]))
     if top_pick is not None:
         a["top_pick"] = top_pick
-        a["history"].append(_event(clock, today, choice=choice, event="top_pick", value=top_pick))
+        a["history"].append(_event(clock, today, choice=choice, at=at, event="top_pick", value=top_pick))
     if channel is not None:
         if channel not in CHANNELS:
             raise Refused(f"how they applied is one of {', '.join(CHANNELS)}, not {channel!r}")
         a["channel"] = channel
-        a["history"].append(_event(clock, today, choice=choice, event="channel", value=channel))
+        a["history"].append(_event(clock, today, choice=choice, at=at, event="channel", value=channel))
     save(root, applications)
     return a
 

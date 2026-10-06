@@ -55,6 +55,7 @@ def queue(root, clock):
     for k, v in waiting:
         out.append({
             "key": k,
+            "num": v.get("num"),
             "company": v.get("company", ""),
             "title": v.get("title", ""),
             "location": v.get("location", ""),

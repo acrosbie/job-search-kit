@@ -12,7 +12,7 @@ import re
 import sys
 
 from . import __version__, net, scan, settings, store
-from . import add, configure, titles, track, verdicts
+from . import add, choices, configure, page, titles, track, verdicts
 from . import init as starter
 from . import queue as triage_queue
 from .clock import Clock
@@ -109,6 +109,15 @@ def cmd_add(a):
 
 def cmd_add_link(a):
     _out(add.add_link(a.folder, a.url, _clock(a.folder), company=a.company or ""))
+    return 0
+
+
+def cmd_page(a):
+    return 0  # the page is written after every command that changes something; see main()
+
+
+def cmd_record_choices(a):
+    _out(choices.record_file(a.folder, _clock(a.folder), a.file))
     return 0
 
 
@@ -252,6 +261,15 @@ def parser():
     s.add_argument("--company", help="the company's name, when its board isn't one the user watches")
     s.set_defaults(func=cmd_add_link)
 
+    s = sub.add_parser("page", help="write the jobs page: data/page.json, data/jobs-page.html and My jobs.html")
+    s.add_argument("--folder", required=True)
+    s.set_defaults(func=cmd_page)
+
+    s = sub.add_parser("record-choices", help="record the choices the user made on the jobs page")
+    s.add_argument("--folder", required=True)
+    s.add_argument("file", help="a JSON list of choices, or the pasted 'Copy my choices' text")
+    s.set_defaults(func=cmd_record_choices)
+
     s = sub.add_parser("settings", help="show or change one setting, checked before it's saved")
     acts = s.add_subparsers(dest="action", required=True)
     x = acts.add_parser("show")
@@ -317,6 +335,20 @@ def parser():
     return p
 
 
+# Commands after which the jobs page is written again, so it always shows the records as they are.
+REFRESHES = {"scan", "mark", "add", "add-link", "apply", "track", "due", "record-choices", "page"}
+
+
+def _refresh_page(folder, report):
+    try:
+        summary = page.refresh(folder, _clock(folder))
+    except Exception as e:  # the page must never cost the user the change they just made
+        print(f"the jobs page wasn't updated: {type(e).__name__}: {e}", file=sys.stderr)
+        return
+    if report:
+        _out(summary)
+
+
 def main(argv):
     p = parser()
     a = p.parse_args(argv)
@@ -324,7 +356,10 @@ def main(argv):
         p.print_help()
         return 0
     try:
-        return a.func(a)
+        code = a.func(a)
+        if code == 0 and a.command in REFRESHES:
+            _refresh_page(a.folder, a.command == "page")
+        return code
     except FileNotFoundError as e:
         print(f"missing file: {e.filename}", file=sys.stderr)
         return 1
