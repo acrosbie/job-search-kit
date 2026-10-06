@@ -45,7 +45,8 @@ class ApplyTest(TrackBase):
         self.assertEqual(posting["status"], "applied")
         last = self.folder.read_decisions()[-1]
         self.assertEqual((last["key"], last["verdict"], last["by"]), ("greenhouse-acme-1", "applied", "user"))
-        self.assertTrue(json.load(open(self.folder.applications_json, encoding="utf-8"))["applications"])
+        with open(self.folder.applications_json, encoding="utf-8") as f:
+            self.assertEqual(len(json.load(f)["applications"]), 2)  # this one, and the one from test_scan
 
     def test_saying_it_twice_updates_one_record(self):
         track.apply(self.root, on(20), key="greenhouse-acme-1")
@@ -163,6 +164,21 @@ class DueTest(TrackBase):
         # 03:00 UTC on 09-22 is still 09-21 in Denver: day 20, nothing closes yet.
         late = Clock("America/Denver", fixed=dt.datetime(2026, 9, 22, 3, 0, tzinfo=dt.timezone.utc))
         self.assertEqual(track.due(self.root, late)["closed_now"], [])
+
+
+class ScanClosesTest(TrackBase):
+    def test_a_scan_runs_the_day_21_close(self):
+        from jobkit import net
+        from tests.test_scan import Fake, answers
+        self.folder.save_applications([])
+        track.apply(self.root, on(1), key="greenhouse-acme-1", date="2026-09-01")
+        track.apply(self.root, on(10), key="greenhouse-acme-4", date="2026-09-10", contact="Dana Example")
+        self.addCleanup(net.use, net.use(Fake(answers())))
+        code, out, _ = self.run_cli("scan", "--as-of", FIXED.isoformat())
+        self.assertEqual(code, 0)
+        summary = json.loads(out)
+        self.assertEqual([a["id"] for a in summary["closed_day_21"]], ["greenhouse-acme-1"])
+        self.assertEqual(summary["follow_ups_due"], {"send": 1, "find_person": 0, "closing": 0})
 
 
 class LegacyTest(TrackBase):

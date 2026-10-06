@@ -140,7 +140,10 @@ def run(root, only=None, clock=None, workers=WORKERS):
             # applied: that is the user's action.
             app = store.application_for({"company": r["company"], "title": r["title"], "url": r["url"]}, applications)
             if app:
-                flags.append(("applied", s.label("flag_applied", applied=app.get("applied", ""))))
+                flags.append(("applied", s.label("flag_applied", applied=app.get("applied_date") or app.get("applied", ""))))
+            pasted = store.pasted_match(r["company"], r["title"], postings)
+            if pasted:
+                flags.append(("pasted", s.label("flag_pasted", date=postings[pasted].get("first_seen", ""))))
 
             rng = salary_range(body)
             entry = {

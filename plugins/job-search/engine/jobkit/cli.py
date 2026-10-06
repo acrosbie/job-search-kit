@@ -42,10 +42,14 @@ def cmd_scan(a):
         net.use(net.Record(a.record))
     elif a.replay:
         net.use(net.Replay(a.replay))
-    clock = None
+    clock = _clock(a.folder)
     if a.as_of:  # replays compare dates, so they pin the clock
         clock = Clock(settings.load(a.folder).timezone, fixed=dt.datetime.fromisoformat(a.as_of))
-    _out(scan.run(a.folder, only=a.only, clock=clock))
+    summary = scan.run(a.folder, only=a.only, clock=clock)
+    due = track.due(a.folder, clock)  # every scan also runs the day-21 close
+    summary["closed_day_21"] = due["closed_now"]
+    summary["follow_ups_due"] = {k: len(due[k]) for k in ("send", "find_person", "closing")}
+    _out(summary)
     return 0
 
 

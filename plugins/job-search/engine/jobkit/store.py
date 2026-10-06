@@ -176,3 +176,13 @@ def application_for(posting, applications):
         if a.get("company", "").lower() == company and title and role and (title == role or title in role or role in title):
             return a
     return None
+
+
+def pasted_match(company, title, postings):
+    """The key of a posting the user pasted in by hand that is this same job (same company, same
+    title once tidied), or None. A scan finding it again flags it rather than making a second copy."""
+    c, t = (company or "").casefold(), _norm_title(title)
+    for k, v in postings.items():
+        if v.get("source") == "manual" and v.get("company", "").casefold() == c and t and _norm_title(v.get("title")) == t:
+            return k
+    return None
