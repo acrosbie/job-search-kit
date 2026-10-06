@@ -8,18 +8,16 @@ says why).
 import argparse
 import datetime as dt
 import json
-import os
 import re
 import sys
 
 from . import __version__, net, scan, settings, store
-from . import configure, titles, track, verdicts
+from . import add, configure, titles, track, verdicts
 from . import init as starter
 from . import queue as triage_queue
 from .clock import Clock
 from .discover import discover
 from .errors import NotFound, Refused
-from .text import salary_from
 
 
 def _out(obj):
@@ -105,40 +103,12 @@ def cmd_due(a):
 
 
 def cmd_add(a):
-    """Register a posting saved by hand (a pasted link, LinkedIn) as data/postings/manual-<company>-<short>.md,
-    with the same header a scan writes: '# Title', then '- Company:', '- Location:', '- URL:', '- Posted:'."""
-    folder = store.Folder(a.folder)
-    path = os.path.abspath(a.file)
-    if os.path.dirname(path) != os.path.abspath(folder.descriptions):
-        print(f"the file must be in {folder.descriptions}", file=sys.stderr)
-        return 1
-    with open(path, encoding="utf-8") as f:
-        text = f.read()
-    fields = dict(re.findall(r"^- (\w+): (.*)$", text, re.M))
-    title = re.search(r"^# (.+)$", text, re.M)
-    if not title or "Company" not in fields:
-        print("header missing: need '# Title' and '- Company:' lines", file=sys.stderr)
-        return 1
-    key = os.path.splitext(os.path.basename(path))[0]
-    clk = _clock(a.folder)
-    state = folder.load_postings()
-    state["postings"][key] = {
-        "salary": salary_from(text),
-        "status": "new",
-        "first_seen": clk.today(),
-        "last_seen": clk.today(),
-        "company": fields.get("Company", ""),
-        "title": title.group(1).strip(),
-        "location": fields.get("Location", "").replace("(not stated)", ""),
-        "url": fields.get("URL", ""),
-        "posted": fields.get("Posted", "").replace("(unknown)", ""),
-        "source": "manual",
-        "flag": "",
-        "flags": [],
-        "file": os.path.basename(path),
-    }
-    folder.save_postings(state)
-    _out({"key": key, **state["postings"][key]})
+    _out(add.add_file(a.folder, a.file, _clock(a.folder), text_from=a.text_from or "", anyway=a.anyway))
+    return 0
+
+
+def cmd_add_link(a):
+    _out(add.add_link(a.folder, a.url, _clock(a.folder), company=a.company or ""))
     return 0
 
 
@@ -269,10 +239,18 @@ def parser():
     s.add_argument("--folder", required=True)
     s.set_defaults(func=cmd_due)
 
-    s = sub.add_parser("add", help="register a posting saved by hand")
+    s = sub.add_parser("add", help="save a posting the user found: a file with the scan's header, from anywhere")
     s.add_argument("--folder", required=True)
     s.add_argument("file")
+    s.add_argument("--text-from", choices=("link", "pasted"), help="Claude read it from the link, or the user pasted it")
+    s.add_argument("--anyway", action="store_true", help="save it even though it looks like one already saved")
     s.set_defaults(func=cmd_add)
+
+    s = sub.add_parser("add-link", help="save a posting from a link to a job board the engine reads")
+    s.add_argument("--folder", required=True)
+    s.add_argument("url")
+    s.add_argument("--company", help="the company's name, when its board isn't one the user watches")
+    s.set_defaults(func=cmd_add_link)
 
     s = sub.add_parser("settings", help="show or change one setting, checked before it's saved")
     acts = s.add_subparsers(dest="action", required=True)

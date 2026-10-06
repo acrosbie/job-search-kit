@@ -116,61 +116,21 @@ def run(root, only=None, clock=None, workers=WORKERS):
                     entry["flag"] = _flag_text(flags)
                     entry["flags"] = [{"code": c, "text": t} for c, t in flags]
                 continue
-            try:
-                desc = r["description"] if r["description"] is not None else (r["detail"]() if r["detail"] else "")
-                if isinstance(desc, dict):  # a detail call can also return the real place and date
-                    if desc.get("location"):
-                        r["location"] = desc["location"]
-                        keep, code = screen.location_ok(r["location"], s)
-                        if not keep:
-                            matched -= 1
-                            n -= 1
-                            dropped_loc += 1
-                            present.discard(r["key"])
-                            continue
-                    if desc.get("posted") and not r["posted"]:
-                        r["posted"] = desc["posted"]
-                    desc = desc["description"]
-            except Exception as e:
-                desc = f"(description fetch failed: {type(e).__name__}: {e})"
-            body = desc if isinstance(desc, str) else ""
-
-            status, rule, reason, flags = screen.assess(r["location"], code, body, s)
-            # An application made outside the scan (LinkedIn, a company site) is flagged, never marked
-            # applied: that is the user's action.
-            app = store.application_for({"company": r["company"], "title": r["title"], "url": r["url"]}, applications)
-            if app:
-                flags.append(("applied", s.label("flag_applied", applied=app.get("applied_date") or app.get("applied", ""))))
-            pasted = store.pasted_match(r["company"], r["title"], postings)
-            if pasted:
-                flags.append(("pasted", s.label("flag_pasted", date=postings[pasted].get("first_seen", ""))))
-
-            rng = salary_range(body)
-            entry = {
-                "salary": salary_from(body),
-                "pay_low": rng[0] if rng else None,
-                "pay_high": rng[1] if rng else None,
-                "status": status,
-                "first_seen": today,
-                "last_seen": today,
-                "company": r["company"],
-                "title": r["title"],
-                "location": r["location"],
-                "url": r["url"],
-                "posted": r["posted"],
-                "source": r["ats"],
-                "flag": _flag_text(flags),
-                "flags": [{"code": c, "text": t} for c, t in flags],
-                "file": folder.save_description(r, desc, today),
-            }
-            postings[r["key"]] = entry
-            summary = {"key": r["key"], "company": r["company"], "title": r["title"], "location": r["location"],
-                       "flag": entry["flag"], "salary": entry["salary"]}
-            if reason:
-                entry.update({"note": reason, "rule": rule, "triaged": today})
-                folder.log_decision({"at": stamp, "date": today, "key": r["key"], "company": r["company"],
-                                     "title": r["title"], "verdict": status, "rule": rule, "reason": reason, "by": "rule"})
-                rejected.append({**summary, "rule": rule, "reason": reason})
+            desc, place, posted = read_description(r)
+            if place:  # a detail call can also return the real place
+                r["location"] = place
+                keep, code = screen.location_ok(r["location"], s)
+                if not keep:
+                    matched -= 1
+                    n -= 1
+                    dropped_loc += 1
+                    present.discard(r["key"])
+                    continue
+            if posted and not r["posted"]:
+                r["posted"] = posted
+            entry, summary = save_new(folder, r, code, desc, s, applications, postings, today, stamp)
+            if entry.get("rule"):
+                rejected.append({**summary, "rule": entry["rule"], "reason": entry["note"]})
             else:
                 new.append(summary)
         if name in boards:
@@ -218,3 +178,62 @@ def run(root, only=None, clock=None, workers=WORKERS):
         "failures": failures,
         "check_by_hand": [{"name": c["name"], "careers_url": c.get("careers_url", "")} for c in manual],
     }
+
+
+def read_description(r):
+    """(description, place, posted date) for one record a reader returned. Some boards need a second
+    call for the description, made only now; it can also return the real place and date ("" if not)."""
+    try:
+        desc = r["description"] if r["description"] is not None else (r["detail"]() if r["detail"] else "")
+        if isinstance(desc, dict):
+            return desc["description"], desc.get("location") or "", desc.get("posted") or ""
+        return desc, "", ""
+    except Exception as e:
+        return f"(description fetch failed: {type(e).__name__}: {e})", "", ""
+
+
+def save_new(folder, r, code, desc, s, applications, postings, today, stamp, reject=None, extra_flags=()):
+    """Save one newly found posting: its description file, its record with the automatic verdict and
+    flags, and a decisions.log line when a rule rejected it. Scan, add and add-link all come through
+    here, so a posting is screened the same way however it arrived. `reject` is (rule, reason) for a
+    rejection decided before this point. Returns (entry, summary); the caller saves postings.json."""
+    body = desc if isinstance(desc, str) else ""
+    status, rule, reason, flags = screen.assess(r["location"], code, body, s)
+    if reject:
+        status, (rule, reason) = "not_a_fit", reject
+    # An application made outside the scan (LinkedIn, a company site) is flagged, never marked
+    # applied: that is the user's action.
+    app = store.application_for({"company": r["company"], "title": r["title"], "url": r["url"]}, applications)
+    if app:
+        flags.append(("applied", s.label("flag_applied", applied=app.get("applied_date") or app.get("applied", ""))))
+    pasted = store.pasted_match(r["company"], r["title"], postings) if r["ats"] != "manual" else None
+    if pasted:
+        flags.append(("pasted", s.label("flag_pasted", date=postings[pasted].get("first_seen", ""))))
+    flags += list(extra_flags)
+
+    rng = salary_range(body)
+    entry = {
+        "salary": salary_from(body),
+        "pay_low": rng[0] if rng else None,
+        "pay_high": rng[1] if rng else None,
+        "status": status,
+        "first_seen": today,
+        "last_seen": today,
+        "company": r["company"],
+        "title": r["title"],
+        "location": r["location"],
+        "url": r["url"],
+        "posted": r["posted"],
+        "source": r["ats"],
+        "flag": _flag_text(flags),
+        "flags": [{"code": c, "text": t} for c, t in flags],
+        "file": folder.save_description(r, desc, today),
+    }
+    postings[r["key"]] = entry
+    summary = {"key": r["key"], "company": r["company"], "title": r["title"], "location": r["location"],
+               "flag": entry["flag"], "salary": entry["salary"]}
+    if reason:
+        entry.update({"note": reason, "rule": rule, "triaged": today})
+        folder.log_decision({"at": stamp, "date": today, "key": r["key"], "company": r["company"],
+                             "title": r["title"], "verdict": status, "rule": rule, "reason": reason, "by": "rule"})
+    return entry, summary
