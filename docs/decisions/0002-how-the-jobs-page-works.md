@@ -47,6 +47,15 @@ These are proposed edits; the doc itself hasn't been changed.
 - **Phones.** The help article lists new artifacts on desktop and web, not the mobile apps ([Use Cowork on web, desktop, and mobile](https://support.claude.com/en/articles/15520349-use-claude-cowork-on-web-desktop-and-mobile)).
 - **Whether "Copy my choices" works inside the Claude app's preview** of the file page. The buttons showed there; copying wasn't recorded.
 
+## Phase 4 (2026-10-06): the untested items
+
+- **Claude writing the job list into the artifact's storage: works.** After every change Claude writes `data/page.json` into the page's own document, `data/users/<id>/page`, and the page shows the newer of that and the data built into it. Clicks are saved one document each under `data/users/<id>/page/clicks/`. In a new task Claude read all 9 back, recorded them, and marked each done.
+- **One page per user, not one shared page.** A page that uses storage can't be shared publicly; only the owner's organization and invited guests can open it. So a single kit page could never serve a stranger. Each user's page is made in their own account by setup, or the first time it's needed.
+- **A click must visibly land.** With only a small line of text to show a saved click, one job was clicked five times. The page now moves a chosen job into a "Your choices" box at the top, and only the last click on a job is recorded.
+- **Not yet tested:** whether a scheduled check can update the page; phones; "Copy my choices" inside the Claude app's preview of the file.
+
+Details: `docs/phase-4/results.md`.
+
 ## Sources (read 2026-09-24)
 
 - [What are artifacts and how do I use them](https://support.claude.com/en/articles/9487310): "Store data in an artifact", personal versus shared storage, 20 MB limit, Pro and above
