@@ -11,7 +11,7 @@
     {
       "name": "job-search",
       "source": "./plugins/job-search",
-      "description": "Find, screen and track jobs with Claude: setup, scan and triage.",
+      "description": "Find, screen and track jobs with Claude: setup, scan, triage, pasted links, applications and a jobs page.",
       "version": "0.3.0"
     }
   ]

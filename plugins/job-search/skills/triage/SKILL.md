@@ -9,7 +9,7 @@ Read each waiting posting the way a careful friend would: in full, against the u
 
 ## Before starting
 
-1. **Follow `${CLAUDE_PLUGIN_ROOT}/reference/running-the-engine.md`**, sections 1 to 4.
+1. **Follow `${CLAUDE_PLUGIN_ROOT}/reference/running-the-engine.md`**, sections 1 to 5a. Catching up records any choices the user made on their jobs page; their decisions there are theirs, so don't judge those postings again.
 2. **Read the user's profile** (the format is in `${CLAUDE_PLUGIN_ROOT}/reference/profile-format.md`):
    - `profile/rules.md`: the rules and flags you will apply;
    - `profile/about-me.md`: what they have and haven't done, and how to present them;
@@ -34,25 +34,30 @@ Read its description file (`description_file`) **in full**. Then:
    ```
    The note is one line. For Not a fit: `Rule N (<plain name>): "<quoted line>"`. For Your call: `Question: <the question>`. For Worth applying: `Tailor: <the two changes, briefly>`.
 
-   **Exit code 3 means the user already decided this posting. Their decision stands:** leave it and don't mention it again. Never mark anything `applied`; only the user does that.
+   **Exit code 3 means the user already decided this posting. Their decision stands:** leave it and don't mention it again. Never mark anything `applied`: that is recorded only when the user says they applied (the track skill).
 
 If a posting says it's no longer on the board (`gone`), still judge it, and say so when you report it.
 
+If a posting is flagged as the same job as one the user pasted in, give it the same verdict as that one, with the note `Same job as #<number>`.
+
 ## Report to the user
 
-In plain words, short enough to read in a minute:
+In plain words, short enough to read in a minute. Give each job its number (`num` in the queue), so the user can answer by number:
 
 1. **The count:** "12 new: 2 worth applying, 3 your call, 7 not a fit."
-2. **Worth applying**, each with its link: the two resume changes, and the words to mirror.
-3. **Your call**, each with its question and who can answer it.
-4. **Not a fit**, grouped by reason, titles only ("Too far to commute: Acme Support Lead, Globex Care Manager"). Offer to show the quote for any of them. The user can overturn any verdict.
+2. **Worth applying**, each with its number and link: the two resume changes, and the words to mirror.
+3. **Your call**, each with its number, its question and who can answer it.
+4. **Not a fit**, grouped by reason, numbers and titles only ("Too far to commute: #14 Acme Support Lead, #15 Globex Care Manager"). Offer to show the quote for any of them. The user can overturn any verdict.
+
+Then keep their jobs page current (`${CLAUDE_PLUGIN_ROOT}/reference/jobs-page.md`, "Keeping it current"), and say they can also mark jobs there.
 
 ## When the user answers
 
 "Apply to the first two, skip the third, it's too far", or any verdict of their own:
 
+- Match "the third one" or "#12" to the job's number. Repeat the name back as you record it, so a wrong number is caught.
 - Record each one with `--by user` and their words as the note. Their verdict overrides Claude's, and the engine notes a reversal.
-- **Only the user marks a posting `applied`**, and only once they say they have applied. Never assume it.
+- **"I applied" is recorded with the track skill's "I applied to …" steps** (`run.py apply`), which ask how they applied and whether it's a top pick. Only once they say they have applied. Never assume it.
 - When they give a reason that sounds like a rule ("too far", "no more contract work"), write it in the note as `candidate rule: <their words>`. Don't change any rule now; rule changes are proposed, tested on saved postings and agreed with the user first.
 
 ## Don't

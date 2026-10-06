@@ -32,6 +32,8 @@ You can do the init after step 3 if you don't know their field yet. It refuses a
 
 Open with one short paragraph: what setup will do (about 30 minutes, one question at a time, nothing to install, everything stays in this folder). Then say once: "What you share with me is processed by Anthropic under your Claude plan's terms; your files stay in this folder."
 
+Once you know their first name, save it for their jobs page: `run.py settings set --folder "<folder>" you.name "<first name>"`.
+
 ## Step 1: let Claude reach the job boards
 
 Say in one sentence why: "To read job boards for you, Claude needs permission to reach those websites."
@@ -152,6 +154,8 @@ Tell them it runs while their computer is on and Claude is open. If it misses a 
 
 ## Step 8: wrap up
 
+**Make their jobs page,** as `${CLAUDE_PLUGIN_ROOT}/reference/jobs-page.md` says under "Making the page". Its last step tells them, once, that clicks on the page wait in their Claude account until Claude copies them into this folder. If it can't be made here, tell them about **My jobs.html** in their folder instead.
+
 **Write `START HERE.md`** at the top of the folder. Claude reads it first in every future conversation:
 
 ```
@@ -163,19 +167,24 @@ This folder is <their first name>'s job search, run with the job-search kit. Say
 - "Go through the new ones" sorts new jobs into worth applying, your call, and not a fit.
 - "Apply to the first one, skip the second, it's too far" records your decisions.
 - Paste a job link from LinkedIn or anywhere to have it screened too.
+- "I applied to Acme", "Acme replied" or "I have an interview" keeps track of your applications.
+- "What's due?" lists the follow-ups worth sending.
+- "Show me my jobs page" opens the page where you can mark jobs yourself. My jobs.html in this folder is the same page as a file.
 
 profile/   about you, what you want, and your screening rules
 data/      every job found, every decision, every application
 .kit/      the engine that reads the job boards (no need to open it)
 
 Set up on <date>. A daily check runs at <time> while this computer is on.
+Your jobs page: <link>
 ```
 
 **Close with a short summary:**
 - how many job boards, and how many jobs the first scan found in their field;
 - the rules in one line each;
 - what you assumed: anything they said "not sure" to, which you should revisit;
-- what to check in the first week (look at a few "not a fit" verdicts, and say if any were wrong).
+- what to check in the first week (look at a few "not a fit" verdicts, and say if any were wrong);
+- their jobs page, with its link, and that they can tell you when they apply, hear back, or get an interview.
 
 Delete nothing. Leave `setup-progress.md` marked finished.
 
