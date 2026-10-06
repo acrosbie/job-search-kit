@@ -41,6 +41,8 @@ For a phrase rule, use `--phrase-reject <name> --phrases "<pattern>"` instead of
    - the user's overturns, in their words;
    - passing jobs whose text has those words, with the lines quoted.
 2. Judge each job twice, under the current wording and under the new one, from the quoted lines. Open the description file when the lines don't settle it.
+   - **If the change only loosens the rule** (it turns away less), the passing jobs can't be turned away by it, so judge only the jobs it turned away.
+   - **If it tightens the rule, or adds one,** the passing jobs are the ones that matter.
 3. Write the result to a file in your own workspace (not the user's folder):
    ```
    {"checked": ["<every key you judged>"],

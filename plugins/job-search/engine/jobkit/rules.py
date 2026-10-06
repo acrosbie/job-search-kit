@@ -153,7 +153,7 @@ def _clean(text):
 def _history_line(clock, why, rep):
     names = "; ".join(f"{f['company']}, {f['title']} ({f['after'].replace('_', ' ')})" for f in rep["flips"][:6])
     more = f" and {len(rep['flips']) - 6} more" if len(rep["flips"]) > 6 else ""
-    return (f"- Changes: {clock.today()}: \"{why.strip()}\". Replayed over {rep['checked']} saved postings: "
+    return (f"- Changes: {clock.today()}: \"{why.strip().rstrip('.')}\". Replayed over {rep['checked']} saved postings: "
             + (f"{len(rep['flips'])} would change: {names}{more}." if rep["flips"] else "nothing would change."))
 
 
