@@ -45,6 +45,17 @@ class EngineGuardTest(unittest.TestCase):
                 self.assertIsNone(newer.search(line), f"{os.path.relpath(path, REPO)}:{n}: {line.strip()}")
 
 
+class VersionTest(unittest.TestCase):
+    def test_engine_version_moves_with_the_plugin(self):
+        # Skills refresh a user's copy of the engine only when its version differs from the plugin's,
+        # so a plugin release that changes the engine must change the engine's version too.
+        import json
+        with open(os.path.join(REPO, "plugins", "job-search", ".claude-plugin", "plugin.json"), encoding="utf-8") as f:
+            plugin = json.load(f)["version"]
+        engine = re.search(r'__version__ = "([^"]+)"', read(os.path.join(ENGINE, "jobkit", "__init__.py"))).group(1)
+        self.assertEqual(engine.split(".")[:2], plugin.split(".")[:2])
+
+
 class PrivacyTest(unittest.TestCase):
     # The reference system's own file names may appear only where the reference format is the subject:
     # the tools that read it, the tests of those tools, this file, and the docs that explain them.
