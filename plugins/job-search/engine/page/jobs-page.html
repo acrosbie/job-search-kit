@@ -56,6 +56,7 @@ header { display: grid; gap: 10px; }
 .summary strong { color: var(--ink); font-weight: 600; }
 .mode { padding: 10px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); font-size: 0.92rem; }
 .mode.warn { border-color: var(--warn); background: var(--warn-soft); }
+.notice { padding: 10px 14px; border-radius: 6px; background: var(--good-soft); color: var(--ink); border: 1px solid var(--good); }
 .sections { display: grid; gap: 36px; min-width: 0; }
 section { display: grid; gap: 14px; min-width: 0; }
 .lede { color: var(--muted); max-width: 65ch; }
@@ -130,6 +131,7 @@ details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; 
   <header>
     <h1 id="title">Your job search</h1>
     <p class="summary" id="summary">Loading your jobs.</p>
+    <p class="notice" id="review" hidden></p>
     <p class="mode" id="mode" hidden></p>
   </header>
   <main id="app" class="sections"></main>
@@ -365,6 +367,10 @@ details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; 
       return;
     }
     document.getElementById("title").textContent = data.title || "Your job search";
+    var rv = document.getElementById("review");
+    rv.hidden = !data.review_ready;
+    if (data.review_ready) rv.innerHTML = "<strong>Your weekly review is ready</strong> (" + esc(day(data.review_ready)) +
+      "). Say \u201cgo through my review\u201d to Claude. Nothing changes without your yes.";
 
     // A job with a choice waiting for Claude moves up into Your choices, so the click visibly lands.
     var waiting = data.waiting.filter(function (j) { return !waitingOn("key", j.key); });

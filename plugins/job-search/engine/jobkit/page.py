@@ -18,7 +18,7 @@ import datetime as dt
 import json
 import os
 
-from . import __version__, settings, store, track
+from . import __version__, schedule, settings, store, track
 
 TEMPLATE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "page", "jobs-page.html")
 DATA_SLOT = "__JOBS_DATA__"
@@ -115,6 +115,7 @@ def build(root, clock):
                    "open": sum(1 for a in apps_out if a["status"] in ("applied", "replied", "screen", "interview", "offer")),
                    "applications": len(apps_out)},
         "tracking": {"follow_up_after_days": s.follow_up_after_days, "presume_after_days": s.presume_after_days},
+        "review_ready": schedule.review_state(root, s, clock)[0],
         "waiting": waiting_out,
         "todo": todo,
         "applications": apps_out,

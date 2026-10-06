@@ -19,9 +19,12 @@ def last_user_decision(decisions, key):
     return mine[-1] if mine else None
 
 
-def mark(root, key, status, by, note="", force=False, clock=None, choice="", at=""):
+def mark(root, key, status, by, note="", force=False, clock=None, choice="", at="", record_only=False):
     """Record one verdict and return the decisions.log row. `choice` is the id of a click on the jobs
-    page, kept so the same click is never recorded twice, and `at` the time it was made (default now)."""
+    page, kept so the same click is never recorded twice, and `at` the time it was made (default now).
+
+    `record_only` logs Claude's verdict without changing the posting: for a job the user had already
+    applied to before Claude judged it, so the weekly review's outcomes can still compare the two."""
     folder = store.Folder(root)
     state = folder.load_postings()
     entry = state["postings"].get(key)
@@ -29,8 +32,16 @@ def mark(root, key, status, by, note="", force=False, clock=None, choice="", at=
         raise NotFound(f"unknown key {key}")
     if status == "applied" and by != "user":
         raise Refused("only the user marks a posting applied")
+    if record_only:
+        if by != "claude":
+            raise Refused("only Claude's own verdict is recorded without changing the posting")
+        clk = clock or Clock()
+        row = {"at": at or clk.stamp(), "date": (at or clk.stamp())[:10], "key": key, "company": entry["company"],
+               "title": entry["title"], "verdict": status, "reason": note, "by": by, "record_only": True}
+        folder.log_decision(row)
+        return row
     decisions = folder.read_decisions()
-    earlier = [d for d in decisions if d.get("key") == key]
+    earlier = [d for d in decisions if d.get("key") == key and not d.get("record_only")]
     mine = last_user_decision(decisions, key)
     if by != "user" and mine and not force:
         raise Refused(f"the user already decided this one ({mine.get('verdict')} on {mine.get('date')}); "

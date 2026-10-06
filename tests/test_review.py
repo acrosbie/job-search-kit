@@ -3,7 +3,7 @@
 import datetime as dt
 import os
 
-from jobkit import review, rules, schedule, settings, track, verdicts
+from jobkit import page, review, rules, schedule, settings, track, verdicts
 from jobkit.clock import Clock
 from tests.test_rule_change import CLOCK, RuleBase
 from tests.test_scan import FIXED
@@ -98,7 +98,26 @@ class MonthlyTest(RuleBase):
         self.assertEqual(p, {"unconfirmed": ["Led a team of 30", "Owns Zendesk"], "answers": 2, "oldest_answer": "2026-09-20"})
 
 
+class RecordOnlyTest(RuleBase):
+    def test_claudes_verdict_on_a_job_already_applied_to(self):
+        self.folder.save_applications([])
+        track.apply(self.root, CLOCK, key="greenhouse-acme-4", channel="linkedin")
+        verdicts.mark(self.root, "greenhouse-acme-4", "your_call", "claude", note="Question: hybrid days?", clock=CLOCK,
+                      record_only=True)
+        self.assertEqual(self.folder.load_postings()["postings"]["greenhouse-acme-4"]["status"], "applied")
+        o = review.build(self.root, later(30), monthly=True)["outcomes"]
+        self.assertEqual(o["by"]["verdict"], {"your_call": {"no_reply": 1}})
+        with self.assertRaises(verdicts.Refused):
+            verdicts.mark(self.root, "greenhouse-acme-4", "skipped", "user", clock=CLOCK, record_only=True)
+
+
 class PrepareTest(RuleBase):
+    def test_the_page_says_a_review_is_ready(self):
+        review.prepare(self.root, CLOCK)
+        self.assertEqual(page.build(self.root, CLOCK)["review_ready"], "2026-09-24")
+        review.finish(self.root, CLOCK)
+        self.assertEqual(page.build(self.root, CLOCK)["review_ready"], "")
+
     def test_prepared_then_done(self):
         s = settings.load(self.root)
         review.prepare(self.root, CLOCK)

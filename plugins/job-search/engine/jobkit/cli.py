@@ -71,7 +71,8 @@ def cmd_mark(a):
             raise Refused("only the user marks a posting applied")
         _out(track.apply(a.folder, _clock(a.folder), key=a.key, note=a.note))
         return 0
-    _out(verdicts.mark(a.folder, a.key, a.status, a.by, note=a.note, force=a.force, clock=_clock(a.folder)))
+    _out(verdicts.mark(a.folder, a.key, a.status, a.by, note=a.note, force=a.force, clock=_clock(a.folder),
+                       record_only=a.record_only))
     return 0
 
 
@@ -259,6 +260,8 @@ def parser():
     s.add_argument("--note", default="")
     s.add_argument("--by", choices=("claude", "user"), required=True)
     s.add_argument("--force", action="store_true", help="overwrite the user's own decision (only when they ask)")
+    s.add_argument("--record-only", action="store_true",
+                   help="log Claude's verdict without changing the posting (a job the user already applied to)")
     s.set_defaults(func=cmd_mark)
 
     s = sub.add_parser("apply", help="record that the user applied (the user only)")
