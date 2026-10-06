@@ -35,4 +35,4 @@ The engine side is also proven without Cowork by `tests/test_week.py`: three wee
 
 ## The reference system
 
-`C:\Users\aidan\career` was read only. Its file listing and `git status` were identical before and after the phase (`Job Search (test)\phase4\career-*-before.txt` and `-after.txt`).
+The reference system's repository was read only. Its file listing and `git status` were identical before and after the phase (`Job Search (test)\phase4\career-*-before.txt` and `-after.txt`).
