@@ -10,8 +10,9 @@ is recorded with by=user, exactly as if they had said it in chat:
                                   track.track on an application
 
 Every choice carries an id, kept on what it recorded, so the same click is never recorded twice.
-Choices are taken oldest first, and one is skipped as superseded when the user decided the same
-thing later in chat: their latest word stands.
+Choices are taken oldest first, and one is skipped as superseded when the user changed it: a later
+click on the same job, or a later decision in chat. Only their last word is recorded, so changing
+their mind on the page never reads as overturning a verdict several times.
 """
 
 import datetime as dt
@@ -53,10 +54,31 @@ def _later_in_chat(root, c):
     return bool(later)
 
 
+def _changed_on_the_page(choices, done):
+    """Ids of clicks the user replaced with a later click on the same job before Claude recorded
+    either: only their last word on a job counts. Follow-ups and contacts are kept, every one."""
+    last = {}
+    for c in sorted(choices, key=lambda c: _when(c.get("at"))):
+        if c.get("id") in done:
+            continue
+        if c.get("action") in POSTING_ACTIONS:
+            slot = ("job", c.get("key"))
+        elif c.get("action") in APP_ACTIONS and c.get("action") not in ("followed_up", "contact"):
+            slot = ("application", c.get("app"))
+        else:
+            continue
+        last[slot] = c.get("id")
+    keep = set(last.values())
+    return {c.get("id") for c in choices if c.get("id") not in done and c.get("id") not in keep
+            and (c.get("action") in POSTING_ACTIONS
+                 or (c.get("action") in APP_ACTIONS and c.get("action") not in ("followed_up", "contact")))}
+
+
 def record(root, clock, choices):
     """Record a list of page choices. Returns what happened to each, in four lists."""
     out = {"recorded": [], "already": [], "superseded": [], "unknown": []}
     done = recorded_ids(root)
+    replaced = _changed_on_the_page(choices, done)
     for c in sorted(choices, key=lambda c: _when(c.get("at"))):
         cid, action = c.get("id", ""), c.get("action", "")
         brief = {"id": cid, "action": action, "num": c.get("num"), "label": c.get("label", ""),
@@ -66,6 +88,9 @@ def record(root, clock, choices):
             continue
         if cid in done:
             out["already"].append(brief)
+            continue
+        if cid in replaced:
+            out["superseded"].append({**brief, "why": "changed on the page"})
             continue
         # Recorded as of when the user clicked, in their own time zone: that is when they decided.
         clicked = min(_when(c.get("at")), clock.now()).astimezone(clock.now().tzinfo)

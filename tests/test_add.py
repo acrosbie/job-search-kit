@@ -104,6 +104,22 @@ class AddFileTest(ScanBase):
         again = add.add_file(self.root, self.draft(posting(url="")), CLOCK, anyway=True)
         self.assertEqual(again["key"], "manual-initech-support-operations-manager")
 
+    def test_an_application_recorded_by_name_joins_the_posting(self):
+        from jobkit import track
+        self.folder.save_applications([])
+        track.apply(self.root, CLOCK, company="Initech", role="Support Operations Manager", date="2026-09-20",
+                    channel="linkedin", top_pick=True)
+        out = add.add_file(self.root, self.draft(posting()), CLOCK, text_from="pasted")
+        self.assertEqual(out["application"], "app-initech-support-operations-manager")
+        self.assertEqual(out["status"], "applied")
+        a = track.load(self.root)
+        self.assertEqual(len(a), 1)
+        self.assertEqual((a[0]["key"], a[0]["applied_date"], a[0]["top_pick"]), (out["key"], "2026-09-20", True))
+        last = self.folder.read_decisions()[-1]
+        self.assertEqual((last["verdict"], last["by"]), ("applied", "user"))
+        # Saying "I applied" again now finds the same application through the posting.
+        self.assertFalse(track.apply(self.root, CLOCK, key=out["key"])["created"])
+
     def test_a_file_already_named_as_a_key(self):
         path = self.folder.description_path("manual-initech-lead")
         os.makedirs(os.path.dirname(path), exist_ok=True)

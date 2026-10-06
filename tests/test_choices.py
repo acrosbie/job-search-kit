@@ -49,6 +49,16 @@ class ChoicesTest(ScanBase):
         self.assertEqual(([c["id"] for c in again["already"]], again["recorded"]), (["c-1"], []))
         self.assertEqual(sum(1 for d in self.folder.read_decisions() if d.get("choice") == "c-1"), 1)
 
+    def test_only_the_last_click_on_a_job_counts(self):
+        # Five clicks on one job in a few seconds, as when the page didn't show the first one landing.
+        flips = [click(f"c-{i}", a, key="greenhouse-acme-1", at=f"2026-09-24T17:00:0{i}Z")
+                 for i, a in enumerate(["want", "skip", "skip", "skip", "want"])]
+        out = choices.record(self.root, CLOCK, flips + [click("c-9", "followed_up", app="x", at="2026-09-24T17:00:09Z")])
+        self.assertEqual([c["id"] for c in out["recorded"]], ["c-4"])
+        self.assertEqual([c["id"] for c in out["superseded"]], ["c-0", "c-1", "c-2", "c-3"])
+        mine = [d for d in self.folder.read_decisions() if d["by"] == "user"]
+        self.assertEqual([(d["verdict"], d.get("reverses", "")) for d in mine], [("worth_applying", "")])
+
     def test_a_later_word_in_chat_stands(self):
         verdicts.mark(self.root, "greenhouse-acme-1", "worth_applying", "user", clock=CLOCK)  # 18:00 UTC
         out = choices.record(self.root, CLOCK, [click("c-1", "skip", key="greenhouse-acme-1")])  # clicked at 17:00

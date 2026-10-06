@@ -18,7 +18,7 @@ with a reason rather than silently dropped, so they hear why.
 import os
 import re
 
-from . import scan, screen, settings, store
+from . import scan, screen, settings, store, track
 from .boards import READERS, Context, watched_names
 from .errors import Refused
 
@@ -107,7 +107,10 @@ def _save(root, rec, desc, clock, text_from):
                              clock.today(), clock.stamp(), reject=reject, extra_flags=extra)
     entry["text_from"] = text_from
     folder.save_postings(state)
-    return {"saved": True, "key": rec["key"], **entry}
+    joined = track.link(root, clock, rec["key"])  # the user already said they applied to it
+    if joined:
+        entry = folder.load_postings()["postings"][rec["key"]]
+    return {"saved": True, "key": rec["key"], **entry, "application": joined["id"] if joined else ""}
 
 
 # ------------------------------------------------------------ a link to a board the engine reads

@@ -125,6 +125,35 @@ def find(applications, ident):
     return None
 
 
+def unlinked(applications, posting):
+    """An application recorded by company and role, with no saved posting, that is this posting
+    (the same link, or the same company with a matching title), or None."""
+    loose = [a for a in applications if not a.get("key")]
+    return store.application_for({"company": posting.get("company", ""), "title": posting.get("title", ""),
+                                  "url": posting.get("url", "")}, loose)
+
+
+def link(root, clock, key):
+    """When a posting is saved after the user said they applied to it, join the two: the application
+    gains the posting's key, and the posting is marked applied, by the user, who told us so.
+    Returns the application, or None if there's none to join."""
+    folder = store.Folder(root)
+    posting = folder.load_postings()["postings"].get(key)
+    applications = load(root)
+    a = unlinked(applications, posting) if posting else None
+    if a is None:
+        return None
+    a["key"] = key
+    if posting.get("url") and posting["url"] not in a["urls"]:
+        a["urls"].append(posting["url"])
+    a["history"].append(_event(clock, clock.today(), event="posting_saved", value=key))
+    save(root, applications)
+    if posting.get("status") != "applied":
+        verdicts.mark(root, key, "applied", "user", note=f"applied on {a['applied_date']}, before this job was saved",
+                      clock=clock)
+    return a
+
+
 def level_of(role, s):
     m = s.level.search(role or "") if s.level else None
     return m.group(0).strip().lower() if m else ""
@@ -164,6 +193,10 @@ def apply(root, clock, key="", company="", role="", url="", date="", estimated=F
     applications = load(root)
     ident = key or app_id(company, role)
     a = find(applications, ident)
+    if a is None and posting is not None:
+        a = unlinked(applications, posting)  # recorded by name before the posting was saved
+        if a is not None:
+            a["key"] = key
     created = a is None
     if created:
         a = {"id": ident, "key": key, "company": company, "role": role, "urls": [url] if url else [],

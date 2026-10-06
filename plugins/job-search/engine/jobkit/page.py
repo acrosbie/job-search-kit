@@ -74,9 +74,11 @@ def build(root, clock):
     if app_numbered:
         track.save(root, applications)
 
+    decided_by = {d.get("key"): d.get("by", "") for d in folder.read_decisions()}  # who made the latest decision
+
     def job(k, v):
-        return {"num": v.get("num"), "key": k, "company": v.get("company", ""), "title": v.get("title", ""),
-                "location": v.get("location", ""), "url": v.get("url", ""), "salary": v.get("salary", ""),
+        return {"num": v.get("num"), "key": k, "by": decided_by.get(k, ""), "company": v.get("company", ""),
+                "title": v.get("title", ""), "location": v.get("location", ""), "url": v.get("url", ""), "salary": v.get("salary", ""),
                 "status": v.get("status", ""), "note": v.get("note", ""), "flag": v.get("flag", ""),
                 "first_seen": v.get("first_seen", ""), "gone": v.get("gone", ""), "source": v.get("source", "")}
 

@@ -21,12 +21,13 @@ Only ever when the user says they applied. Never because Claude marked a job wor
    - A number ("I applied to #12") is a `num` in `data/page.json`.
    - A company or title: look in `data/page.json` first, then in `data/postings.json`.
    - If several jobs match, ask which one, with one multiple-choice question.
-   - If it isn't saved and they have the link, save it first with the add-job skill.
-   - If it isn't saved and there's no link, record it by company and role.
+   - If it isn't saved and they have the link, save it first with the add-job skill. For a LinkedIn link, that means asking them to paste the posting.
+   - If they'd rather not paste it, or there's no link, record it by company and role. Say they can paste the posting any time, and it will be joined to this application.
 2. **Ask how, and whether it's a top pick, in one go.** Use multiple-choice questions if your tools allow; otherwise ask in one short message.
-   - For each application, ask "How did you apply to <Company>?", with the choices: on the company's site, through LinkedIn, through someone I know, some other way.
-   - Then ask one question: "Which of these are top picks for you?" (for one application: "Is this one of your top picks?").
+   - For each application, ask "How did you apply to <Company>?", with the choices: on the company's site, through LinkedIn, through someone I know, some other way. Name the company in every question.
+   - Then ask one question: "Which of these are top picks for you?", listing each company as a choice (for one application: "Is this one of your top picks?").
    - Ask about at most three applications at a time. Skip anything they've already told you ("I applied through a friend" answers how).
+   - Match each answer to its company by name before recording it. Never carry one application's answers over to another.
 3. **The date** is today, unless they say otherwise.
    - "Last Tuesday" means that date.
    - "About two weeks ago" means the latest date it could be, with `--estimated`.
@@ -36,7 +37,12 @@ Only ever when the user says they applied. Never because Claude marked a job wor
    python3 "<folder>/.kit/engine/run.py" apply <key> --channel <company_site|linkedin|referral|other> --top-pick <yes|no> [--date YYYY-MM-DD] [--estimated] [--contact "<name>"] [--note "<their words>"] --folder "<folder>"
    ```
    With no saved posting: `apply --company "<company>" --role "<role>" [--url "<link>"] …`.
-5. **Confirm in one line:** "Recorded: you applied to #12 Acme, Senior Accountant, today, on their site, as a top pick."
+5. **Confirm each application on its own line,** with the date, how they applied and whether it's a top pick, so a wrong answer is caught:
+   > Recorded:
+   > - #12 Acme, Senior Accountant: today, on their site, a top pick
+   > - #15 Globex, Controller: 2 Oct, through LinkedIn, not a top pick
+
+   If they correct one, record the correction with `track <id> --channel … --top-pick …`.
 
 ## What happened next
 

@@ -3,8 +3,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Mono:wght@500&family=Public+Sans:ital,wght@0,400;0,600;1,400&display=swap">
 <style>
-/* Layout: one reading column. A summary line, then the three lists the user acts on (waiting on you,
-   to do, applications), then what was screened out, then the choices waiting to reach Claude.
+/* Layout: one reading column. A summary line; then the user's own choices, the moment they make one;
+   then the three lists they act on (waiting on you, to do, applications); then what was screened out.
    Statuses are rubber-stamp labels in the stamp-pad blue of an application form. */
 :root {
   --bg: #f2f5f8;
@@ -61,7 +61,6 @@ section { display: grid; gap: 14px; min-width: 0; }
 .lede { color: var(--muted); max-width: 65ch; }
 .list { display: grid; gap: 12px; }
 .item { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; display: grid; gap: 8px; min-width: 0; }
-.item.chosen { border-style: dashed; }
 .item-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
 .meta { color: var(--muted); font-size: 0.92rem; overflow-wrap: anywhere; }
 .note { max-width: 65ch; overflow-wrap: anywhere; }
@@ -85,28 +84,46 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
 .fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 10px; }
 label { display: grid; gap: 4px; font-size: 0.88rem; color: var(--muted); }
 select, input, textarea { background: var(--surface); border: 1px solid var(--line); border-radius: 5px; padding: 7px 9px; min-width: 0; width: 100%; }
-.chosen-line { font-size: 0.92rem; color: var(--accent); }
+/* The user's own choices: the one boxed, tinted block on the page, so a click visibly lands somewhere. */
+.yours { background: var(--accent-soft); border: 2px solid var(--accent); border-radius: 8px; padding: 16px; }
+.yours .lede { color: var(--ink); }
+.choice { display: grid; grid-template-columns: 3.2rem minmax(0, 1fr) auto; gap: 4px 12px; align-items: start;
+  background: var(--surface); border-radius: 6px; padding: 10px 12px; }
+.choice .what { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.choice .detail { grid-column: 2 / -1; font-size: 0.9rem; color: var(--muted); }
+.choice .undo { grid-column: 3; grid-row: 1; }
+.choice.problem { border: 1px solid var(--bad); }
+.choice.problem .detail { color: var(--bad); }
+.yours textarea { min-height: 7rem; font: 0.8rem/1.4 var(--mono); }
+.said { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 8px 10px; border-radius: 5px;
+  background: var(--accent-soft); font-size: 0.92rem; }
 .apps { display: grid; gap: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
 .app { display: grid; grid-template-columns: 3.2rem minmax(0, 1fr) auto; gap: 4px 12px; padding: 12px 14px; border-top: 1px solid var(--line); align-items: start; }
 .app:first-child { border-top: 0; }
 .app .when { grid-column: 2; color: var(--muted); font-size: 0.9rem; }
 .app .side { grid-column: 3; grid-row: 1; justify-self: end; }
-.app .more { grid-column: 2 / -1; }
+.app .more { grid-column: 2 / -1; display: grid; gap: 8px; }
 @media (max-width: 34rem) {
-  .app { grid-template-columns: 2.6rem minmax(0, 1fr); }
-  .app .side { grid-column: 2; grid-row: auto; justify-self: start; }
+  .app, .choice { grid-template-columns: 2.6rem minmax(0, 1fr); }
+  .app .side, .choice .undo { grid-column: 2; grid-row: auto; justify-self: start; }
 }
 details { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px 16px; }
 summary { cursor: pointer; font-family: var(--display); font-weight: 600; font-size: 1.05rem; }
 details .list { margin-top: 12px; gap: 0; }
 details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; padding-inline: 0; }
 .empty { padding: 18px; border: 1px dashed var(--line); border-radius: 6px; color: var(--muted); }
-.choices { position: sticky; bottom: env(safe-area-inset-bottom, 0px); background: var(--surface); border: 1px solid var(--accent);
-  border-radius: 6px; padding: 14px 16px; display: grid; gap: 10px; box-shadow: 0 6px 24px rgb(0 0 0 / 0.12); }
-.choices ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 4px; }
-.choices textarea { min-height: 7rem; font: 0.8rem/1.4 var(--mono); }
+.toast { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px); left: 50%; transform: translateX(-50%);
+  width: min(32rem, calc(100% - 32px)); background: var(--ink); color: var(--bg); border-radius: 8px; padding: 12px 16px;
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.25); z-index: 10; font-size: 0.95rem; }
+.sendbar { position: sticky; bottom: env(safe-area-inset-bottom, 0px); display: flex; flex-wrap: wrap; align-items: center;
+  justify-content: space-between; gap: 10px; background: var(--ink); color: var(--bg); border-radius: 8px; padding: 10px 14px; }
+.sendbar button { background: var(--bg); color: var(--ink); border-color: var(--bg); font-weight: 600; }
 .error { color: var(--bad); }
-@media (prefers-reduced-motion: no-preference) { button { transition: border-color 0.12s; } }
+@media (prefers-reduced-motion: no-preference) {
+  button { transition: border-color 0.12s; }
+  .toast { animation: drop 0.18s ease-out; }
+  @keyframes drop { from { transform: translate(-50%, -8px); opacity: 0.4; } }
+}
 </style>
 
 <div class="page">
@@ -116,8 +133,9 @@ details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; 
     <p class="mode" id="mode" hidden></p>
   </header>
   <main id="app" class="sections"></main>
-  <section class="choices" id="choices" hidden></section>
+  <div class="sendbar" id="sendbar" hidden></div>
 </div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script type="application/json" id="jobs-data">__JOBS_DATA__</script>
 <script>
@@ -128,6 +146,13 @@ details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; 
     want: "Want it", skip: "Skip", applied: "I applied", followed_up: "I followed up", replied: "They replied",
     screen: "Screen booked", interview: "Interview", offer: "Offer", rejected: "Turned down", withdrawn: "I withdrew",
     contact: "Contact"
+  };
+  // What a saved choice says, and how its stamp looks.
+  var CHOSEN = {
+    want: ["You want it", "s-worth"], skip: ["Skipped", "s-out"], applied: ["You applied", "s-applied"],
+    followed_up: ["Followed up", "s-call"], replied: ["They replied", "s-replied"], screen: ["Screen booked", "s-screen"],
+    interview: ["Interview", "s-interview"], offer: ["Offer", "s-offer"], rejected: ["Turned down", "s-rejected"],
+    withdrawn: ["You withdrew", "s-withdrawn"], contact: ["Contact added", "s-call"]
   };
   var VERDICT = {
     worth_applying: ["Worth applying", "s-worth"], your_call: ["Your call", "s-call"], "new": ["New", "s-new"],
@@ -141,6 +166,9 @@ details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; 
   var ROUTE = { send: ["Follow up", "s-send"], find_person: ["Find a person", "s-find"], close: ["Nothing to send", "s-closing"] };
   var CHANNELS = [["", "Not sure"], ["company_site", "On the company's site"], ["linkedin", "Through LinkedIn"],
                   ["referral", "Through someone I know"], ["other", "Some other way"]];
+  var VIA = { company_site: "on their site", linkedin: "through LinkedIn", referral: "through someone you know", other: "another way" };
+  var EVENTS = { followed_up: true, contact: true };   // kept alongside a status choice, never replacing one
+
   var data = null;
   try { data = JSON.parse(document.getElementById("jobs-data").textContent); } catch (e) { data = null; }
   // Clicks kept in this browser belong to this copy of the page; a newer copy starts afresh.
@@ -151,6 +179,7 @@ details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; 
   var open = null;            // {kind, ref, action} of the panel being filled in
   var draft = {};             // what has been typed into that panel
   var problem = "";
+  var toastTimer = null;
 
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
@@ -165,11 +194,28 @@ details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; 
   function stamp(pair) { return '<span class="stamp ' + pair[1] + '">' + esc(pair[0]) + "</span>"; }
   function newId() { return "c-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7); }
 
-  function latestFor(field, value) {
+  function toast(text) {
+    var t = document.getElementById("toast");
+    t.textContent = text; t.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.hidden = true; }, 6000);
+  }
+
+  // ---------------------------------------------------------------- the user's choices
+
+  function all() { return Object.keys(choices).map(function (id) { return choices[id]; }); }
+  function pending() {
+    return all().filter(function (c) { return !c.recorded; }).sort(function (a, b) { return a.at < b.at ? -1 : 1; });
+  }
+  function problems() {  // shown for a week after Claude tried
+    var since = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
+    return all().filter(function (c) { return c.problem && String(c.recorded) >= since; });
+  }
+  // The choice still waiting for Claude on this job or application, if any (its latest status choice).
+  function waitingOn(field, value, events) {
     var best = null;
-    Object.keys(choices).forEach(function (id) {
-      var c = choices[id];
-      if (c[field] === value && (!best || c.at > best.at)) best = c;
+    pending().forEach(function (c) {
+      if (c[field] === value && (events || !EVENTS[c.action]) && (!best || c.at > best.at)) best = c;
     });
     return best;
   }
@@ -188,7 +234,8 @@ details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; 
         "</select></label>");
     }
     if (kind === "app") {
-      f.push('<label for="f-contact">A person there (optional)<input id="f-contact" data-field="contact" maxlength="80" placeholder="Their name" value="' + esc(draft.contact || "") + '"></label>');
+      f.push('<label for="f-contact">' + (action === "contact" ? "Their name" : "A person there (optional)") +
+        '<input id="f-contact" data-field="contact" maxlength="80" placeholder="Their name" value="' + esc(draft.contact || "") + '"></label>');
     }
     var hint = action === "skip" ? "Why? (optional, it helps tune your rules)" : "Anything to add? (optional)";
     f.push('<label for="f-note">' + hint + '<input id="f-note" data-field="note" maxlength="300" value="' + esc(draft.note || "") + '"></label>');
@@ -197,29 +244,54 @@ details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; 
       '<button type="button" data-cancel>Cancel</button></div></div>';
   }
 
-  function chosenLine(c) {
-    if (!c) return "";
-    if (c.problem) return '<p class="chosen-line error">Claude couldn\'t record your ' + esc(ACTIONS[c.action] || c.action) + ": " + esc(c.problem) + "</p>";
-    var state = c.recorded ? "recorded by Claude" : (mode === "saving" ? "saved; Claude records it next time you talk" : "not saved yet; copy your choices below");
-    return '<p class="chosen-line">You chose: ' + esc(ACTIONS[c.action] || c.action) + " (" + state + ")" +
-      (c.recorded ? "" : ' <button type="button" class="link" data-undo="' + esc(c.id) + '">Undo</button>') + "</p>";
+  function chosenDetail(c) {
+    var bits = [];
+    if (c.channel) bits.push(VIA[c.channel] || c.channel);
+    if (c.top_pick) bits.push(c.top_pick === "yes" ? "a top pick" : "not a top pick");
+    if (c.contact) bits.push("contact: " + c.contact);
+    if (c.note) bits.push("“" + c.note + "”");
+    return bits.join(" · ");
+  }
+
+  function yoursSection() {
+    var list = pending();
+    var bad = problems();
+    if (!list.length && !bad.length) return "";
+    var rows = list.map(function (c) {
+      var detail = chosenDetail(c);
+      return '<div class="choice"><span class="num">' + (c.num ? "#" + esc(c.num) : "") + "</span>" +
+        '<div class="what">' + stamp(CHOSEN[c.action] || [c.action, "s-call"]) + "<span>" + esc(c.label) + "</span></div>" +
+        (detail ? '<p class="detail">' + esc(detail) + "</p>" : "") +
+        '<button type="button" class="link undo" data-undo="' + esc(c.id) + '">Undo</button></div>';
+    }).concat(bad.map(function (c) {
+      return '<div class="choice problem"><span class="num">' + (c.num ? "#" + esc(c.num) : "") + "</span>" +
+        '<div class="what">' + stamp(CHOSEN[c.action] || [c.action, "s-call"]) + "<span>" + esc(c.label) + "</span></div><span></span>" +
+        '<p class="detail">Claude couldn\'t record this: ' + esc(c.problem) + "</p></div>";
+    }));
+    var lede = mode === "saving"
+      ? "Saved on this page. Claude records " + (list.length === 1 ? "it" : "them") + " in your Job Search folder the next time you talk to it. Changed your mind? Press Undo, or choose again."
+      : "Not sent to Claude yet. Press <strong>Copy my choices</strong>, then paste them into Claude.";
+    return '<section class="yours" aria-labelledby="h-yours"><h2 id="h-yours">Your choices <span class="count">' + list.length + "</span></h2>" +
+      '<p class="lede">' + lede + "</p>" + '<div class="list">' + rows.join("") + "</div>" +
+      (mode === "file" && list.length ? '<div class="actions"><button type="button" class="primary" data-copy>Copy my choices</button></div>' +
+        '<p class="muted" id="copy-note">Then paste them into Claude.</p>' +
+        '<textarea id="copy-text" readonly hidden aria-label="Your choices, to copy"></textarea>' : "") +
+      "</section>";
   }
 
   function jobCard(j, kind) {
-    var verdict = VERDICT[j.status] || ["", ""];
-    var c = latestFor("key", j.key);
+    var verdict = j.status === "worth_applying" && j.by === "user" ? ["You want it", "s-worth"] : (VERDICT[j.status] || ["", ""]);
     var meta = [esc(j.company), esc(j.location || "place not stated"), j.salary ? esc(j.salary) : "pay not stated",
                 "found " + day(j.first_seen)];
     var note = j.note || (j.status === "new" ? "Not gone through yet. Ask Claude to go through the new ones." : "");
     var buttons = kind === "screened" ? ["want"] : ["want", "skip", "applied"];
-    return '<article class="item' + (c && !c.recorded ? " chosen" : "") + '">' +
+    return '<article class="item">' +
       '<div class="item-head"><span class="num">#' + esc(j.num) + "</span>" + stamp(verdict) + "</div>" +
       "<h3>" + (j.url ? '<a href="' + esc(j.url) + '" target="_blank" rel="noopener">' + esc(j.title) + "</a>" : esc(j.title)) + "</h3>" +
       '<p class="meta">' + meta.join(" · ") + "</p>" +
       (note ? '<p class="note">' + esc(note) + "</p>" : "") +
       (j.flag ? '<p class="flag">Note: ' + esc(j.flag) + "</p>" : "") +
       (j.gone ? '<p class="flag">No longer on the company\'s job board since ' + day(j.gone) + ".</p>" : "") +
-      chosenLine(c) +
       '<div class="actions">' + buttons.map(function (a) {
         return '<button type="button" data-open="' + a + '" data-kind="job" data-ref="' + esc(j.key) + '">' + ACTIONS[a] + "</button>";
       }).join("") + "</div>" +
@@ -227,10 +299,19 @@ details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; 
       "</article>";
   }
 
+  function saidLines(id) {
+    return pending().filter(function (c) { return c.app === id; }).map(function (c) {
+      var detail = chosenDetail(c);
+      return '<p class="said">You said: ' + stamp(CHOSEN[c.action] || [c.action, "s-call"]) +
+        (detail ? " " + esc(detail) : "") + ' <span class="muted">' + (mode === "saving" ? "Saved for Claude." : "Not sent to Claude yet.") + "</span> " +
+        '<button type="button" class="link" data-undo="' + esc(c.id) + '">Undo</button></p>';
+    }).join("");
+  }
+
   function appRow(a) {
     var st = STATUS[a.status] || [a.status, "s-closed"];
-    var c = latestFor("app", a.id);
-    var when = "applied " + day(a.applied_date) + (a.estimated ? " (about)" : "") +
+    var how = [VIA[a.channel], a.top_pick === true ? "a top pick" : ""].filter(Boolean).join(", ");
+    var when = "applied " + day(a.applied_date) + (a.estimated ? " (about)" : "") + (how ? " " + esc(how) : "") +
       (a.days != null ? ', day <span class="mono">' + a.days + "</span>" : "") +
       (a.status === "applied" && a.closes_on ? " · closes " + day(a.closes_on) + " if no reply" : "") +
       (a.contact ? " · contact " + esc(a.contact) : "") +
@@ -238,13 +319,14 @@ details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; 
     var live = ["applied", "replied", "screen", "interview", "offer", "presumed_rejected"].indexOf(a.status) >= 0;
     var options = ["replied", "screen", "interview", "offer", "rejected", "withdrawn", "followed_up", "contact"];
     var picked = open && open.kind === "app" && open.ref === a.id ? open.action : "";
+    var said = saidLines(a.id);
     return '<div class="app"><span class="num">' + (a.num ? "#" + esc(a.num) : "") + "</span>" +
       '<div><strong>' + esc(a.company) + "</strong>, " +
       (a.url ? '<a href="' + esc(a.url) + '" target="_blank" rel="noopener">' + esc(a.role) + "</a>" : esc(a.role)) + "</div>" +
       '<span class="side">' + stamp(st) + "</span>" +
       '<p class="when">' + when + "</p>" +
-      '<div class="more">' + chosenLine(c) +
-      (live ? '<label for="what-' + esc(a.id) + '">What happened?<select id="what-' + esc(a.id) + '" data-what="' + esc(a.id) + '">' +
+      '<div class="more">' + said +
+      (live ? '<label for="what-' + esc(a.id) + '">' + (said ? "Anything else?" : "What happened?") + '<select id="what-' + esc(a.id) + '" data-what="' + esc(a.id) + '">' +
         '<option value="">Choose…</option>' + options.map(function (o) {
           return '<option value="' + o + '"' + (picked === o ? " selected" : "") + ">" + (o === "contact" ? "Add a contact" : ACTIONS[o]) + "</option>";
         }).join("") + "</select></label>" : "") +
@@ -259,7 +341,7 @@ details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; 
         ? "Day " + t.days + ". A top pick with nobody to follow up with. Look for the person who would manage this role, and add their name."
         : "Day " + t.days + ". Nothing to send without a contact. It closes on " + day(t.closes_on) + " if there's no reply.";
     return '<article class="item"><div class="item-head"><span class="num">' + (t.num ? "#" + esc(t.num) : "") + "</span>" + stamp(r) + "</div>" +
-      "<h3>" + esc(t.company) + ", " + esc(t.role) + "</h3><p class=\"note\">" + what + "</p>" +
+      "<h3>" + esc(t.company) + ", " + esc(t.role) + "</h3><p class=\"note\">" + what + "</p>" + saidLines(t.id) +
       '<div class="actions"><button type="button" data-open="followed_up" data-kind="app" data-ref="' + esc(t.id) + '">I followed up</button>' +
       (t.route !== "send" ? '<button type="button" data-open="contact" data-kind="app" data-ref="' + esc(t.id) + '">Add a contact</button>' : "") +
       "</div>" + panel("app", t.id, "followed_up") + panel("app", t.id, "contact") + "</article>";
@@ -267,30 +349,37 @@ details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; 
 
   function render() {
     var app = document.getElementById("app");
-    document.getElementById("mode").hidden = false;
     var modeEl = document.getElementById("mode");
+    modeEl.hidden = false;
     modeEl.className = "mode" + (mode === "file" ? " warn" : "");
     modeEl.innerHTML = mode === "saving"
-      ? "Your clicks save on this page. Claude records them the next time you talk to it."
-      : "This copy of the page can't save your clicks. Make your choices, then use <strong>Copy my choices</strong> at the bottom and paste them into Claude. You can also tell Claude by number, such as “skip #12”.";
+      ? "Mark jobs here as you read them. Each choice is saved on this page straight away, and Claude records it in your folder the next time you talk to it."
+      : "This copy of the page can't save your clicks. Make your choices, then use <strong>Copy my choices</strong> and paste them into Claude. You can also tell Claude by number, such as “skip #12”.";
     if (problem) modeEl.innerHTML += '<br><span class="error">' + esc(problem) + "</span>";
 
+    var waitingCount = pending().length;
     if (!data) {
       document.getElementById("summary").textContent = "";
-      app.innerHTML = '<p class="empty">Your jobs appear here after Claude next checks your job boards. Ask Claude “show me my jobs page” to fill it in.</p>';
-      renderChoices();
+      app.innerHTML = yoursSection() + '<p class="empty">Your jobs appear here after Claude next checks your job boards. Ask Claude “show me my jobs page” to fill it in.</p>';
+      renderSendbar();
       return;
     }
     document.getElementById("title").textContent = data.title || "Your job search";
+
+    // A job with a choice waiting for Claude moves up into Your choices, so the click visibly lands.
+    var waiting = data.waiting.filter(function (j) { return !waitingOn("key", j.key); });
+    var screened = data.screened.filter(function (j) { return !waitingOn("key", j.key); });
     var k = data.counts || {};
     document.getElementById("summary").innerHTML = "As of " + esc(day(data.as_of)) + ", " +
       esc(new Date(data.as_of).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })) + ": " +
-      "<strong>" + (k.waiting || 0) + "</strong> waiting on you, <strong>" + (k.to_do || 0) + "</strong> to do, <strong>" +
-      (k.open || 0) + "</strong> open applications.";
+      "<strong>" + waiting.length + "</strong> waiting on you, <strong>" + (k.to_do || 0) + "</strong> to do, <strong>" +
+      (k.open || 0) + "</strong> open applications" +
+      (waitingCount ? ", and <strong>" + waitingCount + "</strong> of your choices " +
+        (mode === "saving" ? "saved for Claude." : "not sent to Claude yet.") : ".");
 
-    var html = [];
-    html.push('<section aria-labelledby="h-waiting"><h2 id="h-waiting">Waiting on you <span class="count">' + data.waiting.length + "</span></h2>" +
-      (data.waiting.length ? '<div class="list">' + data.waiting.map(function (j) { return jobCard(j, "waiting"); }).join("") + "</div>"
+    var html = [yoursSection()];
+    html.push('<section aria-labelledby="h-waiting"><h2 id="h-waiting">Waiting on you <span class="count">' + waiting.length + "</span></h2>" +
+      (waiting.length ? '<div class="list">' + waiting.map(function (j) { return jobCard(j, "waiting"); }).join("") + "</div>"
         : '<p class="empty">Nothing waiting. New jobs appear here after each check.</p>') +
       (data.more_waiting ? '<p class="lede">And ' + data.more_waiting + " older ones not gone through yet, left off this page to keep it quick. Ask Claude to go through the new ones.</p>" : "") +
       "</section>");
@@ -301,53 +390,38 @@ details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; 
     html.push('<section aria-labelledby="h-apps"><h2 id="h-apps">Applications <span class="count">' + data.applications.length + "</span></h2>" +
       (data.applications.length ? '<div class="apps">' + data.applications.map(appRow).join("") + "</div>"
         : '<p class="empty">No applications yet. When you apply, tell Claude or press I applied on the job.</p>') + "</section>");
-    if (data.screened.length) {
-      html.push('<details><summary>Screened out in the last two weeks (' + data.screened.length + ")</summary>" +
+    if (screened.length) {
+      html.push('<details><summary>Screened out in the last two weeks (' + screened.length + ")</summary>" +
         '<p class="lede" style="margin-top:8px">Each with the reason. Press Want it on any you disagree with; your rules get reviewed against these.</p>' +
-        '<div class="list">' + data.screened.map(function (j) { return jobCard(j, "screened"); }).join("") + "</div></details>");
+        '<div class="list">' + screened.map(function (j) { return jobCard(j, "screened"); }).join("") + "</div></details>");
     }
-    var wasOpen = document.querySelector("details") && document.querySelector("details").open;
+    var d0 = document.querySelector("details");
+    var wasOpen = d0 && d0.open;
     app.innerHTML = html.join("");
-    if (wasOpen || (open && open.kind === "job" && data.screened.some(function (j) { return j.key === open.ref; }))) {
+    if (wasOpen || (open && open.kind === "job" && screened.some(function (j) { return j.key === open.ref; }))) {
       var d = app.querySelector("details"); if (d) d.open = true;
     }
-    renderChoices();
+    renderSendbar();
   }
 
-  function pending() {
-    return Object.keys(choices).map(function (id) { return choices[id]; })
-      .filter(function (c) { return !c.recorded; }).sort(function (a, b) { return a.at < b.at ? -1 : 1; });
+  // Opened from the folder, a bar at the bottom keeps the one step that sends choices in reach.
+  function renderSendbar() {
+    var bar = document.getElementById("sendbar");
+    var n = pending().length;
+    bar.hidden = mode !== "file" || !n;
+    if (bar.hidden) return;
+    bar.innerHTML = "<span><strong>" + n + "</strong> choice" + (n === 1 ? "" : "s") + " not sent to Claude yet.</span>" +
+      '<button type="button" data-copy>Copy my choices</button>';
   }
 
   function choiceText(list) {
     var lines = ["My job choices:"];
     list.forEach(function (c) {
-      var bits = [];
-      if (c.channel) bits.push(CHANNELS.filter(function (x) { return x[0] === c.channel; })[0][1].toLowerCase());
-      if (c.top_pick) bits.push(c.top_pick === "yes" ? "a top pick" : "not a top pick");
-      if (c.contact) bits.push("contact " + c.contact);
-      if (c.note) bits.push("“" + c.note + "”");
-      lines.push("- " + (c.num ? "#" + c.num + " " : "") + c.label + ": " + ACTIONS[c.action] + (bits.length ? " (" + bits.join(", ") + ")" : ""));
+      var detail = chosenDetail(c);
+      lines.push("- " + (c.num ? "#" + c.num + " " : "") + c.label + ": " + ACTIONS[c.action] + (detail ? " (" + detail + ")" : ""));
     });
     lines.push("[choices: " + JSON.stringify(list) + "]");
     return lines.join("\n");
-  }
-
-  function renderChoices() {
-    var box = document.getElementById("choices");
-    var list = pending();
-    box.hidden = !list.length;
-    if (!list.length) { box.innerHTML = ""; return; }
-    var items = "<ul>" + list.map(function (c) {
-      return "<li>" + (c.num ? '<span class="mono">#' + esc(c.num) + "</span> " : "") + esc(c.label) + ": " + esc(ACTIONS[c.action]) + "</li>";
-    }).join("") + "</ul>";
-    box.innerHTML = mode === "saving"
-      ? "<strong>Saved, waiting for Claude (" + list.length + ")</strong>" + items +
-        '<p class="muted">Claude records these the next time you talk to it.</p>'
-      : "<strong>Your choices (" + list.length + ")</strong>" + items +
-        '<div class="actions"><button type="button" class="primary" data-copy>Copy my choices</button></div>' +
-        '<p class="muted" id="copy-note">Then paste them into Claude.</p>' +
-        '<textarea id="copy-text" readonly hidden aria-label="Your choices, to copy"></textarea>';
   }
 
   // ---------------------------------------------------------------- saving
@@ -366,22 +440,35 @@ details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; 
     try { choices = JSON.parse(localStorage.getItem(LOCAL) || "{}") || {}; } catch (e) { choices = {}; }
   }
 
+  function remove(id) {
+    delete choices[id];
+    if (mode === "saving") clicks.doc(id).delete().catch(function () { problem = "Couldn't undo that one. Tell Claude in chat instead."; render(); });
+  }
+
   function save() {
     var l = labelFor(open.kind, open.ref);
+    var field = open.kind === "job" ? "key" : "app";
     var c = { id: newId(), at: new Date().toISOString(), action: open.action, num: l.num, label: l.label,
               note: (draft.note || "").trim(), channel: draft.channel || "", top_pick: draft.top_pick || "",
               contact: (draft.contact || "").trim(), recorded: "" };
-    c[open.kind === "job" ? "key" : "app"] = open.ref;
+    c[field] = open.ref;
     if (c.action === "contact" && !c.contact) { problem = "Add the person's name before saving."; render(); return; }
+    // A new choice on the same job replaces the one still waiting for Claude: only the last word counts.
+    if (!EVENTS[c.action]) {
+      pending().forEach(function (old) { if (old[field] === c[field] && !EVENTS[old.action]) remove(old.id); });
+    }
     choices[c.id] = c;
     open = null; draft = {}; problem = "";
     if (mode === "saving") {
       clicks.doc(c.id).set(c).catch(function (e) {
-        problem = "That click didn't save" + (e && e.code === "quota_exceeded" ? ": this page's storage is full." : ". Try again, or tell Claude in chat.");
+        problem = "That choice didn't save" + (e && e.code === "quota_exceeded" ? ": this page's storage is full." : ". Try again, or tell Claude in chat.");
         delete choices[c.id]; render();
       });
+      toast("Saved: " + (CHOSEN[c.action] || [c.action])[0] + (c.num ? ", #" + c.num : "") + " " + c.label +
+            ". It's under Your choices at the top, and Claude records it next time you talk.");
     } else {
       saveLocal();
+      toast("Noted: " + (CHOSEN[c.action] || [c.action])[0] + (c.num ? ", #" + c.num : "") + ". Use Copy my choices to send it to Claude.");
     }
     render();
   }
@@ -389,9 +476,9 @@ details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; 
   function undo(id) {
     var c = choices[id];
     if (!c || c.recorded) return;
-    delete choices[id];
-    if (mode === "saving") clicks.doc(id).delete().catch(function () { problem = "Couldn't undo that one. Tell Claude in chat instead."; render(); });
-    else saveLocal();
+    remove(id);
+    if (mode !== "saving") saveLocal();
+    toast("Undone: " + (c.num ? "#" + c.num + " " : "") + c.label + " is back where it was.");
     render();
   }
 
@@ -411,10 +498,13 @@ details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; 
     } else if (t.hasAttribute("data-copy")) {
       var text = choiceText(pending());
       var area = document.getElementById("copy-text");
-      var done = function () { document.getElementById("copy-note").textContent = "Copied. Now paste them into Claude."; };
+      var note = document.getElementById("copy-note");
+      var done = function () { if (note) note.textContent = "Copied. Now paste them into Claude."; toast("Copied. Now paste them into Claude."); };
       var fallback = function () {
+        if (!area) return;
         area.hidden = false; area.value = text; area.focus(); area.select();
-        document.getElementById("copy-note").textContent = "Select all of this text, copy it, and paste it into Claude.";
+        if (note) note.textContent = "Select all of this text, copy it, and paste it into Claude.";
+        area.scrollIntoView({ block: "center" });
       };
       try { navigator.clipboard.writeText(text).then(done, fallback); } catch (err) { fallback(); }
     }

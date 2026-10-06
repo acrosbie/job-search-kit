@@ -37,6 +37,7 @@ class PageTest(ScanBase):
         self.assertEqual((app["status"], app["closes_on"], app["num"] is not None), ("applied", "2026-09-22", True))
         self.assertEqual(d["counts"], {"waiting": 2, "to_do": 1, "open": 1, "applications": 1})
         self.assertEqual(d["title"], "My job search")
+        self.assertEqual({j["key"]: j["by"] for j in d["screened"]}["greenhouse-acme-3"], "rule")
 
     def test_numbers_stay_put(self):
         first = {j["key"]: j["num"] for j in page.build(self.root, CLOCK)["waiting"]}

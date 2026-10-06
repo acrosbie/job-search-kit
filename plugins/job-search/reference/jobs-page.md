@@ -53,7 +53,7 @@ Every skill does this first, as part of catching up (`running-the-engine.md`).
 4. Mark each click as done in the page's storage, in one `batch` of `update` writes, each with the version you listed:
    - for every click in `recorded`, `already` or `superseded`, set `recorded` to today's date;
    - for every click in `unknown`, set `recorded` to today's date and `problem` to its `why`, in plain words.
-5. Tell the user in one line what you recorded, by number and name: "From your jobs page: you applied to #12 Acme, Senior Accountant, and skipped #15 and #16." Mention a superseded click only as "one you'd changed your mind about since". Say plainly which clicks couldn't be recorded, and why.
+5. Tell the user in one line what you recorded, by number and name: "From your jobs page: you applied to #12 Acme, Senior Accountant, and skipped #15 and #16." Only their last choice on each job is recorded; if they changed their mind on the page or since in chat, say "your last choice on #81 was want it" rather than listing each click. Say plainly which clicks couldn't be recorded, and why.
 
 Never edit or delete the user's clicks in any other way, and never mark one done without recording it first.
 
