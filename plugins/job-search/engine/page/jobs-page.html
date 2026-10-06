@@ -198,6 +198,7 @@ details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; 
 
   function chosenLine(c) {
     if (!c) return "";
+    if (c.problem) return '<p class="chosen-line error">Claude couldn\'t record your ' + esc(ACTIONS[c.action] || c.action) + ": " + esc(c.problem) + "</p>";
     var state = c.recorded ? "recorded by Claude" : (mode === "saving" ? "saved; Claude records it next time you talk" : "not saved yet; copy your choices below");
     return '<p class="chosen-line">You chose: ' + esc(ACTIONS[c.action] || c.action) + " (" + state + ")" +
       (c.recorded ? "" : ' <button type="button" class="link" data-undo="' + esc(c.id) + '">Undo</button>') + "</p>";

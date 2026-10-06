@@ -26,7 +26,7 @@ The engine runs from a copy inside the user's folder, `<folder>/.kit/engine/`, s
 
 1. Run `python3 "<folder>/.kit/engine/run.py" version`. It prints `job-search-kit engine X.Y.Z, Python ...`.
 2. Compare that with `__version__` in `${CLAUDE_PLUGIN_ROOT}/engine/jobkit/__init__.py`.
-3. If the copy is missing, or the versions differ, copy **every file** under `${CLAUDE_PLUGIN_ROOT}/engine/` into `<folder>/.kit/engine/`, keeping the same paths: `run.py`, `README.md`, `jobkit/`, `jobkit/boards/`, `jobkit/_vendor/tomli/`. Overwrite what's there; never delete anything. The plugin's files live on Anthropic's servers, so use whichever route your tools give you to write files into the user's folder.
+3. If the copy is missing, or the versions differ, copy **every file** under `${CLAUDE_PLUGIN_ROOT}/engine/` into `<folder>/.kit/engine/`, keeping the same paths: `run.py`, `README.md`, `jobkit/`, `jobkit/boards/`, `jobkit/_vendor/tomli/`, `page/` and `starter/`. Overwrite what's there; never delete anything. The plugin's files live on Anthropic's servers, so use whichever route your tools give you to write files into the user's folder.
 4. Run the version check again. It must now match. If copying isn't possible at all, use the fallback in section 6.
 
 ## 5. Commands
@@ -42,8 +42,15 @@ Quote every path: folder names often contain spaces.
 | `scan` | Read every board in `profile/companies.toml` and save what's new. Prints a JSON summary |
 | `queue` | The postings waiting for triage, each with its cooldown facts |
 | `show KEY` | One saved posting, as text |
-| `mark KEY STATUS --by claude\|user --note "..."` | Record a verdict: `worth_applying`, `your_call`, `not_a_fit`, `skipped`, or `applied` (user only) |
-| `add FILE` | Register a posting saved by hand |
+| `mark KEY STATUS --by claude\|user --note "..."` | Record a verdict: `worth_applying`, `your_call`, `not_a_fit` or `skipped` |
+| `add-link URL` | Save a pasted link to a job board the engine reads, exactly as a scan would |
+| `add FILE` | Save a posting the user found, from a file with the scan's header |
+| `apply KEY` | The user applied (only ever when they say so): records the application and marks the posting applied |
+| `track ID STATUS` | What happened to an application: a reply, screen, interview, offer, rejection, withdrawal or follow-up; also a contact |
+| `due` | Close applications with no reply at day 21, and list the follow-ups due |
+| `applications` | Every application, with its day count and what's due |
+| `record-choices FILE` | Record the clicks from the user's jobs page |
+| `page` | Write the jobs page files again (every change does this already) |
 | `discover NAME` | Which public job board a company uses |
 
 **Exit codes:**
@@ -54,13 +61,22 @@ Quote every path: folder names often contain spaces.
 
 Full details are in `${CLAUDE_PLUGIN_ROOT}/engine/README.md`.
 
+## 5a. Catch up
+
+After installing or refreshing the engine, every skill catches up before doing anything else:
+
+1. **The jobs page:** read and record any clicks the user made on it, as `${CLAUDE_PLUGIN_ROOT}/reference/jobs-page.md` says under "Reading the user's clicks".
+2. **Day 21:** run `due`. If `closed_now` lists anything, say so in one line: "No reply from Acme in three weeks, so I've marked it closed. Tell me if you hear from them." (The scan skill can skip this step: every scan runs it.)
+
+Keep it short: the user asked for something else, so give the catch-up a line or two and move on.
+
 ## 6. Fallback: no shell can see the folder
 
 Run the engine straight from `${CLAUDE_PLUGIN_ROOT}/engine` in a shell on Anthropic's servers, against a copy:
 
-1. Copy these into a temporary folder, keeping their paths: `profile/` (every file), plus whichever exist of `data/postings.json`, `data/applications.json`, `data/decisions.log` and `data/runs.log`.
+1. Copy these into a temporary folder, keeping their paths: `profile/` (every file), plus whichever exist of `data/postings.json`, `data/applications.json`, `data/decisions.log`, `data/runs.log` and `data/page-choices.json`. For `show`, also copy that posting's file from `data/postings/`.
 2. Run the command with `--folder` pointing at the temporary folder.
-3. Copy back into the user's folder: `data/postings.json`, `data/postings.backup.json`, `data/decisions.log`, `data/runs.log`, `data/titles-latest.tsv`, and every file that is new in `data/postings/`.
+3. Copy back into the user's folder: `data/postings.json`, `data/postings.backup.json`, `data/applications.json`, `data/applications.backup.json`, `data/decisions.log`, `data/runs.log`, `data/titles-latest.tsv`, `data/page.json`, `data/jobs-page.html`, `My jobs.html`, and every file that is new in `data/postings/`.
 
 ## 7. Code mode
 
