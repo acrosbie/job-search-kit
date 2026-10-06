@@ -6,7 +6,7 @@ order, so a recorded set of board answers gives the same result in both.
 import concurrent.futures as cf
 import re
 
-from . import screen, settings, store
+from . import health, screen, settings, store
 from .boards import READERS, Context, watched_names
 from .clock import Clock
 from .text import salary_from, salary_range
@@ -62,14 +62,19 @@ def run(root, only=None, clock=None, workers=WORKERS):
     answered, failures = [], []
     with cf.ThreadPoolExecutor(max_workers=workers) as pool:
         for name, ats, c, recs, err in pool.map(guarded, queue):
+            before = boards.get(name, {})
+            # For scan health: when the board was first read, and the last day it listed any job.
+            first = before.get("first_read") or today
             if err is None:
                 answered.append((name, recs))
-                boards[name] = {"ats": ats, "last_ok": stamp, "jobs": len(recs), "error": ""}
+                boards[name] = {"ats": ats, "last_ok": stamp, "jobs": len(recs), "error": "", "fails": 0,
+                                "first_read": first, "last_listed": today if recs else before.get("last_listed", "")}
             else:
                 failures.append({"board": c.get("name", name), "slug": name, "error": err})
                 # A failed board must not keep showing last run's numbers as if they were current.
                 b = boards.setdefault(name, {"ats": ats, "last_ok": "", "jobs": 0})
-                b.update({"error": err, "jobs": "", "matched": "", "stale": True})
+                b.update({"error": err, "jobs": "", "matched": "", "stale": True, "fails": before.get("fails", 0) + 1,
+                          "first_read": first})
 
     applications = folder.load_applications()
     new, rejected, matched = [], [], 0
@@ -177,6 +182,7 @@ def run(root, only=None, clock=None, workers=WORKERS):
         "rejected_postings": rejected,
         "failures": failures,
         "check_by_hand": [{"name": c["name"], "careers_url": c.get("careers_url", "")} for c in manual],
+        "health": health.boards(boards, companies, s, today),
     }
 
 

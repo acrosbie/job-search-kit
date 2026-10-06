@@ -3,7 +3,7 @@ rather than editing the files, so a pattern full of backslashes is always writte
 
 import json
 
-SECTION_ORDER = ("you", "titles", "places", "description", "pay", "workday", "triage", "tracking", "page", "labels")
+SECTION_ORDER = ("you", "titles", "places", "description", "pay", "workday", "triage", "tracking", "schedule", "page", "labels")
 
 
 def value(v):

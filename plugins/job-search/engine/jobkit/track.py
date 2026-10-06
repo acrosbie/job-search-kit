@@ -30,7 +30,7 @@ for a person, and the rest are left to close at day 21.
 import datetime as dt
 import re
 
-from . import settings, store, verdicts
+from . import schedule, settings, store, verdicts
 from .errors import NotFound, Refused
 
 STATUSES = ("applied", "replied", "screen", "interview", "offer", "rejected", "presumed_rejected", "withdrawn", "closed")
@@ -323,4 +323,5 @@ def due(root, clock):
         out[route].sort(key=lambda r: -(r["days"] or 0))
     runs = store.Folder(root).read_runs(limit=1)
     out["last_scan_at"] = runs[-1].get("at", "") if runs else ""
+    out.update(schedule.facts(root, s, clock))  # what catching up needs: an overdue scan, a review
     return out

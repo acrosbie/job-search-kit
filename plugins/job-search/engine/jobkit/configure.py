@@ -24,7 +24,8 @@ KNOWN = {
     "workday": {"country_facet": PATTERN, "max_total": NUMBER},
     "triage": {"cooldown_days": NUMBER},
     "tracking": {"follow_up_after_days": NUMBER, "presume_after_days": NUMBER},
-    "page": {"url": TEXT, "version": TEXT, "route": TEXT},
+    "page": {"url": TEXT, "version": TEXT, "route": ("", "storage", "republish")},
+    "schedule": {"scan": ("", "daily", "weekdays", "weekly"), "review": ("", "weekly")},
     "labels": {k: TEXT for k in settings.DEFAULT_LABELS},
 }
 
@@ -85,7 +86,11 @@ def set_value(folder, key, raw_value):
     kind = KNOWN.get(section, {}).get(name)
     if kind is None:
         raise Refused(f"there's no setting called {key}")
-    if kind == NUMBER:
+    if isinstance(kind, tuple):  # one of a few words
+        if raw_value not in kind:
+            raise Refused(f"{key} is one of {', '.join(repr(k) for k in kind)}")
+        new = raw_value
+    elif kind == NUMBER:
         try:
             new = int(raw_value)
         except ValueError:

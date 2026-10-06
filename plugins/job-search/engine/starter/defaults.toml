@@ -21,6 +21,11 @@ cooldown_days = 30
 follow_up_after_days = 5
 presume_after_days = 21
 
+# The scheduled checks, so a conversation can catch up on one that was missed. Setup fills these in.
+[schedule]
+scan = ""
+review = ""
+
 # The user's jobs page, made by Claude in their own Claude account.
 [page]
 url = ""

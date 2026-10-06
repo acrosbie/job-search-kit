@@ -8,6 +8,10 @@
     data/decisions.log        every verdict, by rule, Claude or the user; one JSON object a line, append-only
     data/runs.log             one JSON object per scan, append-only
     data/titles-latest.tsv    every title read on the last scan, for testing a title change on real data
+    data/reviews.log          one JSON object per weekly review prepared or gone through, append-only
+    data/changes.log          every change to the screening rules, and every one declined, append-only
+    data/review.json          the weekly review last prepared
+    data/replay-latest.json   the last replay of a proposed rule change, which saving it must match
     data/page.json            what the jobs page shows (see page.py)
     data/jobs-page.html       the jobs page with its data built in, for Claude to publish
     My jobs.html              the jobs page as a file, at the top of the folder
@@ -35,6 +39,10 @@ class Folder:
         self.applications_backup_json = os.path.join(self.data, "applications.backup.json")
         self.page_json = os.path.join(self.data, "page.json")
         self.page_publish_html = os.path.join(self.data, "jobs-page.html")
+        self.reviews_log = os.path.join(self.data, "reviews.log")
+        self.changes_log = os.path.join(self.data, "changes.log")
+        self.review_json = os.path.join(self.data, "review.json")
+        self.replay_json = os.path.join(self.data, "replay-latest.json")
         self.page_html = os.path.join(root, "My jobs.html")
         self.decisions_log = os.path.join(self.data, "decisions.log")
         self.runs_log = os.path.join(self.data, "runs.log")
@@ -133,6 +141,24 @@ class Folder:
 
     def read_decisions(self):
         return self._lines(self.decisions_log)
+
+    def log_review(self, row):
+        self._append(self.reviews_log, row)
+
+    def read_reviews(self):
+        return self._lines(self.reviews_log)
+
+    def log_change(self, row):
+        self._append(self.changes_log, row)
+
+    def read_changes(self):
+        return self._lines(self.changes_log)
+
+    def write_json(self, path, obj):
+        self._write(path, json.dumps(obj, indent=1, ensure_ascii=False) + "\n")
+
+    def read_json(self, path):
+        return json.loads(self._read(path)) if os.path.exists(path) else None
 
     def write_titles(self, rows):
         """rows: (board, title, location) for every posting read this scan."""

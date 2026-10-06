@@ -16,6 +16,8 @@ pattern matches nothing, so a half-written file can't wave every job through.
     [tracking]     follow_up_after_days (5), presume_after_days (21): when an application is due a follow-up,
                    and when one with no reply becomes presumed rejected
     [page]         url, version, route: the user's jobs page artifact, which Claude makes and keeps current
+    [schedule]     scan (daily, weekdays, weekly), review (weekly): what the scheduled checks are, so a
+                   conversation can catch up on one that was missed
     [labels]       wording for every flag and reason (defaults below)
 """
 
@@ -82,6 +84,7 @@ class Settings:
     follow_up_after_days: int
     presume_after_days: int
     page: dict
+    schedule: dict
     labels: dict
 
     def label(self, name, **values):
@@ -111,6 +114,7 @@ def parse(raw):
         follow_up_after_days=int(tr.get("follow_up_after_days", 5)),
         presume_after_days=int(tr.get("presume_after_days", 21)),
         page={"url": "", "version": "", "route": "", **raw.get("page", {})},
+        schedule={"scan": "", "review": "", **raw.get("schedule", {})},
         labels={**DEFAULT_LABELS, **raw.get("labels", {})},
     )
 
