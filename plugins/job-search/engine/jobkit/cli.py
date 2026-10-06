@@ -12,7 +12,7 @@ import re
 import sys
 
 from . import __version__, net, scan, settings, store
-from . import add, choices, configure, page, replay, titles, track, verdicts
+from . import add, choices, configure, page, replay, rules, titles, track, verdicts
 from . import init as starter
 from . import queue as triage_queue
 from .clock import Clock
@@ -141,6 +141,30 @@ def cmd_replay(a):
         phrase = {"name": a.phrase_reject, "phrases": a.phrases or "", "min_distinct": a.min_distinct,
                   "reason": a.reason or ""}
     _out(replay.settings_change(a.folder, _clock(a.folder), sets=a.set or [], phrase=phrase))
+    return 0
+
+
+def cmd_rule_evidence(a):
+    _out(rules.evidence(a.folder, a.number, words=a.words))
+    return 0
+
+
+def cmd_change_rule(a):
+    if a.new is None and a.number is None:
+        raise Refused("give the rule's number, or --new and its plain name")
+    _out(rules.change(a.folder, _clock(a.folder), n=a.number, text_file=a.text, why=a.why or "", replay_file=a.replay,
+                      accept=a.accept_flips or (), retire=a.retire, flag_file=a.flag_text, new_name=a.new or "",
+                      name=a.name or ""))
+    return 0
+
+
+def cmd_decline(a):
+    _out(rules.decline(a.folder, _clock(a.folder), a.what, a.why or "", proposal=a.proposal or ""))
+    return 0
+
+
+def cmd_requeue(a):
+    _out(rules.requeue(a.folder, _clock(a.folder), a.keys, a.why))
     return 0
 
 
@@ -313,6 +337,38 @@ def parser():
     s.add_argument("--reason")
     s.set_defaults(func=cmd_replay)
 
+    s = sub.add_parser("rule-evidence", help="what a change to one of the user's triage rules could touch")
+    s.add_argument("--folder", required=True)
+    s.add_argument("number", type=int)
+    s.add_argument("--words", help="a pattern of the rule's words, to find passing postings it could newly catch")
+    s.set_defaults(func=cmd_rule_evidence)
+
+    s = sub.add_parser("change-rule", help="change, retire or add a triage rule in rules.md, with its replay and history")
+    s.add_argument("--folder", required=True)
+    s.add_argument("number", type=int, nargs="?")
+    s.add_argument("--text", help="a file holding the rule's new lines (Not a fit when, Doesn't count, Why)")
+    s.add_argument("--why", help="the user's own words for the change")
+    s.add_argument("--replay", help="a JSON file: the postings checked, and each one that would flip")
+    s.add_argument("--accept-flips", nargs="*", metavar="KEY", help="jobs the user agreed this change may turn away")
+    s.add_argument("--retire", action="store_true", help="retire the rule; its number is kept")
+    s.add_argument("--flag-text", help="with --retire: a file holding the flag it becomes")
+    s.add_argument("--new", metavar="NAME", help="add a rule with the next number and this plain name")
+    s.add_argument("--name", help="rename the rule")
+    s.set_defaults(func=cmd_change_rule)
+
+    s = sub.add_parser("decline", help="record a proposed rule change the user turned down")
+    s.add_argument("--folder", required=True)
+    s.add_argument("--what", required=True, help='what it would have changed: "rule 4", "setting places.hybrid_ok", "phrase rule NAME"')
+    s.add_argument("--why", help="the user's own words")
+    s.add_argument("--proposal", help="the change, in plain words")
+    s.set_defaults(func=cmd_decline)
+
+    s = sub.add_parser("requeue", help="put jobs a loosened rule turned away back on the waiting list")
+    s.add_argument("--folder", required=True)
+    s.add_argument("keys", nargs="+")
+    s.add_argument("--why", required=True, help="the change that lets them through, in plain words")
+    s.set_defaults(func=cmd_requeue)
+
     s = sub.add_parser("companies", help="list, add or drop a watched company")
     acts = s.add_subparsers(dest="action", required=True)
     x = acts.add_parser("list")
@@ -362,7 +418,7 @@ def parser():
 
 
 # Commands after which the jobs page is written again, so it always shows the records as they are.
-REFRESHES = {"scan", "mark", "add", "add-link", "apply", "track", "due", "record-choices", "page"}
+REFRESHES = {"scan", "mark", "add", "add-link", "apply", "track", "due", "record-choices", "page", "requeue"}
 
 
 def _refresh_page(folder, report):
