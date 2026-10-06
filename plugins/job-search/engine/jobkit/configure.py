@@ -8,8 +8,9 @@ refused change leaves the file exactly as it was.
 import os
 import re
 
-from . import settings, tomlwrite
+from . import changes, settings, tomlwrite
 from .boards import READERS
+from .clock import Clock
 from .errors import Refused
 from .toml import load_file
 
@@ -78,8 +79,8 @@ def show(folder):
     return load_file(_paths(folder)[0])
 
 
-def set_value(folder, key, raw_value):
-    """Set `section.key` to a value given as text. Returns (old, new)."""
+def coerce(key, raw_value):
+    """(section, name, value) for a setting given as text, checked. Refused if it isn't right."""
     if "." not in key:
         raise Refused("give the setting as section.name, for example titles.function")
     section, name = key.split(".", 1)
@@ -101,18 +102,41 @@ def set_value(folder, key, raw_value):
             check_pattern(new)
         if section == "labels":
             check_label(name, new)
+    return section, name, new
+
+
+def set_value(folder, key, raw_value, why="", accept=(), clock=None):
+    """Set `section.key` to a value given as text. Returns (old, new).
+
+    Once there are saved postings, a change to how they're screened needs a replay of exactly this
+    change first, the user's words (`why`), and their acceptance of any job they applied to or wanted
+    that it would turn away (changes.guard). It is then logged in data/changes.log."""
+    section, name, new = coerce(key, raw_value)
     path = _paths(folder)[0]
     text = _read(path)
     raw = load_file(path)
     old = raw.get(section, {}).get(name)
+    kind = changes.guard_kind(key)
+    rep = None
+    if kind:
+        clk = clock or Clock(settings.parse(raw).timezone)
+        rep = changes.guard(folder, kind, lambda ch: _covers(ch, kind, key, new), accept, why, clk)
     raw.setdefault(section, {})[name] = new
     settings.parse(raw)  # the whole file must still load
     _write(path, tomlwrite.settings_text(raw, tomlwrite.header_of(text)))
+    if rep is not None:
+        changes.log(folder, clk, f"setting {key}", "changed", old, new, why, rep, accept)
     return old, new
 
 
-def phrase_reject(folder, name, phrases, min_distinct=2, reason="", same_as=None):
-    """Add a phrase rule, or replace the one with the same name."""
+def _covers(change, kind, key, value):
+    if kind == "titles":
+        return change.get(key) == value
+    return [key, value] in (change.get("set") or [])
+
+
+def phrase_rule(name, phrases, min_distinct=2, reason="", same_as=None):
+    """A phrase rule as it would be saved, checked."""
     check_pattern(phrases)
     if min_distinct < 1:
         raise Refused("min-distinct has to be at least 1")
@@ -120,18 +144,29 @@ def phrase_reject(folder, name, phrases, min_distinct=2, reason="", same_as=None
         used = set(re.findall(r"{(\w+)}", reason))
         if used - {"hits"}:
             raise Refused("a phrase rule's reason can only use {hits}")
-    path = _paths(folder)[0]
-    text = _read(path)
-    raw = load_file(path)
     rule = {"name": name, "phrases": phrases, "min_distinct": min_distinct}
     if same_as:
         rule["same_as"] = same_as
     if reason:
         rule["reason"] = reason
+    return rule
+
+
+def phrase_reject(folder, name, phrases, min_distinct=2, reason="", same_as=None, why="", accept=(), clock=None):
+    """Add a phrase rule, or replace the one with the same name. Guarded like set_value."""
+    rule = phrase_rule(name, phrases, min_distinct, reason, same_as)
+    path = _paths(folder)[0]
+    text = _read(path)
+    raw = load_file(path)
+    clk = clock or Clock(settings.parse(raw).timezone)
+    rep = changes.guard(folder, "settings", lambda ch: ch.get("phrase_reject") == rule, accept, why, clk)
+    old = next((r for r in raw.get("phrase_rejects", []) if r.get("name") == name), None)
     rules = [r for r in raw.get("phrase_rejects", []) if r.get("name") != name] + [rule]
     raw["phrase_rejects"] = rules
     settings.parse(raw)
     _write(path, tomlwrite.settings_text(raw, tomlwrite.header_of(text)))
+    if rep is not None:
+        changes.log(folder, clk, f"phrase rule {name}", "changed", old, rule, why, rep, accept)
     return rule
 
 

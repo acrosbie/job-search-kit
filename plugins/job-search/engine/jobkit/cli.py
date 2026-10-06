@@ -12,7 +12,7 @@ import re
 import sys
 
 from . import __version__, net, scan, settings, store
-from . import add, choices, configure, page, titles, track, verdicts
+from . import add, choices, configure, page, replay, titles, track, verdicts
 from . import init as starter
 from . import queue as triage_queue
 from .clock import Clock
@@ -125,11 +125,22 @@ def cmd_settings(a):
     if a.action == "show":
         _out(configure.show(a.folder))
     elif a.action == "set":
-        old, new = configure.set_value(a.folder, a.key, a.value)
+        old, new = configure.set_value(a.folder, a.key, a.value, why=a.why or "", accept=a.accept_flips or (),
+                                       clock=_clock(a.folder))
         _out({"setting": a.key, "was": old, "now": new})
     else:
         same_as = json.loads(a.same_as) if a.same_as else None
-        _out(configure.phrase_reject(a.folder, a.name, a.phrases, a.min_distinct, a.reason, same_as))
+        _out(configure.phrase_reject(a.folder, a.name, a.phrases, a.min_distinct, a.reason, same_as,
+                                     why=a.why or "", accept=a.accept_flips or (), clock=_clock(a.folder)))
+    return 0
+
+
+def cmd_replay(a):
+    phrase = None
+    if a.phrase_reject:
+        phrase = {"name": a.phrase_reject, "phrases": a.phrases or "", "min_distinct": a.min_distinct,
+                  "reason": a.reason or ""}
+    _out(replay.settings_change(a.folder, _clock(a.folder), sets=a.set or [], phrase=phrase))
     return 0
 
 
@@ -152,8 +163,10 @@ def cmd_titles(a):
 
 def cmd_try_titles(a):
     try:
-        _out(titles.try_patterns(a.folder, function=a.function, level=a.level, exclude=a.exclude,
-                                 field_words=a.field_words, sample=a.sample, seed=a.seed))
+        patterns = {"function": a.function, "level": a.level, "exclude": a.exclude, "field_words": a.field_words}
+        result = titles.try_patterns(a.folder, sample=a.sample, seed=a.seed, **patterns)
+        replay.record_titles(a.folder, _clock(a.folder), patterns, result)  # the replay a title change needs
+        _out(result)
     except re.error as e:
         print(f"that pattern doesn't work: {e}", file=sys.stderr)
         return 3
@@ -278,6 +291,8 @@ def parser():
     x.add_argument("--folder", required=True)
     x.add_argument("key", help="section.name, for example titles.function")
     x.add_argument("value")
+    x.add_argument("--why", help="the user's own words for a change to how jobs are screened")
+    x.add_argument("--accept-flips", nargs="*", metavar="KEY", help="jobs the user agreed this change may turn away")
     x = acts.add_parser("phrase-reject")
     x.add_argument("--folder", required=True)
     x.add_argument("name")
@@ -285,7 +300,18 @@ def parser():
     x.add_argument("--min-distinct", type=int, default=2)
     x.add_argument("--reason", default="")
     x.add_argument("--same-as", help='JSON object, for example {"net revenue retention": "nrr"}')
+    x.add_argument("--why", help="the user's own words for this rule")
+    x.add_argument("--accept-flips", nargs="*", metavar="KEY", help="jobs the user agreed this rule may turn away")
     s.set_defaults(func=cmd_settings)
+
+    s = sub.add_parser("replay", help="what a change to the scan's rules would do to every saved posting")
+    s.add_argument("--folder", required=True)
+    s.add_argument("--set", nargs=2, action="append", metavar=("KEY", "VALUE"), help="a setting to change; repeat for several")
+    s.add_argument("--phrase-reject", metavar="NAME", help="a phrase rule to add or change, with --phrases")
+    s.add_argument("--phrases")
+    s.add_argument("--min-distinct", type=int, default=2)
+    s.add_argument("--reason")
+    s.set_defaults(func=cmd_replay)
 
     s = sub.add_parser("companies", help="list, add or drop a watched company")
     acts = s.add_subparsers(dest="action", required=True)
