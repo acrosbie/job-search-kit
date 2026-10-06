@@ -53,3 +53,15 @@ Say which steps did what they should, and anything that surprised you. I check t
 - **Step 1:** whether Claude can read a LinkedIn link word for word, or needs the text pasted. Either works; this tells us which one users will usually see.
 - **Step 3:** how the page is kept current, by writing to its storage or by publishing it again. The answer is saved in the folder as `[page] route`.
 - **Step 5:** what we tell users about when the page updates.
+
+## Re-test after 0.3.1 (about 10 minutes)
+
+The first run found two problems: Claude couldn't read the LinkedIn link, and a click on the page gave no clear sign it had worked, so it was clicked five times. Version 0.3.1 fixes both. Use the same folder, once the plugin shows **0.3.1**.
+
+1. **In a new task, say "show me my jobs page"** and open it. Claude brings the page up to date first.
+   - Click **Skip** on a job and press **Save**. The job should move up into **Your choices** at the top, with a message saying so.
+   - Press **Undo** on it. It should go back where it was.
+   - Click **Want it** on another job and **Save**.
+2. **Paste the LinkedIn link again.** Claude should ask you to paste the posting, without trying to read the link. On LinkedIn, copy from the job title down to the end of the description, and paste it. Claude should save it, say it's joined to your MV Transportation application, and give a verdict.
+3. **Say "Step was on their site, and it isn't a top pick."** Claude should correct it, and list it back.
+4. **In a new task, say "what's due?"** Claude should record your one click (Want it), not the Skip you undid.
