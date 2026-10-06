@@ -12,7 +12,7 @@ import re
 import sys
 
 from . import __version__, net, scan, settings, store
-from . import add, choices, configure, page, replay, rules, titles, track, verdicts
+from . import add, choices, configure, page, replay, review, rules, titles, track, verdicts
 from . import init as starter
 from . import queue as triage_queue
 from .clock import Clock
@@ -141,6 +141,17 @@ def cmd_replay(a):
         phrase = {"name": a.phrase_reject, "phrases": a.phrases or "", "min_distinct": a.min_distinct,
                   "reason": a.reason or ""}
     _out(replay.settings_change(a.folder, _clock(a.folder), sets=a.set or [], phrase=phrase))
+    return 0
+
+
+def cmd_review(a):
+    clock = _clock(a.folder)
+    if a.done:
+        _out(review.finish(a.folder, clock, monthly=a.monthly))
+    elif a.prepare:
+        _out(review.prepare(a.folder, clock))
+    else:
+        _out(review.build(a.folder, clock, monthly=True if a.monthly else None))
     return 0
 
 
@@ -337,6 +348,14 @@ def parser():
     s.add_argument("--reason")
     s.set_defaults(func=cmd_replay)
 
+    s = sub.add_parser("review", help="the weekly review's facts: overturns, rules, a spot-check, titles, pipeline")
+    s.add_argument("--folder", required=True)
+    g = s.add_mutually_exclusive_group()
+    g.add_argument("--prepare", action="store_true", help="keep it in data/review.json for the user to go through")
+    g.add_argument("--done", action="store_true", help="the user has gone through it")
+    s.add_argument("--monthly", action="store_true", help="include the monthly parts now (or, with --done, they were gone through)")
+    s.set_defaults(func=cmd_review)
+
     s = sub.add_parser("rule-evidence", help="what a change to one of the user's triage rules could touch")
     s.add_argument("--folder", required=True)
     s.add_argument("number", type=int)
@@ -418,7 +437,7 @@ def parser():
 
 
 # Commands after which the jobs page is written again, so it always shows the records as they are.
-REFRESHES = {"scan", "mark", "add", "add-link", "apply", "track", "due", "record-choices", "page", "requeue"}
+REFRESHES = {"scan", "mark", "add", "add-link", "apply", "track", "due", "record-choices", "page", "requeue", "review"}
 
 
 def _refresh_page(folder, report):
