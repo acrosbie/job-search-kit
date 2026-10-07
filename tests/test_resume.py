@@ -145,5 +145,98 @@ class TraceTest(unittest.TestCase):
             resume.parse_source("# Morgan Reyes\n## Experience\nfrom: a source under a heading\n")
 
 
+SAMPLE = """# Morgan Reyes
+Denver, CO · morgan.reyes@example.com · (555) 010-0142
+
+## Summary
+Accounting manager who runs a fast, clean close & leads a team of 4.
+from: 4 direct reports at Peakline
+from: Cut the month-end close from 10 business days to 6
+
+## Experience
+### Accounting Manager | Peakline Software, Denver, CO | Mar 2021 – Present
+from: Accounting Manager, Peakline Software, Denver, CO, Mar 2021 to present
+- Cut the month-end close from 10 business days to 6 by rebuilding the close calendar and reconciliations.
+  from: Cut the month-end close from 10 business days to 6 by rebuilding the close calendar and reconciliations
+- Automated accounts payable approvals with Bill.com, removing paper invoices entirely.
+  from: Automated accounts payable approvals with Bill.com, removing paper invoices entirely
+
+## Education
+BS, Accounting, Front Range State University, 2015
+from: BS, Accounting, Front Range State University, 2015
+"""
+
+SAMPLE_PARAGRAPHS = [
+    "Morgan Reyes",
+    "Denver, CO · morgan.reyes@example.com · (555) 010-0142",
+    "Summary",
+    "Accounting manager who runs a fast, clean close & leads a team of 4.",
+    "Experience",
+    "Accounting Manager\tMar 2021 – Present",
+    "Peakline Software, Denver, CO",
+    "Cut the month-end close from 10 business days to 6 by rebuilding the close calendar and reconciliations.",
+    "Automated accounts payable approvals with Bill.com, removing paper invoices entirely.",
+    "Education",
+    "BS, Accounting, Front Range State University, 2015",
+]
+
+
+class BlocksTest(unittest.TestCase):
+    def test_layout(self):
+        out = resume.blocks(resume.parse_source(SAMPLE))
+        self.assertEqual(out[5], ("job", "Accounting Manager", "Peakline Software, Denver, CO", "Mar 2021 – Present"))
+        self.assertEqual([b[0] for b in out], ["name", "contact", "heading", "para", "heading", "job", "bullet",
+                                                "bullet", "heading", "para"])
+
+    def test_job_headings(self):
+        self.assertEqual(resume._job("Controller | 2019 - 2021"), ("Controller", "", "2019 - 2021"))
+        self.assertEqual(resume._job("Controller | Acme"), ("Controller", "Acme", ""))
+        self.assertEqual(resume._job("Controller"), ("Controller", "", ""))
+
+    def test_a_credential_joins_the_name(self):
+        items = resume.parse_source("# Morgan Reyes, MBA\nDenver\n## Education\nMBA\n")
+        self.assertEqual(resume.blocks(items)[0], ("name", "Morgan Reyes, MBA"))
+
+
+class WordTest(unittest.TestCase):
+    def setUp(self):
+        from jobkit import docx
+        self.docx = docx
+        self.data = docx.build(resume.blocks(resume.parse_source(SAMPLE)), title="Morgan Reyes resume",
+                               author="Morgan Reyes")
+
+    def test_parts_are_well_formed(self):
+        import io
+        import zipfile
+        from xml.dom import minidom
+        with zipfile.ZipFile(io.BytesIO(self.data)) as z:
+            names = z.namelist()
+            self.assertEqual(names[0], "[Content_Types].xml")
+            self.assertEqual(sorted(names), sorted(["[Content_Types].xml", "_rels/.rels", "word/document.xml",
+                                                    "word/_rels/document.xml.rels", "word/styles.xml",
+                                                    "word/numbering.xml", "docProps/core.xml"]))
+            for n in names:
+                minidom.parseString(z.read(n))  # raises if any part isn't well-formed XML
+            core = z.read("docProps/core.xml").decode("utf-8")
+        self.assertIn("<dc:creator>Morgan Reyes</dc:creator>", core)
+
+    def test_text_is_the_resume_without_its_sources(self):
+        self.assertEqual(self.docx.text_of(self.data), SAMPLE_PARAGRAPHS)
+        self.assertNotIn(b"from:", self.data)
+
+    def test_bullets_are_word_bullets(self):
+        import io
+        import zipfile
+        with zipfile.ZipFile(io.BytesIO(self.data)) as z:
+            xml = z.read("word/document.xml").decode("utf-8")
+        self.assertEqual(xml.count('<w:numId w:val="1"/>'), 2)
+        self.assertNotIn("<w:tbl", xml)  # no tables
+        self.assertNotIn("<w:txbx", xml)  # no text boxes
+
+    def test_the_same_resume_makes_the_same_file(self):
+        self.assertEqual(self.docx.build(resume.blocks(resume.parse_source(SAMPLE)), "Morgan Reyes resume",
+                                         "Morgan Reyes"), self.data)
+
+
 if __name__ == "__main__":
     unittest.main()

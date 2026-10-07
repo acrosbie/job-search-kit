@@ -258,6 +258,32 @@ def check_items(items, entries):
     return items
 
 
+def _job(text):
+    """A job heading's title, place and dates: "Title | Company, Place | Dates". With two parts, the
+    second is the dates if it has a digit or says "present"."""
+    parts = [p.strip() for p in text.split("|")]
+    if len(parts) == 1:
+        return parts[0], "", ""
+    if len(parts) == 2:
+        dated = re.search(r"\d|present|current", parts[1], re.I)
+        return (parts[0], "", parts[1]) if dated else (parts[0], parts[1], "")
+    return parts[0], " | ".join(parts[1:-1]), parts[-1]
+
+
+def blocks(items):
+    """The resume as the Word and PDF makers lay it out (docx.py): the name (with a traced
+    credential), contact lines, headings, jobs, bullets and lines of text."""
+    out = []
+    for it in items:
+        if it["kind"] == "credential":
+            out[0] = ("name", f"{out[0][1]}, {it['text']}")
+        elif it["kind"] == "job":
+            out.append(("job",) + _job(it["text"]))
+        else:
+            out.append((it["kind"], it["text"]))
+    return out
+
+
 def check_text(text, entries):
     """The whole check, as a summary for Claude: each line, what it rests on, and its problems."""
     items = check_items(parse_source(text), entries)
