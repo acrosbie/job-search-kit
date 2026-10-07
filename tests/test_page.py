@@ -96,6 +96,27 @@ class PageTest(ScanBase):
         for banned in ("alert(", "confirm(", "prompt(", "window.print"):
             self.assertNotIn(banned, template)
 
+    def test_a_page_that_is_behind_gets_noticed(self):
+        def run(*args):
+            with contextlib.redirect_stdout(io.StringIO()) as out:
+                self.assertEqual(cli.main([args[0], "--folder", self.root, *args[1:]]), 0)
+            return json.loads(out.getvalue())
+
+        self.assertFalse(run("due")["page_behind"])  # no jobs page yet
+        configure.set_value(self.root, "page.url", "https://claude.ai/artifact/example")
+        self.assertTrue(run("due")["page_behind"])
+        pushed = run("page", "--pushed")
+        self.assertEqual(pushed["pushed"], json.loads(read(self.folder.page_json))["digest"])
+        self.assertFalse(run("due")["page_behind"])  # written again since, but showing the same
+        run("mark", "greenhouse-acme-1", "skipped", "--by", "user")
+        self.assertTrue(run("due")["page_behind"])
+
+    def test_the_fingerprint_ignores_when_it_was_written(self):
+        a = page.build(self.root, CLOCK)
+        b = page.build(self.root, Clock("", fixed=FIXED.replace(hour=20)))
+        self.assertNotEqual(a["as_of"], b["as_of"])
+        self.assertEqual(page.digest(a), page.digest(b))
+
     def test_every_change_rewrites_the_page(self):
         with contextlib.redirect_stdout(io.StringIO()):
             cli.main(["mark", "--folder", self.root, "greenhouse-acme-1", "worth_applying", "--by", "claude",

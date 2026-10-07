@@ -63,6 +63,16 @@ def review_state(root, s, clock):
     return ready, due
 
 
+def page_behind(root, s):
+    """True when the user has a jobs page and it doesn't yet show what the folder holds: the last
+    data sent to it ([page] pushed) isn't the folder's page.json. A skipped update, or a scheduled
+    check that couldn't reach the page, is then caught up by the next conversation."""
+    if not s.page.get("url"):
+        return False
+    data = store.Folder(root).read_json(store.Folder(root).page_json) or {}
+    return data.get("digest", "") != s.page.get("pushed", "")
+
+
 def facts(root, s, clock):
     folder = store.Folder(root)
     ready, due = review_state(root, s, clock)

@@ -15,7 +15,8 @@ pattern matches nothing, so a half-written file can't wave every job through.
     [triage]       cooldown_days: one application per company in this many days (default 30)
     [tracking]     follow_up_after_days (5), presume_after_days (21): when an application is due a follow-up,
                    and when one with no reply becomes presumed rejected
-    [page]         url, version, route: the user's jobs page artifact, which Claude makes and keeps current
+    [page]         url, version, route, pushed: the user's jobs page artifact, which Claude makes and keeps
+                   current, and the fingerprint of the data last sent to it
     [schedule]     scan (daily, weekdays, weekly), review (weekly): what the scheduled checks are, so a
                    conversation can catch up on one that was missed
     [labels]       wording for every flag and reason (defaults below)
@@ -113,7 +114,7 @@ def parse(raw):
         cooldown_days=int(raw.get("triage", {}).get("cooldown_days", 30)),
         follow_up_after_days=int(tr.get("follow_up_after_days", 5)),
         presume_after_days=int(tr.get("presume_after_days", 21)),
-        page={"url": "", "version": "", "route": "", **raw.get("page", {})},
+        page={"url": "", "version": "", "route": "", "pushed": "", **raw.get("page", {})},
         schedule={"scan": "", "review": "", **raw.get("schedule", {})},
         labels={**DEFAULT_LABELS, **raw.get("labels", {})},
     )

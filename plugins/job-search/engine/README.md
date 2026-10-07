@@ -24,7 +24,7 @@ python3 run.py <command> --folder "<the user's Job Search folder>" [options]
 | `track ID [STATUS]` | What happened next: `replied`, `screen`, `interview`, `offer`, `rejected`, `withdrawn`, `closed`, or `followed_up` (an event, not a status); also `--contact`, `--top-pick`, `--channel`, `--note`, `--date` | the application |
 | `applications` | Every application with `days`, `closes_on`, `due` and `route` | JSON |
 | `due` | Closes every application still at plain `applied` after `[tracking] presume_after_days`, then lists the follow-ups due by route: `send` (a contact is recorded), `find_person` (a top pick, nobody known), `closing` (nothing to send) | JSON: `closed_now`, `send`, `find_person`, `closing`, `open`, `last_scan_at` |
-| `page` | Writes the jobs page (below). Every command that changes the records does this by itself | a summary |
+| `page [--pushed]` | Writes the jobs page (below). Every command that changes the records does this by itself. `--pushed` records that its current data was just sent to the user's jobs page | a summary |
 | `review [--prepare \| --done] [--monthly]` | The weekly review's facts (below). `--prepare` keeps them in `data/review.json` for the user to go through, and the page says so; `--done` marks it gone through | JSON |
 | `replay --set KEY VALUE … [--phrase-reject NAME --phrases P …]` | What a change to the scan's rules (places, remote wording, pay, phrase rules) would do: every saved posting screened under the current and the proposed settings, each one whose outcome differs listed by name, with `wanted` (jobs the user applied to or wanted that it would turn away) and `would_pass` (jobs a rule turned away that would now pass). Kept in `data/replay-latest.json` | JSON |
 | `rule-evidence N [--words P]` | For rule N in `rules.md`: the postings it turned away, with Claude's quote; the user's overturns of it, in their words; and passing postings whose description matches the words, with the lines quoted. Claude re-reads these to replay a change | JSON |
@@ -53,7 +53,7 @@ python3 run.py <command> --folder "<the user's Job Search folder>" [options]
 
 Every scan also runs `due`, so the summary carries `closed_day_21` (applications just closed at day 21) and `follow_ups_due` (counts by route). Its `health` lists boards that failed 3 scans in a row (`failing`), answered with no jobs for 30 days (`silent`), or hit the Workday cap (`at_cap`).
 
-`due` also says what catching up needs: `scan_overdue` (by `[schedule] scan`), `review_ready` (the date a prepared review is waiting) and `review_due`.
+`due` also says what catching up needs: `scan_overdue` (by `[schedule] scan`), `review_ready` (the date a prepared review is waiting), `review_due`, and `page_behind` (the user's jobs page doesn't show what `page.json` holds: its `digest`, a fingerprint that ignores when it was written, isn't `[page] pushed`).
 
 **The weekly review** (`review`) holds `since`, `disagreements` (overturns grouped by the rule they overturned, `propose` once a rule has two since it last changed, unless a proposal for it was declined in the last four weeks), `candidate_rules`, `rule_activity` (fires per rule over 28 days, `never_fired`, the `top` rule's share), `spot_check` (10 automatic rejects), `missed_titles` (20 near misses), `pipeline` (`due`), `scan_health`, and once a month `outcomes` (counts by Claude's verdict, how they applied, level and top pick) and `profile_refresh`.
 
@@ -112,7 +112,7 @@ Every pattern is a case-insensitive regular expression; a missing or empty one m
 | `[workday]` | `country_facet`, `max_total` | Workday boards are narrowed to one country and capped |
 | `[triage]` | `cooldown_days` (default 30) | One application per company in this many days; `queue` reports what applies |
 | `[tracking]` | `follow_up_after_days` (5), `presume_after_days` (21) | When a follow-up is due, and when an application with no reply closes as presumed rejected |
-| `[page]` | `url`, `version`, `route` | The user's jobs page artifact: its link, the engine version it was published from, and how Claude keeps it current (`republish` or `storage`) |
+| `[page]` | `url`, `version`, `route`, `pushed` | The user's jobs page artifact: its link, the engine version it was published from, and how Claude keeps it current (`republish` or `storage`) |
 | `[schedule]` | `scan` (`daily`, `weekdays`, `weekly`), `review` (`weekly`) | The scheduled checks, so a conversation can catch up on one that was missed |
 | `[labels]` | `flag_*`, `reason_*` | Wording for every flag and reason. Plain-language defaults are in `jobkit/settings.py` |
 

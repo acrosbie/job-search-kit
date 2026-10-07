@@ -12,7 +12,7 @@ import re
 import sys
 
 from . import __version__, net, scan, settings, store
-from . import add, choices, configure, page, replay, review, rules, titles, track, verdicts
+from . import add, choices, configure, page, replay, review, rules, schedule, titles, track, verdicts
 from . import init as starter
 from . import queue as triage_queue
 from .clock import Clock
@@ -99,7 +99,11 @@ def cmd_applications(a):
 
 
 def cmd_due(a):
-    _out(track.due(a.folder, _clock(a.folder)))
+    clock = _clock(a.folder)
+    out = track.due(a.folder, clock)
+    _refresh_page(a.folder, False)  # so the page is compared after anything due just closed
+    out["page_behind"] = schedule.page_behind(a.folder, settings.load(a.folder))
+    _out(out)
     return 0
 
 
@@ -114,7 +118,14 @@ def cmd_add_link(a):
 
 
 def cmd_page(a):
-    return 0  # the page is written after every command that changes something; see main()
+    """The page is written after every command that changes something (see main). --pushed records
+    that Claude has just sent the page's current data to the user's jobs page."""
+    if a.pushed:
+        _refresh_page(a.folder, False)
+        data = store.Folder(a.folder).read_json(store.Folder(a.folder).page_json) or {}
+        configure.set_value(a.folder, "page.pushed", data.get("digest", ""))
+        _out({"pushed": data.get("digest", ""), "as_of": data.get("as_of", "")})
+    return 0
 
 
 def cmd_record_choices(a):
@@ -315,6 +326,7 @@ def parser():
 
     s = sub.add_parser("page", help="write the jobs page: data/page.json, data/jobs-page.html and My jobs.html")
     s.add_argument("--folder", required=True)
+    s.add_argument("--pushed", action="store_true", help="the page's current data has just been sent to the user's jobs page")
     s.set_defaults(func=cmd_page)
 
     s = sub.add_parser("record-choices", help="record the choices the user made on the jobs page")
@@ -465,7 +477,7 @@ def main(argv):
     try:
         code = a.func(a)
         if code == 0 and a.command in REFRESHES:
-            _refresh_page(a.folder, a.command == "page")
+            _refresh_page(a.folder, a.command == "page" and not getattr(a, "pushed", False))
         return code
     except FileNotFoundError as e:
         print(f"missing file: {e.filename}", file=sys.stderr)

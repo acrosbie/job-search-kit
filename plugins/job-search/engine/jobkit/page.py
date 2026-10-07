@@ -15,6 +15,7 @@ in chat, and next week. Numbers are given out here, the first time a job appears
 """
 
 import datetime as dt
+import hashlib
 import json
 import os
 
@@ -124,6 +125,13 @@ def build(root, clock):
     })
 
 
+def digest(data):
+    """What the page shows, as a short fingerprint that ignores when it was written, so Claude can tell
+    whether the page in the user's Claude account is behind the folder (schedule.page_behind)."""
+    body = {k: v for k, v in data.items() if k not in ("as_of", "digest")}
+    return hashlib.sha1(json.dumps(body, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()[:16]
+
+
 def _size(data):
     return len(json.dumps(data, ensure_ascii=False).encode("utf-8"))
 
@@ -167,10 +175,12 @@ def refresh(root, clock):
     """Write page.json, the publishable copy and My jobs.html. Returns a short summary."""
     folder = store.Folder(root)
     data = build(root, clock)
+    data["digest"] = digest(data)
     with open(TEMPLATE, encoding="utf-8") as f:
         content = render(data, f.read())
     folder._write(folder.page_json, json.dumps(data, indent=1, ensure_ascii=False) + "\n")
     folder._write(folder.page_publish_html, content)
     folder._write(folder.page_html, DOCUMENT.format(content=content))
     return {"page": "My jobs.html", "publish": "data/jobs-page.html", "data": "data/page.json",
-            "bytes": os.path.getsize(folder.page_json), "version": data["version"], **data["counts"]}
+            "bytes": os.path.getsize(folder.page_json), "version": data["version"], "digest": data["digest"],
+            **data["counts"]}

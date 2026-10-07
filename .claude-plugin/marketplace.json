@@ -12,7 +12,7 @@
       "name": "job-search",
       "source": "./plugins/job-search",
       "description": "Find, screen and track jobs with Claude: setup, scan, triage, pasted links, applications, a jobs page, and a weekly review that tunes your rules.",
-      "version": "0.4.0"
+      "version": "0.4.1"
     }
   ]
 }
