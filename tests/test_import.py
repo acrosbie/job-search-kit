@@ -181,6 +181,19 @@ class ImportTest(unittest.TestCase):
                           ("Support Lead", "skipped", "No longer open: the posting came down", "himalayas-globex-3")])
         self.assertEqual(rows[0]["rule"], "rule_6")
 
+    def test_applications_join_their_postings(self):
+        # Found moving the reference search across: no imported application knew its saved posting.
+        apps = [{"company": "Acme", "role": "Support Lead (Remote) ([posting](https://acme.test/9))", "urls": [], "key": ""},
+                {"company": "Globex", "role": "Support Lead", "urls": [], "key": ""},
+                {"company": "Globex", "role": "Support Lead (SF)", "urls": [], "key": ""},
+                {"company": "Initech", "role": "Head of Support", "urls": [], "key": ""}]
+        kit = {"greenhouse-acme-9": {"company": "Acme", "title": "Support Lead", "status": "applied", "url": "https://acme.test/9"},
+               "greenhouse-globex-2": {"company": "Globex", "title": "Support Lead", "status": "applied", "url": ""},
+               "greenhouse-initech-3": {"company": "Initech", "title": "Head of Support", "status": "not_a_fit", "url": ""}}
+        self.assertEqual(import_reference.join(apps, kit), 1)
+        self.assertEqual([a["key"] for a in apps], ["greenhouse-acme-9", "", "", ""])  # Globex twice: left by name
+        self.assertEqual(apps[0]["urls"], ["https://acme.test/9"])
+
     def test_a_job_that_came_down(self):
         out = os.path.join(self.dir, "kit-closed")
         kit, _ = import_reference.postings({"postings": {"greenhouse-acme-8": {

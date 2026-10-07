@@ -214,6 +214,33 @@ def decisions(log_text):
     return rows
 
 
+def join(apps, kit_postings):
+    """Give each imported application its saved posting's key, so the two read as one job: the one
+    applied-to posting it matches (the same link, or the same company and title), when that posting
+    matches no other application. The rest stay recorded by company and role, as before. Returns
+    how many were joined."""
+    from jobkit.store import application_for
+    claims = {}
+    for i, app in enumerate(apps):
+        if app.get("key"):
+            continue
+        found = [k for k, v in kit_postings.items() if v.get("status") == "applied" and application_for(
+            {"company": v.get("company", ""), "title": v.get("title", ""), "url": v.get("url", "")}, [app])]
+        if len(found) == 1:
+            claims.setdefault(found[0], []).append(i)
+    joined = 0
+    for k, idx in claims.items():
+        if len(idx) != 1:
+            continue  # two applications to one posting (applied twice?): leave both by name
+        app = apps[idx[0]]
+        app["key"] = k
+        url = kit_postings[k].get("url")
+        if url and url not in app.setdefault("urls", []):
+            app["urls"].append(url)
+        joined += 1
+    return joined
+
+
 def main(argv):
     p = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     p.add_argument("--config", required=True)
@@ -250,8 +277,6 @@ def main(argv):
     if a.pipeline:
         with open(a.pipeline, encoding="utf-8") as f:
             apps = applications(f.read(), relative)
-    with open(os.path.join(out, "data", "applications.json"), "w", encoding="utf-8", newline="\n") as f:
-        json.dump({"applications": apps}, f, indent=1, ensure_ascii=False)
     report = [f"{len(load_file(a.watchlist).get('company', []))} companies", f"{len(apps)} applications"]
     if a.seen:
         with open(a.seen, encoding="utf-8") as f:
@@ -260,6 +285,9 @@ def main(argv):
         with open(os.path.join(out, "data", "postings.json"), "w", encoding="utf-8", newline="\n") as f:
             json.dump(kit, f, indent=1, ensure_ascii=False)
         report.append(f"{len(kit['postings'])} postings ({copied} descriptions)")
+        report[1] += f" ({join(apps, kit['postings'])} joined to their postings)"
+    with open(os.path.join(out, "data", "applications.json"), "w", encoding="utf-8", newline="\n") as f:
+        json.dump({"applications": apps}, f, indent=1, ensure_ascii=False)
     if a.triage_log:
         with open(a.triage_log, encoding="utf-8") as f:
             rows = decisions(f.read())
