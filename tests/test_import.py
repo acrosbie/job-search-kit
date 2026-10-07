@@ -70,6 +70,7 @@ PIPELINE = """# Pipeline
 |---|---|---|---|---|---|---|---|---|
 | Acme | Support Operations Manager ([posting](https://acme.test/jobs/5)) | Strong | Manager | $90K | 2026-09-10 | | open | contact: Pat |
 | Globex | [Head of Support](https://globex.test/j/1) | Fair | Manager | | 1w | | open | |
+| Initech | Support Operations Lead (Remote) ([posting](https://initech.test/3)) | **Strong** | **Manager**, team of 8 | **$150K** | 2026-09-12 | — | **presumed rejected** | |
 
 ## Outreach
 """
@@ -143,11 +144,17 @@ class ImportTest(unittest.TestCase):
         self.assertEqual(companies[1]["queries"], ["support operations", "head of support"])
 
         apps = store.Folder(out).load_applications()
-        self.assertEqual(len(apps), 2)
+        self.assertEqual(len(apps), 3)
         self.assertEqual((apps[0]["role"], apps[0]["urls"], apps[0]["applied_date"]),
-                         ("Support Operations Manager (posting)", ["https://acme.test/jobs/5"], "2026-09-10"))
+                         ("Support Operations Manager", ["https://acme.test/jobs/5"], "2026-09-10"))
         self.assertEqual((apps[1]["role"], apps[1]["applied"], apps[1]["applied_date"], apps[1]["applied_date_estimated"]),
                          ("Head of Support", "1w", "2026-09-05", True))
+        # Found moving the reference search across: "(posting)" ended every role, and the table's
+        # bold stayed in fit and level, so "Strong" and "**Strong**" counted apart.
+        i = apps[2]
+        self.assertEqual((i["role"], i["urls"], i["fit"], i["level"], i["level_detail"], i["posted_pay"]),
+                         ("Support Operations Lead (Remote)", ["https://initech.test/3"], "Strong", "Manager", "team of 8", "$150K"))
+        self.assertEqual((i["status"], i["followed_up"], i["top_pick"]), ("presumed_rejected", "", True))
         posting = {"company": "Acme", "title": "Support Operations Manager", "url": ""}
         self.assertEqual(store.application_for(posting, apps)["applied"], "2026-09-10")
         self.assertTrue(all(a["id"] and a["status"] in track.STATUSES and a["history"] for a in apps))
@@ -158,7 +165,7 @@ class ImportTest(unittest.TestCase):
         f = store.Folder(out)
         state = f.load_postings()
         p5, p6 = state["postings"]["greenhouse-acme-5"], state["postings"]["greenhouse-acme-6"]
-        self.assertEqual((p5["status"], p5["rule"], p6["status"]), ("not_a_fit", "rule_11", "worth_applying"))
+        self.assertEqual((p5["status"], p5["rule"], p6["status"]), ("not_a_fit", "rule 11", "worth_applying"))
         self.assertEqual([x["text"] for x in p5["flags"]], ["elsewhere", "contract or interim (contract role)"])
         self.assertEqual(state["boards"]["acme"]["jobs"], 12)
         self.assertIn("Manage the vendors.", f.read_description("greenhouse-acme-5"))
@@ -166,7 +173,7 @@ class ImportTest(unittest.TestCase):
         d = f.read_decisions()
         self.assertEqual([(x["verdict"], x["by"]) for x in d],
                          [("not_a_fit", "claude"), ("worth_applying", "claude"), ("not_a_fit", "user")])
-        self.assertEqual((d[0]["rule"], d[2]["reverses"]), ("rule_11", "worth_applying"))
+        self.assertEqual((d[0]["rule"], d[2]["reverses"]), ("rule 11", "worth_applying"))
 
     def test_a_title_with_a_bar_in_it(self):
         # Found moving the reference search onto the kit: a board's title "REQ-7 | Support Lead" split
@@ -179,7 +186,15 @@ class ImportTest(unittest.TestCase):
                          [("REQ-7 | Support Lead", "not_a_fit", 'Rule 6: "on-site"', "himalayas-globex-req-7"),
                           ("Support Lead", "your_call", "Question: remote? | page: maybe", "himalayas-globex-2"),
                           ("Support Lead", "skipped", "No longer open: the posting came down", "himalayas-globex-3")])
-        self.assertEqual(rows[0]["rule"], "rule_6")
+        self.assertEqual(rows[0]["rule"], "rule 6")
+        self.assertEqual([r["by"] for r in rows], ["claude", "user", "claude"])
+
+    def test_only_the_users_clicks_are_theirs(self):
+        rows = import_reference.decisions(
+            "| 2026-09-23 | Acme | Support Lead | REJECT | page: too far | greenhouse-acme-1 |\n"
+            "| 2026-09-23 | Acme | Support Lead | REJECT | REVERSAL of APPLY. page: no note | greenhouse-acme-2 |\n"
+            "| 2026-09-23 | Acme | Support Lead | APPLY | Rule 4 passes; see the jobs page: it owns the stack | greenhouse-acme-3 |\n")
+        self.assertEqual([r["by"] for r in rows], ["user", "user", "claude"])
 
     def test_applications_join_their_postings(self):
         # Found moving the reference search across: no imported application knew its saved posting.
@@ -203,6 +218,16 @@ class ImportTest(unittest.TestCase):
         self.assertEqual((e["status"], e["note"]), ("skipped", "No longer open: req pulled"))
         self.assertEqual(import_reference._closed_note("No longer open: gone from the board"),
                          "No longer open: gone from the board")  # not said twice
+
+    def test_refuses_a_folder_already_set_up(self):
+        # Re-running it over a live folder would wipe everything recorded there since the import.
+        out = os.path.join(self.dir, "kit")
+        self.assertEqual(self.run_tool(out), 0)
+        f = store.Folder(out)
+        f.log_decision({"key": "greenhouse-acme-6", "verdict": "applied", "by": "user"})
+        before = f._read(f.decisions_log)
+        self.assertEqual(self.run_tool(out), 3)
+        self.assertEqual(f._read(f.decisions_log), before)
 
     def test_refuses_to_write_inside_the_repo(self):
         self.assertEqual(self.run_tool(os.path.join(import_reference.REPO, "tmp-personal")), 3)

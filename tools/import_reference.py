@@ -78,6 +78,23 @@ def companies_toml(watchlist):
 
 _LINK = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
 _LINK_URLS = re.compile(r"\]\((https?://[^)]+)\)")
+# "Role ([posting](url))": the link is kept in urls, and the word "posting" isn't part of the role.
+_POSTING_LINK = re.compile(r"\s*\(\s*\[posting\]\([^)]*\)\s*\)", re.I)
+
+
+def plain(cell):
+    """A table cell without its markdown emphasis: **bold**, *italic*, `code`."""
+    return re.sub(r"[*`]", "", cell or "").strip()
+
+
+def role_text(cell):
+    return plain(_LINK.sub(r"\1", _POSTING_LINK.sub("", cell or "")))
+
+
+def level_parts(cell):
+    """("Manager", "8 PMs") from "Manager, 8 PMs": the level the tracker gave, and its detail."""
+    level, _, detail = plain(cell).partition(", ")
+    return level.strip(), detail.strip()
 
 
 def applied_date(cell, relative):
@@ -109,16 +126,21 @@ def applications(pipeline_text, relative=None):
             cells.insert(6, "")
         company, role, fit, level, pay, applied, followed, status, note = cells
         when, estimated = applied_date(applied, relative or {})
-        rows.append(normalize_application({
-            "company": company,
-            "role": _LINK.sub(r"\1", role).strip(),
+        level, level_detail = level_parts(level)
+        followed_on, _ = applied_date(followed, {})  # a date, or nothing: "—" isn't a follow-up
+        row = {
+            "company": plain(company),
+            "role": role_text(role),
             "urls": _LINK_URLS.findall(role),
-            "fit": fit, "level": level, "posted_pay": pay,
+            "fit": plain(fit), "level": level, "posted_pay": plain(pay),
             "applied": applied,
             "applied_date": when,
             "applied_date_estimated": estimated,
-            "followed_up": followed, "status": status, "note": note,
-        }))
+            "followed_up": followed_on, "status": status, "note": note,
+        }
+        if level_detail:
+            row["level_detail"] = level_detail
+        rows.append(normalize_application(row))
     return rows
 
 
@@ -147,7 +169,7 @@ def rule_of(note):
     if note.startswith("Rule 12, applied by the scanner"):
         return "pay"
     m = re.match(r"\s*Rule (\d+)", note)
-    return f"rule_{m.group(1)}" if m else ""
+    return f"rule {m.group(1)}" if m else ""  # the engine's own id for a rules.md rule (review.rule_of)
 
 
 def postings(seen, descriptions_from, out):
@@ -190,6 +212,10 @@ def _log_row(line):
     return None
 
 
+# A verdict clicked on the reference's own page starts "page:", after any "REVERSAL of X." or a cell bar.
+_CLICKED = re.compile(r"(?:^|\|\s*|REVERSAL of [A-Z]+\.\s*)page:")
+
+
 def decisions(log_text):
     """The reference triage log as decisions.log rows. A verdict clicked on the reference's own page
     is the user's decision; every other row was Claude's."""
@@ -204,7 +230,7 @@ def decisions(log_text):
             why = _closed_note(why)
         row = {"date": date, "key": key, "company": company.strip(), "title": title.strip(),
                "verdict": VERDICT.get(verdict, verdict.lower()), "reason": why,
-               "by": "user" if "page:" in why else "claude"}
+               "by": "user" if _CLICKED.search(why) else "claude"}
         rev = re.search(r"REVERSAL of ([A-Z]+)", why)
         if rev:
             row["reverses"] = VERDICT.get(rev.group(1), rev.group(1).lower())
@@ -258,6 +284,11 @@ def main(argv):
     out = os.path.abspath(a.out)
     if os.path.commonpath([out, REPO]) == REPO:
         print("refusing to write inside the repository: the result is personal data", file=sys.stderr)
+        return 3
+    if any(os.path.exists(os.path.join(out, *p)) for p in (("profile", "settings.toml"), ("data", "postings.json"),
+                                                            ("data", "applications.json"))):
+        print("refusing to write over a folder that is already set up: everything recorded there since would be "
+              "lost. Import into a new, empty folder.", file=sys.stderr)
         return 3
     labels = {}
     if a.labels:
