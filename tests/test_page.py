@@ -96,6 +96,14 @@ class PageTest(ScanBase):
         for banned in ("alert(", "confirm(", "prompt(", "window.print"):
             self.assertNotIn(banned, template)
 
+    def test_the_file_only(self):
+        # The user wants My jobs.html and no page in their Claude account: nothing is ever behind.
+        from jobkit import configure, schedule, settings
+        configure.set_value(self.root, "page.route", "file")
+        s = settings.load(self.root)
+        self.assertEqual((s.page["route"], s.page["url"]), ("file", ""))
+        self.assertFalse(schedule.page_behind(self.root, s))
+
     def test_a_page_that_is_behind_gets_noticed(self):
         def run(*args):
             with contextlib.redirect_stdout(io.StringIO()) as out:

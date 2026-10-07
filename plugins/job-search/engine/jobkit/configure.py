@@ -25,7 +25,7 @@ KNOWN = {
     "workday": {"country_facet": PATTERN, "max_total": NUMBER},
     "triage": {"cooldown_days": NUMBER},
     "tracking": {"follow_up_after_days": NUMBER, "presume_after_days": NUMBER},
-    "page": {"url": TEXT, "version": TEXT, "route": ("", "storage", "republish"), "pushed": TEXT},
+    "page": {"url": TEXT, "version": TEXT, "route": ("", "storage", "republish", "file"), "pushed": TEXT},
     "schedule": {"scan": ("", "daily", "weekdays", "weekly"), "review": ("", "weekly")},
     "labels": {k: TEXT for k in settings.DEFAULT_LABELS},
 }

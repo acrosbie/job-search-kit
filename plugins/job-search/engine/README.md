@@ -137,7 +137,7 @@ Every pattern is a case-insensitive regular expression; a missing or empty one m
 | `[workday]` | `country_facet`, `max_total` | Workday boards are narrowed to one country and capped |
 | `[triage]` | `cooldown_days` (default 30) | One application per company in this many days; `queue` reports what applies |
 | `[tracking]` | `follow_up_after_days` (5), `presume_after_days` (21) | When a follow-up is due, and when an application with no reply closes as presumed rejected |
-| `[page]` | `url`, `version`, `route`, `pushed` | The user's jobs page artifact: its link, the engine version it was published from, and how Claude keeps it current (`republish` or `storage`) |
+| `[page]` | `url`, `version`, `route`, `pushed` | The user's jobs page artifact: its link, the engine version it was published from, and how Claude keeps it current (`republish` or `storage`), or `file`: the user wants only `My jobs.html`, and no page in their Claude account |
 | `[schedule]` | `scan` (`daily`, `weekdays`, `weekly`), `review` (`weekly`) | The scheduled checks, so a conversation can catch up on one that was missed |
 | `[labels]` | `flag_*`, `reason_*` | Wording for every flag and reason. Plain-language defaults are in `jobkit/settings.py` |
 

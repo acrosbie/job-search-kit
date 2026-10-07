@@ -148,7 +148,7 @@ Offer two, one at a time, and set up each one they want as `${CLAUDE_PLUGIN_ROOT
 
 ## Step 8: wrap up
 
-**Make their jobs page,** as `${CLAUDE_PLUGIN_ROOT}/reference/jobs-page.md` says under "Making the page". Its last step tells them, once, that clicks on the page wait in their Claude account until Claude copies them into this folder. If it can't be made here, tell them about **My jobs.html** in their folder instead.
+**Make their jobs page,** as `${CLAUDE_PLUGIN_ROOT}/reference/jobs-page.md` says under "Making the page" (it asks first whether they'd rather have it as a file only). Its last step tells them, once, that clicks on the page wait in their Claude account until Claude copies them into this folder. If it can't be made here, tell them about **My jobs.html** in their folder instead.
 
 **Write `START HERE.md`** at the top of the folder. Claude reads it first in every future conversation:
 
