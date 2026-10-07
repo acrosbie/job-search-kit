@@ -46,7 +46,7 @@ So the engine checks every line against `about-me.md` before it makes a file.
 
    Never accuse. "This says a team of 8. You told me 4 direct reports. Which is right?"
 8. **Ask about each one, one question at a time,** the way setup asks about their background. Then ask the direct questions about numbers.
-9. **Record every answer in `about-me.md`,** in its sections, as setup does:
+9. **Record each answer in `about-me.md` as soon as they give it,** before you ask the next question. Don't save them up for the end: in the first test run, every answer was given and none was saved. Use its sections, as setup does:
    - **Confirmed:** the claim in their words, with "<first name> said so, <date>: '<their words>'".
    - **Corrected:** Was (the resume's words, quoted, with "(resume)"), Now (what's true), Why (their words and the date). Skip it if `about-me.md` already has that correction.
    - **Not confirmed yet:** anything they aren't sure of, with their words and the date.
@@ -68,6 +68,8 @@ So the engine checks every line against `about-me.md` before it makes a file.
    - Nothing else: no new skills, keywords or numbers.
 3. **Check it:** `run.py resume check "<folder>/resume/main.md" --folder "<folder>"`. It must come back with `flagged` 0. If not, fix or drop each line it names, and check again.
 4. **Make it:** `run.py resume render "<folder>/resume/main.md" --folder "<folder>"`.
+   - **Refused because the check's answers aren't recorded** (`about-me.md` hasn't changed since the check)? Record the answers they gave in this conversation, as in step 1, then make it again. Don't ask them again.
+   - **They chose not to answer?** Make it with `--why "<their words>"`. What they didn't confirm stays off it.
 5. **Tell them:**
    - **Where the files are:** "Jordan Lee resume.docx and Jordan Lee resume.pdf, in the resume folder of your Job Search folder."
    - **How many pages it is.**

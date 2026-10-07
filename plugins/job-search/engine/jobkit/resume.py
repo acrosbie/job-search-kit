@@ -334,10 +334,23 @@ def check(root, path, clock, own=False):
     """Check a resume source against about-me.md. `own`: it's the user's own resume, transcribed, so
     the result is kept in data/resume-check.json as the record of what was found."""
     out = {"source": _rel(root, path), **check_text(_read(path), read_about(root))}
-    if own:
-        out = {"checked_at": clock.stamp(), **out}
+    if own:  # with a fingerprint of about-me.md, so making the clean resume can tell the answers went in
+        out = {"checked_at": clock.stamp(), "about_digest": _about_digest(root), **out}
         store.Folder(root).write_json(os.path.join(root, CHECK_JSON), out)
     return out
+
+
+def _about_digest(root):
+    return _digest(_read(os.path.join(root, ABOUT)))
+
+
+def unanswered(root):
+    """The last check of the user's own resume, if it found lines to ask about and about-me.md hasn't
+    changed since: the user's answers haven't been recorded. Otherwise None."""
+    kept = store.Folder(root).read_json(os.path.join(root, CHECK_JSON))
+    if not kept or not kept.get("flagged") or not kept.get("about_digest"):
+        return None
+    return kept if kept["about_digest"] == _about_digest(root) else None
 
 
 def records(root):
@@ -354,15 +367,25 @@ def _write_bytes(path, data):
                       "close it and try again") from None
 
 
-def render(root, path, clock, for_key=""):
+def render(root, path, clock, for_key="", why=""):
     """Make the Word file and the PDF from a resume source, beside it, named "<Name> resume". Refused
-    unless every line traces to about-me.md. `for_key`: the saved posting a tailored copy is for."""
+    unless every line traces to about-me.md. `for_key`: the saved posting a tailored copy is for.
+
+    The main resume (no `for_key`) is also refused while the check of the user's own resume is
+    waiting for its answers (unanswered), unless `why` gives the user's words for not answering:
+    a resume made then would quietly leave out whatever they confirmed."""
     text = _read(path)
     result = check_text(text, read_about(root))
     bad = [it for it in result["items"] if it["kind"] in CLAIMS and not it["ok"]]
     if bad:
         listed = "; ".join(f'line {it["line"]} "{_short(it["text"])}": {it["problems"][0]["detail"]}' for it in bad[:5])
         raise Refused(f"{len(bad)} of its lines don't trace to about-me.md, so no resume was made: {listed}")
+    waiting = None if for_key or why.strip() else unanswered(root)
+    if waiting:
+        raise Refused(f"the check of their resume on {waiting['checked_at'][:10]} found {waiting['flagged']} lines to ask "
+                      "about, and about-me.md hasn't changed since, so their answers aren't recorded. Record each "
+                      "answer in about-me.md, then make the resume again. If they chose not to answer, give their "
+                      "words with --why")
     posting = {}
     if for_key:
         posting = store.Folder(root).load_postings()["postings"].get(for_key)
@@ -389,6 +412,8 @@ def render(root, path, clock, for_key=""):
     record = {"source": _rel(root, path), "for": for_key, "company": posting.get("company", ""),
               "role": posting.get("title", ""), "made_at": clock.stamp(), "source_digest": _digest(text),
               "files": files, "pages": pages, "style": {"scale": style.scale, "space": style.space}}
+    if why.strip():
+        record["why"] = why.strip()
     rows = [r for r in records(root) if r.get("source") != record["source"]] + [record]
     store.Folder(root).write_json(os.path.join(root, RECORDS_JSON), {"resumes": rows})
     return {**record, "lines": result["lines"], "warnings": warnings}

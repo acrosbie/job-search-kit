@@ -437,6 +437,33 @@ class CommandTest(unittest.TestCase):
         self.assertEqual((kept["source"], kept["flagged"]), ("resume/your-resume.md", 2))
         self.assertTrue(kept["checked_at"])
 
+    def test_the_clean_resume_waits_for_the_check_s_answers(self):
+        # Phase 5b's first run: the user answered, but the answers never reached about-me.md.
+        own = os.path.join(self.root, "resume", "your-resume.md")
+        self.write("# Morgan Reyes\nDenver, CO\n\n## Experience\n- Rolled out Expensify company-wide in 2023.\n", own)
+        self.assertEqual(self.run_cli("resume", "check", own, "--own")[1]["flagged"], 1)
+        code, _, err = self.run_cli("resume", "render", self.source)
+        self.assertEqual(code, 3)
+        self.assertIn("found 1 lines to ask about, and about-me.md hasn't changed since", err)
+
+        # A copy for one job isn't held back: it starts from a main resume that was already made.
+        path = os.path.join(self.root, "resume", "Acme - Support Lead", "resume.md")
+        os.makedirs(os.path.dirname(path))
+        self.write(SAMPLE, path)
+        self.assertEqual(self.run_cli("resume", "render", path, "--for", "greenhouse-acme-1")[0], 0)
+
+        # The user chose not to answer: their words let it through, and are kept.
+        code, out, _ = self.run_cli("resume", "render", self.source, "--why", "leave those off for now")
+        self.assertEqual((code, out["why"]), (0, "leave those off for now"))
+
+        # Or their answer goes into about-me.md, and it goes through.
+        about = os.path.join(self.root, "profile", "about-me.md")
+        with open(about, encoding="utf-8") as f:
+            text = f.read()
+        self.write(text.replace("| Backs themself on:", "| Rolled out Expensify company-wide in 2023 | Morgan said so, 2026-09-24 |\n"
+                                                         "| Backs themself on:", 1), about)
+        self.assertEqual(self.run_cli("resume", "render", self.source)[0], 0)
+
     def test_a_badly_made_source_is_named(self):
         self.write("Morgan Reyes\n")
         code, _, err = self.run_cli("resume", "check", self.source)
