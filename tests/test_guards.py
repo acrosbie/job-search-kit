@@ -69,6 +69,22 @@ class OnRequestTest(unittest.TestCase):
                 self.assertNotIn("resume check", text, name)
 
 
+class SkillFrontmatterTest(unittest.TestCase):
+    def test_every_description_reaches_cowork_whole(self):
+        # The frontmatter is YAML: in an unquoted value " #" starts a comment and ": " starts a
+        # mapping, so either one cuts the description Cowork matches requests against.
+        skills = os.path.join(REPO, "plugins", "job-search", "skills")
+        for name in sorted(os.listdir(skills)):
+            head = read(os.path.join(skills, name, "SKILL.md")).split("\n---", 1)[0]
+            fields = dict(line.split(": ", 1) for line in head.splitlines()[1:] if ": " in line)
+            self.assertEqual(fields.get("name"), name)
+            value = fields.get("description", "")
+            self.assertTrue(value, name)
+            if value[0] not in "'\"":
+                self.assertNotIn(" #", value, name)
+                self.assertNotIn(": ", value, name)
+
+
 class PrivacyTest(unittest.TestCase):
     # The reference system's own file names may appear only where the reference format is the subject:
     # the tools that read it, the tests of those tools, this file, and the docs that explain them.

@@ -1,6 +1,6 @@
 ---
 name: resume
-description: Help with the user's resume, only when they ask - check it against what they've confirmed about themselves (claims that are inflated, unconfirmed or don't match), make a clean main resume, or make a copy tailored to one job, as a Word file and a PDF. Use when the user says "check my resume", "is my resume accurate", "clean up my resume", "make me a resume", "update my resume", "tailor my resume for #12" or "a resume for the Acme job". A job marked worth applying is not a request. Needs the user's Job Search folder connected.
+description: Help with the user's resume, only when they ask - check it against what they've confirmed about themselves (claims that are inflated, unconfirmed or don't match), make a clean main resume, or make a copy tailored to one job, as a Word file and a PDF. Use when the user says "check my resume", "is my resume accurate", "clean up my resume", "make me a resume", "update my resume", "tailor my resume for job 12" or "a resume for the Acme job". A job marked worth applying is not a request. Needs the user's Job Search folder connected.
 ---
 
 # Resume: check it, clean it, tailor it
