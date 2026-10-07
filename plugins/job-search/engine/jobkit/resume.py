@@ -23,12 +23,16 @@ its source ("led the audit" where about-me.md says "prepared the schedules"), an
 `flag:` line.
 """
 
+import hashlib
 import os
 import re
 
-from .errors import BadFile
+from . import docx, pdf, store
+from .errors import BadFile, NotFound, Refused
 
 ABOUT = os.path.join("profile", "about-me.md")
+CHECK_JSON = os.path.join("data", "resume-check.json")  # the last check of the user's own resume
+RECORDS_JSON = os.path.join("data", "resumes.json")  # every resume made, and what it was made from
 
 # The sections of about-me.md (reference/profile-format.md), by how their heading starts.
 SECTIONS = (("confirmed", "confirmed"), ("corrected", "corrected"), ("not confirmed", "unconfirmed"),
@@ -295,3 +299,119 @@ def check_text(text, entries):
     name = next(it["text"] for it in items if it["kind"] == "name")
     return {"name": name, "lines": len(claims), "traced": sum(it["ok"] for it in claims),
             "flagged": sum(not it["ok"] for it in claims), "problems": kinds, "items": items}
+
+
+# ------------------------------------------------------------------ the commands
+
+
+def _read(path):
+    with open(path, encoding="utf-8") as f:
+        return f.read()
+
+
+def _digest(text):
+    return hashlib.sha1(text.encode("utf-8")).hexdigest()[:16]
+
+
+def _rel(root, path):
+    """A path inside the user's folder as it reads from there ("resume/main.md"); others in full."""
+    a, r = os.path.abspath(path), os.path.abspath(root)
+    try:
+        if os.path.commonpath([a, r]) == r:
+            return os.path.relpath(a, r).replace(os.sep, "/")
+    except ValueError:  # another drive
+        pass
+    return a
+
+
+def _short(text, n=60):
+    return text if len(text) <= n else text[:n - 1].rstrip() + "\u2026"
+
+
+def check(root, path, clock, own=False):
+    """Check a resume source against about-me.md. `own`: it's the user's own resume, transcribed, so
+    the result is kept in data/resume-check.json as the record of what was found."""
+    out = {"source": _rel(root, path), **check_text(_read(path), read_about(root))}
+    if own:
+        out = {"checked_at": clock.stamp(), **out}
+        store.Folder(root).write_json(os.path.join(root, CHECK_JSON), out)
+    return out
+
+
+def records(root):
+    data = store.Folder(root).read_json(os.path.join(root, RECORDS_JSON)) or {}
+    return data.get("resumes", [])
+
+
+def _write_bytes(path, data):
+    try:
+        with open(path, "wb") as f:  # in place: the folder doesn't allow deleting
+            f.write(data)
+    except PermissionError:
+        raise BadFile(f"couldn't write {os.path.basename(path)}: it may be open in another program; "
+                      "close it and try again") from None
+
+
+def render(root, path, clock, for_key=""):
+    """Make the Word file and the PDF from a resume source, beside it, named "<Name> resume". Refused
+    unless every line traces to about-me.md. `for_key`: the saved posting a tailored copy is for."""
+    text = _read(path)
+    result = check_text(text, read_about(root))
+    bad = [it for it in result["items"] if it["kind"] in CLAIMS and not it["ok"]]
+    if bad:
+        listed = "; ".join(f'line {it["line"]} "{_short(it["text"])}": {it["problems"][0]["detail"]}' for it in bad[:5])
+        raise Refused(f"{len(bad)} of its lines don't trace to about-me.md, so no resume was made: {listed}")
+    posting = {}
+    if for_key:
+        posting = store.Folder(root).load_postings()["postings"].get(for_key)
+        if posting is None:
+            raise NotFound(f"no saved posting {for_key}")
+    lay = blocks(parse_source(text))
+    name = result["name"]
+    base = os.path.join(os.path.dirname(os.path.abspath(path)),
+                        (re.sub(r'[<>:"/\\|?*\x00-\x1f]', "", name).strip() or "My") + " resume")
+    title = f"{name} resume"
+    _write_bytes(base + ".docx", docx.build(lay, title, name))
+    files, pages, warnings = [_rel(root, base + ".docx")], 0, []
+    try:
+        data, pages = pdf.build(lay, title, name)
+    except pdf.CantDraw as e:
+        warnings.append(f"no PDF: it can't show {' '.join(e.chars)}. The Word file can be saved as a PDF from Word")
+    else:
+        _write_bytes(base + ".pdf", data)
+        files.append(_rel(root, base + ".pdf"))
+    record = {"source": _rel(root, path), "for": for_key, "company": posting.get("company", ""),
+              "role": posting.get("title", ""), "made_at": clock.stamp(), "source_digest": _digest(text),
+              "files": files, "pages": pages}
+    rows = [r for r in records(root) if r.get("source") != record["source"]] + [record]
+    store.Folder(root).write_json(os.path.join(root, RECORDS_JSON), {"resumes": rows})
+    return {**record, "lines": result["lines"], "warnings": warnings}
+
+
+def stale(root):
+    """Resumes made earlier that no longer match: the source was changed after the files were made,
+    or a line no longer traces to about-me.md (a claim corrected since, say). Catching up offers to
+    remake each one; nothing is remade without the user's yes."""
+    rows = records(root)
+    if not rows or not os.path.exists(os.path.join(root, ABOUT)):
+        return []
+    entries = read_about(root)
+    out = []
+    for r in rows:
+        src = r["source"] if os.path.isabs(r["source"]) else os.path.join(root, r["source"])
+        if not os.path.exists(src):
+            continue
+        text = _read(src)
+        brief = {k: r.get(k, "") for k in ("source", "for", "company", "role", "made_at")}
+        if _digest(text) != r.get("source_digest"):
+            out.append({**brief, "why": "changed_since_made", "lines": []})
+            continue
+        try:
+            result = check_text(text, entries)
+        except BadFile:
+            continue
+        lines = [{"line": it["text"], "problem": it["problems"][0]["detail"]}
+                 for it in result["items"] if it["kind"] in CLAIMS and not it["ok"]]
+        if lines:
+            out.append({**brief, "why": "profile_changed", "lines": lines})
+    return out

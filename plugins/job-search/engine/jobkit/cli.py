@@ -12,12 +12,12 @@ import re
 import sys
 
 from . import __version__, net, scan, settings, store
-from . import add, choices, configure, page, replay, review, rules, schedule, titles, track, verdicts
+from . import add, choices, configure, page, replay, resume, review, rules, schedule, titles, track, verdicts
 from . import init as starter
 from . import queue as triage_queue
 from .clock import Clock
 from .discover import discover
-from .errors import NotFound, Refused
+from .errors import BadFile, NotFound, Refused
 
 
 def _out(obj):
@@ -103,6 +103,7 @@ def cmd_due(a):
     out = track.due(a.folder, clock)
     _refresh_page(a.folder, False)  # so the page is compared after anything due just closed
     out["page_behind"] = schedule.page_behind(a.folder, settings.load(a.folder))
+    out["resume_stale"] = resume.stale(a.folder)
     _out(out)
     return 0
 
@@ -145,6 +146,14 @@ def cmd_settings(a):
         _out(configure.phrase_reject(a.folder, a.name, a.phrases, a.min_distinct, a.reason, same_as,
                                      why=a.why or "", accept=a.accept_flips or (), clock=_clock(a.folder),
                                      setup=a.setup))
+    return 0
+
+
+def cmd_resume(a):
+    if a.action == "check":
+        _out(resume.check(a.folder, a.file, _clock(a.folder), own=a.own))
+    else:
+        _out(resume.render(a.folder, a.file, _clock(a.folder), for_key=a.for_key or ""))
     return 0
 
 
@@ -357,6 +366,18 @@ def parser():
     x.add_argument("--setup", action="store_true", help="setup's own rule, before the user has decided any job")
     s.set_defaults(func=cmd_settings)
 
+    s = sub.add_parser("resume", help="check a resume against about-me.md, or make it into a Word file and a PDF")
+    acts = s.add_subparsers(dest="action", required=True)
+    x = acts.add_parser("check", help="every line traced to about-me.md, or what's wrong with it")
+    x.add_argument("--folder", required=True)
+    x.add_argument("file", help="a resume source, resume/<name>.md")
+    x.add_argument("--own", action="store_true", help="the user's own resume, transcribed: keep the result")
+    x = acts.add_parser("render", help="the Word file and the PDF, beside the source; only if every line traces")
+    x.add_argument("--folder", required=True)
+    x.add_argument("file", help="a resume source, resume/<name>.md")
+    x.add_argument("--for", dest="for_key", metavar="KEY", help="the saved posting a tailored copy is for")
+    s.set_defaults(func=cmd_resume)
+
     s = sub.add_parser("replay", help="what a change to the scan's rules would do to every saved posting")
     s.add_argument("--folder", required=True)
     s.add_argument("--set", nargs=2, action="append", metavar=("KEY", "VALUE"), help="a setting to change; repeat for several")
@@ -482,7 +503,7 @@ def main(argv):
     except FileNotFoundError as e:
         print(f"missing file: {e.filename}", file=sys.stderr)
         return 1
-    except NotFound as e:
+    except (NotFound, BadFile) as e:
         print(str(e), file=sys.stderr)
         return 1
     except Refused as e:

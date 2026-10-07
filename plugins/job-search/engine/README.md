@@ -32,6 +32,8 @@ python3 run.py <command> --folder "<the user's Job Search folder>" [options]
 | `decline --what "rule N" --why "…"` | Logs a proposed change the user turned down; the review won't propose it again for four weeks | the logged row |
 | `requeue KEY… --why "…"` | Puts jobs a loosened rule turned away back on the waiting list, never one the user decided | JSON: `requeued`, `refused` |
 | `record-choices FILE` | Records clicks from the jobs page, given as a JSON list or the pasted "Copy my choices" text, as the user's own decisions as of when they clicked: oldest first, once each, and only the last click on each job or application, skipping any the user overruled later in chat | JSON: `recorded`, `already`, `superseded`, `unknown` |
+| `resume check FILE [--own]` | Checks a resume source (below) line by line against `profile/about-me.md`: each line must rest on a confirmed claim, quoted in its `from:` lines. `--own`: the file is the user's own resume, transcribed, and the result is kept in `data/resume-check.json` | JSON: `lines`, `traced`, `flagged`, `problems` (counts by kind), and every line with its sources and problems |
+| `resume render FILE [--for KEY]` | Makes `<Name> resume.docx` and `<Name> resume.pdf` beside the source, only if every line traces. `--for`: the saved posting a tailored copy is for. Recorded in `data/resumes.json` | JSON: `files`, `pages`, `warnings`, and the record |
 | `discover SLUG [--page URL]` | Which public job board a company uses; with `--page`, also reads its careers page for an embedded board | JSON: `boards`, `embedded`, `unsupported` |
 | `init [--field support-cx\|custom] [--places us] [--timezone Area/City]` | Starts a new user's folder from `starter/`: the 589 starter boards, the defaults, a places pack and a field pack (`custom` leaves the title patterns empty for setup to build). Refuses a folder that already has a profile | JSON summary |
 | `settings show` / `settings set KEY VALUE` | Reads, or changes one setting by dotted key (`titles.function`, `places.hybrid_ok`, `pay.reject_if_top_below`, `labels.reason_pay`). Checked before saving: patterns compile, numbers are numbers, keys exist, labels use only their own placeholders | JSON |
@@ -43,7 +45,7 @@ python3 run.py <command> --folder "<the user's Job Search folder>" [options]
 
 `scan` also takes `--record DIR` (save every board answer to a cassette folder), `--replay DIR` (read answers from one, with no network) and `--as-of TIME` (pin the clock, for replays).
 
-**Exit codes:** 0 done; 1 something is wrong with the folder or its files, or a posting, application or rule isn't there (the message names it); 2 a mistake in the command; 3 refused on purpose. **Changing how postings are screened is guarded:** once there are saved postings, `settings set` on `places.*`, `description.remote_language`, `pay.*` or `titles.*`, `settings phrase-reject` and `change-rule` are refused unless today's replay was of exactly that change (`replay`, `try-titles`, or Claude's for `change-rule`), the user's words are given with `--why`, and each job they applied to or wanted that it would turn away is named in `--accept-flips`. The change is logged in `data/changes.log` with its replay. `mark` refuses when Claude tries to overwrite a verdict the **user** made (their decision stands; `--force` only when they ask), and when anyone but the user marks a posting `applied`. `add` and `add-link` refuse a duplicate. `track` refuses `presumed_rejected`, which only the day-21 close sets.
+**Exit codes:** 0 done; 1 something is wrong with the folder or its files, or a posting, application or rule isn't there (the message names it); 2 a mistake in the command; 3 refused on purpose. `resume render` refuses a resume with any line that doesn't trace (exit 3, naming the lines). **Changing how postings are screened is guarded:** once there are saved postings, `settings set` on `places.*`, `description.remote_language`, `pay.*` or `titles.*`, `settings phrase-reject` and `change-rule` are refused unless today's replay was of exactly that change (`replay`, `try-titles`, or Claude's for `change-rule`), the user's words are given with `--why`, and each job they applied to or wanted that it would turn away is named in `--accept-flips`. The change is logged in `data/changes.log` with its replay. `mark` refuses when Claude tries to overwrite a verdict the **user** made (their decision stands; `--force` only when they ask), and when anyone but the user marks a posting `applied`. `add` and `add-link` refuse a duplicate. `track` refuses `presumed_rejected`, which only the day-21 close sets.
 
 **The scan summary** has `boards`, `failed`, `read`, `dropped_title`, `dropped_location`, `matched`, `new`, `rejected_by_rule`, `total_seen`, and four lists:
 - `new_postings`: key, company, title, location, flag, salary. This is the queue for triage.
@@ -53,7 +55,7 @@ python3 run.py <command> --folder "<the user's Job Search folder>" [options]
 
 Every scan also runs `due`, so the summary carries `closed_day_21` (applications just closed at day 21) and `follow_ups_due` (counts by route). Its `health` lists boards that failed 3 scans in a row (`failing`), answered with no jobs for 30 days (`silent`), or hit the Workday cap (`at_cap`).
 
-`due` also says what catching up needs: `scan_overdue` (by `[schedule] scan`), `review_ready` (the date a prepared review is waiting), `review_due`, and `page_behind` (the user's jobs page doesn't show what `page.json` holds: its `digest`, a fingerprint that ignores when it was written, isn't `[page] pushed`).
+`due` also says what catching up needs: `scan_overdue` (by `[schedule] scan`), `review_ready` (the date a prepared review is waiting), `review_due`, `page_behind` (the user's jobs page doesn't show what `page.json` holds: its `digest`, a fingerprint that ignores when it was written, isn't `[page] pushed`), and `resume_stale` (a resume made earlier whose source was changed since, `changed_since_made`, or whose lines no longer trace to `about-me.md`, `profile_changed`, with those lines).
 
 **The weekly review** (`review`) holds `since`, `disagreements` (overturns grouped by the rule they overturned, `propose` once a rule has two since it last changed, unless a proposal for it was declined in the last four weeks), `candidate_rules`, `rule_activity` (fires per rule over 28 days, `never_fired`, the `top` rule's share), `spot_check` (10 automatic rejects), `missed_titles` (20 near misses), `pipeline` (`due`), `scan_health`, and once a month `outcomes` (counts by Claude's verdict, how they applied, level and top pick) and `profile_refresh`.
 
@@ -90,12 +92,35 @@ Other fields get their title patterns from setup's field generator.
 | `My jobs.html` | The same page as a complete web page, at the top of the folder | engine |
 | `data/runs.log` | One JSON object per scan: the summary counts | engine |
 | `data/titles-latest.tsv` | Every title read on the last scan, for testing a title change on real data | engine |
+| `resume/*.md`, `resume/<Company> - <Role>/resume.md` | Resume sources: the main resume, and a tailored copy per job | Claude (the resume skill) |
+| `resume/.../<Name> resume.docx`, `.pdf` | The resume as made, beside its source | `resume render` |
+| `data/resume-check.json` | The last check of the user's own resume: every line, and what was wrong with it | `resume check --own` |
+| `data/resumes.json` | `{"resumes": [...]}`: each resume made, with its `source`, `for` (a posting key), `company`, `role`, `made_at`, `source_digest`, `files` and `pages` | `resume render` |
 
 A **posting key** is `<system>-<company slug>-<job id>` (for example `greenhouse-acme-4012`), or `manual-<company>-<short>` for one the user found; it ties postings, verdicts and applications together and never changes. **Statuses:** `new`, `worth_applying`, `your_call`, `not_a_fit`, `skipped`, `applied`. A posting record carries `status`, `company`, `title`, `location`, `url`, `posted`, `source`, `salary`, `pay_low`, `pay_high`, `flag` (text), `flags` (`code` and `text` each), `first_seen`, `last_seen`, `gone`, `file`, `num` (its number on the jobs page, given once and kept), for a verdict `note`, `rule` and `triaged`, and for one the user found `text_from` (`board`, `link` or `pasted`).
 
 An **application** carries `id` (the posting's key, or `app-<company>-<role>` with no saved posting), `key`, `company`, `role`, `urls`, `applied_date`, `applied_date_estimated`, `channel`, `top_pick`, `level` (the level word in its title), `posted_pay`, `contact` (only a person the user named), `followed_up` (a date), `status`, `history` (each change: `date`, `at`, `status` or `event`, `by` `user` or `engine`, `note`, `choice`) and `note`. **Application statuses:** `applied`, `replied`, `screen`, `interview`, `offer`, `rejected`, `presumed_rejected`, `withdrawn`, `closed`. Only `due` sets `presumed_rejected`, and only on a plain `applied`; a status the user gives later replaces it. A follow-up is an event with a date, so it never stops the day-21 count. Older rows (the reference tracker's free-text statuses) are read in this shape, with their own words kept as `status_was`.
 
 **The engine never deletes a file**, because Cowork's workspace on the user's computer isn't allowed to. It writes in place, and a posting that disappears from its board gets a `gone` date.
+
+## Resumes
+
+Made only when the user asks (the resume skill). A resume source is plain text, written by Claude in the user's folder:
+
+```
+# First Last                          the name; anything after a comma (", CPA") is a claim
+City · email · phone                  contact lines, up to the first section; not claims
+## Experience                         a section heading
+### Title | Company, Place | Dates    a job: a claim
+- A bullet                            a claim
+A line of text                        a claim (a summary, a degree, a list of tools)
+  from: <words from about-me.md>      the claim above rests on these words, quoted exactly; one or more
+  flag: <kind>: <plain words>         Claude's own finding, when checking the user's own resume
+```
+
+A line traces when every `from:` quotes at least three words (or a whole entry) of `about-me.md`'s Confirmed claims, corrected "Now" wording, Owned hands-on, Worked alongside, or Facts postings check, and none of these is true: a source isn't there (`source_not_found`), is under Not confirmed yet (`unconfirmed`) or is the "Was" side of a correction (`corrected`); the line contains a corrected "Was" phrase its sources don't (`corrected`); it starts with an ownership word (Led, Owned, Built, Managed, ...) but rests on something worked alongside (`alongside_as_owned`); it has a number its sources don't (`number`; "four" counts as 4). A line with no `from:` is `no_source`. The engine checks these by rule; Claude reads for wording that widens a source and says so with `flag:`.
+
+The Word file is built from its XML parts (one column, standard heading and bullet styles, no tables or text boxes, Arial, US Letter). The PDF uses Helvetica, a standard PDF font, so nothing is embedded; the whole file is ASCII. Helvetica draws Western European letters only: a resume with others gets the Word file and a warning.
 
 ## settings.toml
 

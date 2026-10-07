@@ -295,5 +295,112 @@ class PdfTest(unittest.TestCase):
         self.assertEqual(cm.exception.chars, ["Ł", "京", "東"])
 
 
+class CommandTest(unittest.TestCase):
+    """resume check and resume render, through the command line, in a folder with Morgan's profile and
+    the saved jobs of test_scan's made-up boards."""
+
+    def setUp(self):
+        import contextlib
+        import io
+        import shutil
+        from tests.test_scan import ScanBase
+        base = ScanBase()
+        base.setUp()
+        self.addCleanup(base.doCleanups)
+        base.scan()
+        self.root = base.root
+        shutil.copy(os.path.join(PERSONA, "about-me.md"), os.path.join(self.root, "profile", "about-me.md"))
+        self.source = os.path.join(self.root, "resume", "main.md")
+        os.makedirs(os.path.dirname(self.source))
+        self.write(SAMPLE)
+        self.io, self.contextlib = io, contextlib
+
+    def write(self, text, path=None):
+        with open(path or self.source, "w", encoding="utf-8") as f:
+            f.write(text)
+
+    def run_cli(self, *args):
+        import json
+        from jobkit import cli
+        out, err = self.io.StringIO(), self.io.StringIO()
+        with self.contextlib.redirect_stdout(out), self.contextlib.redirect_stderr(err):
+            code = cli.main(list(args) + ["--folder", self.root])
+        return code, (json.loads(out.getvalue()) if out.getvalue().strip() else None), err.getvalue()
+
+    def test_render_makes_both_files_beside_the_source(self):
+        from jobkit import docx, pdf
+        code, out, _ = self.run_cli("resume", "render", self.source)
+        self.assertEqual(code, 0)
+        self.assertEqual(out["files"], ["resume/Morgan Reyes resume.docx", "resume/Morgan Reyes resume.pdf"])
+        self.assertEqual((out["pages"], out["lines"], out["warnings"]), (1, 5, []))
+        with open(os.path.join(self.root, "resume", "Morgan Reyes resume.docx"), "rb") as f:
+            self.assertEqual(docx.text_of(f.read()), SAMPLE_PARAGRAPHS)
+        with open(os.path.join(self.root, "resume", "Morgan Reyes resume.pdf"), "rb") as f:
+            self.assertIn("Automated accounts payable approvals with Bill.com, removing paper invoices entirely.",
+                          " ".join(pdf.text_of(f.read())))
+        [rec] = resume.records(self.root)
+        self.assertEqual((rec["source"], rec["for"]), ("resume/main.md", ""))
+
+    def test_render_refuses_a_line_that_doesnt_trace(self):
+        self.write(SAMPLE + "- Designed and tested SOX controls.\n")
+        code, out, err = self.run_cli("resume", "render", self.source)
+        self.assertEqual((code, out), (3, None))
+        self.assertIn("1 of its lines don't trace to about-me.md", err)
+        self.assertIn("Designed and tested SOX controls", err)
+        self.assertFalse(os.path.exists(os.path.join(self.root, "resume", "Morgan Reyes resume.docx")))
+
+    def test_a_tailored_copy_names_its_job(self):
+        path = os.path.join(self.root, "resume", "Acme - Support Lead", "resume.md")
+        os.makedirs(os.path.dirname(path))
+        self.write(SAMPLE, path)
+        code, out, _ = self.run_cli("resume", "render", path, "--for", "greenhouse-acme-1")
+        self.assertEqual(code, 0)
+        self.assertEqual((out["for"], out["company"]), ("greenhouse-acme-1", "Acme"))
+        self.assertEqual(out["files"][0], "resume/Acme - Support Lead/Morgan Reyes resume.docx")
+        self.assertEqual(self.run_cli("resume", "render", path, "--for", "greenhouse-acme-404")[0], 1)
+
+    def test_checking_the_user_s_own_resume_keeps_the_result(self):
+        own = os.path.join(self.root, "resume", "your-resume.md")
+        self.write("# Morgan Reyes, CPA\nDenver, CO\n\n## Experience\n- Lead a team of 8.\n  from: 4 direct reports at Peakline\n", own)
+        code, out, _ = self.run_cli("resume", "check", own, "--own")
+        self.assertEqual((code, out["lines"], out["flagged"]), (0, 2, 2))
+        from jobkit import store
+        kept = store.Folder(self.root).read_json(os.path.join(self.root, "data", "resume-check.json"))
+        self.assertEqual((kept["source"], kept["flagged"]), ("resume/your-resume.md", 2))
+        self.assertTrue(kept["checked_at"])
+
+    def test_a_badly_made_source_is_named(self):
+        self.write("Morgan Reyes\n")
+        code, _, err = self.run_cli("resume", "check", self.source)
+        self.assertEqual(code, 1)
+        self.assertIn("starts with the name", err)
+
+    def test_catching_up_notices_a_resume_that_no_longer_matches(self):
+        self.assertEqual(self.run_cli("resume", "render", self.source)[0], 0)
+        self.assertEqual(self.run_cli("due")[1]["resume_stale"], [])
+
+        # A claim it rests on is corrected in about-me.md: the resume no longer traces.
+        about_path = os.path.join(self.root, "profile", "about-me.md")
+        with open(about_path, encoding="utf-8") as f:
+            text = f.read()
+        self.write(text.replace("| Automated accounts payable approvals with Bill.com, removing paper invoices entirely |",
+                                "| Automated accounts payable approvals with Bill.com, cutting most paper invoices |"),
+                   about_path)
+        [stale] = self.run_cli("due")[1]["resume_stale"]
+        self.assertEqual((stale["source"], stale["why"]), ("resume/main.md", "profile_changed"))
+        self.assertEqual([x["line"] for x in stale["lines"]],
+                         ["Automated accounts payable approvals with Bill.com, removing paper invoices entirely."])
+
+        # The source was edited after the files were made.
+        self.write(text, about_path)
+        self.write(SAMPLE.replace("& leads", "and leads"))
+        [stale] = self.run_cli("due")[1]["resume_stale"]
+        self.assertEqual(stale["why"], "changed_since_made")
+
+        # Made again: nothing to catch up.
+        self.assertEqual(self.run_cli("resume", "render", self.source)[0], 0)
+        self.assertEqual(self.run_cli("due")[1]["resume_stale"], [])
+
+
 if __name__ == "__main__":
     unittest.main()
