@@ -238,5 +238,62 @@ class WordTest(unittest.TestCase):
                                          "Morgan Reyes"), self.data)
 
 
+class PdfTest(unittest.TestCase):
+    def setUp(self):
+        from jobkit import pdf
+        self.pdf = pdf
+        self.data, self.pages = pdf.build(resume.blocks(resume.parse_source(SAMPLE)), title="Morgan Reyes resume",
+                                          author="Morgan Reyes")
+
+    def test_plain_ascii(self):
+        self.assertTrue(all(b < 128 for b in self.data))
+        self.assertTrue(self.data.startswith(b"%PDF-1.4\n"))
+        self.assertTrue(self.data.endswith(b"%%EOF\n"))
+
+    def test_cross_reference_offsets(self):
+        import re
+        start = int(re.search(rb"startxref\n(\d+)", self.data).group(1))
+        self.assertTrue(self.data[start:].startswith(b"xref\n"))
+        rows = re.findall(rb"(\d{10}) 00000 n ", self.data[start:])
+        for n, offset in enumerate(rows, 1):
+            self.assertTrue(self.data[int(offset):].startswith(f"{n} 0 obj\n".encode()), n)
+        size = int(re.search(rb"/Size (\d+)", self.data).group(1))
+        self.assertEqual(size, len(rows) + 1)
+
+    def test_text_is_the_resume_without_its_sources(self):
+        drawn = self.pdf.text_of(self.data)
+        self.assertEqual(self.pages, 1)
+        self.assertNotIn("from:", " ".join(drawn))
+        flat = " ".join(" ".join(drawn).split())
+        for paragraph in SAMPLE_PARAGRAPHS:
+            for part in paragraph.split("\t"):
+                want = part.upper() if part in ("Summary", "Experience", "Education") else part
+                self.assertIn(want, flat)
+        self.assertEqual(drawn.count("•"), 2)  # a bullet mark for each bullet
+
+    def test_a_long_resume_runs_onto_more_pages(self):
+        bullets = [("bullet", f"Line {n}: reconciled the accounts and closed the month on time.") for n in range(80)]
+        data, pages = self.pdf.build([("name", "Morgan Reyes"), ("heading", "Experience")] + bullets)
+        self.assertEqual(pages, 2)
+        self.assertEqual(data.count(b"/Type /Page "), 2)
+        self.assertIn("Line 79: reconciled the accounts and closed the month on time.", self.pdf.text_of(data))
+
+    def test_wrapping(self):
+        lines = self.pdf.wrap("word " * 60, "regular", 10, 200)
+        self.assertTrue(all(self.pdf.width(line, "regular", 10) <= 200 for line in lines))
+        self.assertEqual(" ".join(lines), ("word " * 60).strip())
+        self.assertEqual(self.pdf.wrap("x" * 200, "regular", 10, 100)[0], "x" * 20)  # 20 x 5.0 = 100 points
+
+    def test_escapes(self):
+        data, _ = self.pdf.build([("name", "Zoë (Jo) O’Neil \\ £")])
+        self.assertTrue(all(b < 128 for b in data))
+        self.assertEqual(self.pdf.text_of(data), ["Zoë (Jo) O’Neil \\ £"])
+
+    def test_letters_it_cant_draw(self):
+        with self.assertRaises(self.pdf.CantDraw) as cm:
+            self.pdf.build([("name", "Łucja Nowak"), ("para", "Tokyo 東京")])
+        self.assertEqual(cm.exception.chars, ["Ł", "京", "東"])
+
+
 if __name__ == "__main__":
     unittest.main()
