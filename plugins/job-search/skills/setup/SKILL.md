@@ -166,6 +166,7 @@ This folder is <their first name>'s job search, run with the job-search kit. Say
 - "Go through my review" goes through the weekly review: rules you've overturned, a spot-check, your follow-ups.
 - "Show me my jobs page" opens the page where you can mark jobs yourself. My jobs.html in this folder is the same page as a file.
 - "Check my resume", "make me a clean resume" or "tailor my resume for #12" helps with your resume, using only what you've confirmed.
+- "I have an interview with Acme on Thursday at 2" records it with a calendar file; "prep me for it" writes a prep sheet; "mock interview" lets you practise; "how did it go" records what happened.
 
 profile/   about you, what you want, and your screening rules
 data/      every job found, every decision, every application

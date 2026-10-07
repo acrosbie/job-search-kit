@@ -13,6 +13,8 @@ Follow `${CLAUDE_PLUGIN_ROOT}/reference/running-the-engine.md`, sections 1 to 5a
 
 **Record everything the user told you first, then run `due` once.** For example, an application from three weeks ago that has a reply is recorded with its reply before anything closes.
 
+**An interview or screen booked** ("I have a screen with Acme tomorrow at 10") is recorded by the interview skill's step 1, which keeps the day and time and writes a calendar file. Then it offers a prep sheet.
+
 ## "I applied to …"
 
 Only ever when the user says they applied. Never because Claude marked a job worth applying, and never "probably".

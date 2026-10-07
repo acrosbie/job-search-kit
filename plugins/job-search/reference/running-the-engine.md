@@ -55,6 +55,7 @@ Quote every path: folder names often contain spaces.
 | `replay`, `rule-evidence`, `change-rule`, `decline`, `requeue` | Changing a rule the careful way (the tune skill) |
 | `discover NAME` | Which public job board a company uses |
 | `resume check FILE`, `resume render FILE` | The user's resume, only when they ask (the resume skill) |
+| `track ID screen --on WHEN`, `interview list`, `interview check FILE`, `interview debriefed ID`, `pay` | Interviews (the interview skill) |
 
 **Exit codes:**
 - **0:** done.
@@ -77,6 +78,7 @@ After installing or refreshing the engine, every skill catches up before doing a
 5. **A resume that no longer matches:** if `due` lists `resume_stale`, offer once, in one line, and remake nothing unless they say yes (then use the resume skill):
    - `profile_changed`: "Your resume still says 'Lead a team of 6', which you corrected. Want me to update it?" Quote the line.
    - `changed_since_made`: "Your resume's Word and PDF files are older than its latest changes. Want me to make them again?"
+6. **Interviews:** if `due` lists `interviews_soon`, offer prep in one line, naming the day and time: "Your Acme screen is tomorrow at 10:00. Want to go through your prep?" If one is listed under `debrief_due`, offer: "How did your Acme screen go? Two minutes now, while it's fresh, helps the next one." Start either only if they say yes (the interview skill).
 
 Keep it short: the user asked for something else, so give the catch-up a line or two and move on.
 
