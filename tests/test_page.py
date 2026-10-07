@@ -96,6 +96,13 @@ class PageTest(ScanBase):
         for banned in ("alert(", "confirm(", "prompt(", "window.print"):
             self.assertNotIn(banned, template)
 
+    def test_unsent_clicks_survive_a_rebuilt_page(self):
+        # Before 0.6.0 the page kept clicks under its "as of" time, so the next scan's copy lost them.
+        template = read(page.TEMPLATE)
+        self.assertIn('var LOCAL = PREFIX + (data ? data.title : "");', template)
+        self.assertNotIn("data.as_of : \"\")", template)
+        self.assertIn("k.indexOf(PREFIX) === 0", template)  # older copies' clicks are gathered up too
+
     def test_the_file_only(self):
         # The user wants My jobs.html and no page in their Claude account: nothing is ever behind.
         from jobkit import configure, schedule, settings

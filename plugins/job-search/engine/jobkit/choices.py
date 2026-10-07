@@ -13,6 +13,10 @@ Every choice carries an id, kept on what it recorded, so the same click is never
 Choices are taken oldest first, and one is skipped as superseded when the user changed it: a later
 click on the same job, or a later decision in chat. Only their last word is recorded, so changing
 their mind on the page never reads as overturning a verdict several times.
+
+Whatever happens to a click is also written to data/choices.log (recorded, already, superseded, or
+unknown with the reason), once per click. The page reads the recent ones back (page.json `handled`),
+so a page opened from the folder can drop the clicks Claude has dealt with and keep the rest.
 """
 
 import datetime as dt
@@ -79,6 +83,8 @@ def record(root, clock, choices):
     out = {"recorded": [], "already": [], "superseded": [], "unknown": []}
     done = recorded_ids(root)
     replaced = _changed_on_the_page(choices, done)
+    folder = store.Folder(root)
+    logged = {(r.get("id"), r.get("outcome")) for r in folder.read_choices()}
     for c in sorted(choices, key=lambda c: _when(c.get("at"))):
         cid, action = c.get("id", ""), c.get("action", "")
         brief = {"id": cid, "action": action, "num": c.get("num"), "label": c.get("label", ""),
@@ -117,6 +123,22 @@ def record(root, clock, choices):
             continue
         done.add(cid)
         out["recorded"].append(brief)
+    for outcome in ("recorded", "already", "superseded", "unknown"):
+        for c in out[outcome]:
+            if c["id"] and (c["id"], outcome) not in logged:
+                logged.add((c["id"], outcome))
+                folder.log_choice({"at": clock.stamp(), "id": c["id"], "outcome": outcome, "why": c.get("why", "")})
+    return out
+
+
+def handled(root, clock, days=30):
+    """{click id: {"outcome", "why"}} for the clicks dealt with in the last `days` days: what the page
+    needs to drop the ones Claude has recorded and show the ones it couldn't."""
+    since = (clock.now() - dt.timedelta(days=days)).isoformat(timespec="seconds")
+    out = {}
+    for r in store.Folder(root).read_choices():
+        if r.get("id") and (r.get("at") or "") >= since[:10]:
+            out[r["id"]] = {"outcome": r.get("outcome", ""), "why": r.get("why", "")}
     return out
 
 

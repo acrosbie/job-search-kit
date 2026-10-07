@@ -10,6 +10,7 @@
     data/titles-latest.tsv    every title read on the last scan, for testing a title change on real data
     data/reviews.log          one JSON object per weekly review prepared or gone through, append-only
     data/changes.log          every change to the screening rules, and every one declined, append-only
+    data/choices.log          every click from the jobs page that was handled, and what happened to it, append-only
     data/review.json          the weekly review last prepared
     data/replay-latest.json   the last replay of a proposed rule change, which saving it must match
     data/page.json            what the jobs page shows (see page.py)
@@ -41,6 +42,7 @@ class Folder:
         self.page_publish_html = os.path.join(self.data, "jobs-page.html")
         self.reviews_log = os.path.join(self.data, "reviews.log")
         self.changes_log = os.path.join(self.data, "changes.log")
+        self.choices_log = os.path.join(self.data, "choices.log")
         self.review_json = os.path.join(self.data, "review.json")
         self.replay_json = os.path.join(self.data, "replay-latest.json")
         self.page_html = os.path.join(root, "My jobs.html")
@@ -153,6 +155,12 @@ class Folder:
 
     def read_changes(self):
         return self._lines(self.changes_log)
+
+    def log_choice(self, row):
+        self._append(self.choices_log, row)
+
+    def read_choices(self):
+        return self._lines(self.choices_log)
 
     def write_json(self, path, obj):
         self._write(path, json.dumps(obj, indent=1, ensure_ascii=False) + "\n")

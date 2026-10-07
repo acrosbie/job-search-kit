@@ -255,8 +255,10 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
 
   var data = null;
   try { data = JSON.parse(document.getElementById("jobs-data").textContent); } catch (e) { data = null; }
-  // Clicks kept in this browser belong to this copy of the page; a newer copy starts afresh.
-  var LOCAL = "job-search-choices " + (data ? data.as_of : "");
+  // Clicks kept in this browser, under one name for this search, so a page rebuilt by the next scan
+  // still has the clicks not yet sent to Claude. Clicks Claude has dealt with (data.handled) drop out.
+  var PREFIX = "job-search-choices ";
+  var LOCAL = PREFIX + (data ? data.title : "");
   var FILTER = "job-search-filter";
   var mode = "file";          // "file": opened from the folder; "saving": an artifact whose clicks save
   var clicks = null;          // the store's collection of clicks, when saving
@@ -281,6 +283,13 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
   function stamp(pair) { return '<span class="stamp ' + pair[1] + '">' + esc(pair[0]) + "</span>"; }
   function newId() { return "c-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7); }
   function plural(n, one, many) { return n + " " + (n === 1 ? one : many); }
+  // Days since a date, counted today: a page opened days after it was built still counts right.
+  function daysSince(iso, fallback) {
+    if (!iso) return fallback;
+    var d = new Date(String(iso).slice(0, 10) + "T12:00:00"), now = new Date();
+    now.setHours(12, 0, 0, 0);
+    return isNaN(d) ? fallback : Math.round((now - d) / 864e5);
+  }
 
   function toast(text) {
     var t = document.getElementById("toast");
@@ -300,12 +309,20 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
   // ---------------------------------------------------------------- the user's choices
 
   function all() { return Object.keys(choices).map(function (id) { return choices[id]; }); }
+  function handledAs(c) { var h = data && data.handled && data.handled[c.id]; return h ? h.outcome : ""; }
+  function problemOf(c) {
+    if (c.problem) return c.problem;
+    return handledAs(c) === "unknown" ? (data.handled[c.id].why || "Claude couldn't match it to a job") : "";
+  }
   function pending() {
-    return all().filter(function (c) { return !c.recorded; }).sort(function (a, b) { return a.at < b.at ? -1 : 1; });
+    return all().filter(function (c) { return !c.recorded && !handledAs(c); })
+      .sort(function (a, b) { return a.at < b.at ? -1 : 1; });
   }
   function problems() {  // shown for a week after Claude tried
     var since = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
-    return all().filter(function (c) { return c.problem && String(c.recorded) >= since; });
+    return all().filter(function (c) {
+      return problemOf(c) && (c.recorded ? String(c.recorded) >= since : handledAs(c) === "unknown");
+    });
   }
   // The choice still waiting for Claude on this job or application, if any (its latest status choice).
   function waitingOn(field, value, events) {
@@ -357,16 +374,18 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
     return bits.join(" · ");
   }
 
-  // Claude's note, shown by what it is: a question to answer, advice for the resume, or the user's own words.
+  // What Claude (or a rule) said, shown by what it is: a question to answer, advice for the resume, or
+  // a reason. Then the user's own words, if they gave any. The two are never mixed up.
   function why(j) {
-    var n = String(j.note || "");
-    if (!n) return "";
-    var m = n.match(/^Question:\s*([\s\S]*)$/);
-    if (m) return '<div class="why question"><span class="k">The question</span>' + esc(m[1]) + "</div>";
-    m = n.match(/^Tailor:\s*([\s\S]*)$/);
-    if (m) return '<div class="why tip"><span class="k">For your resume</span>' + esc(m[1]) + "</div>";
-    if (j.by === "user") return '<div class="why said"><span class="k">You said</span>“' + esc(n) + "”</div>";
-    return '<div class="why plain">' + esc(n) + "</div>";
+    var said = j.claude_said != null ? String(j.claude_said || "") : (j.by === "user" ? "" : String(j.note || ""));
+    var yours = j.you_said != null ? String(j.you_said || "") : (j.by === "user" ? String(j.note || "") : "");
+    var out = "";
+    var m = said.match(/^Question:\s*([\s\S]*)$/);
+    if (m) out += '<div class="why question"><span class="k">The question</span>' + esc(m[1]) + "</div>";
+    else if ((m = said.match(/^Tailor:\s*([\s\S]*)$/))) out += '<div class="why tip"><span class="k">For your resume</span>' + esc(m[1]) + "</div>";
+    else if (said) out += '<div class="why plain"><span class="k">Claude said</span>' + esc(said) + "</div>";
+    if (yours) out += '<div class="why said"><span class="k">You said</span>“' + esc(yours) + "”</div>";
+    return out;
   }
 
   function clockBar(days, closesOn) {
@@ -392,7 +411,7 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
     }).concat(bad.map(function (c) {
       return '<li class="row choice problem"><span class="num">' + (c.num ? "#" + esc(c.num) : "") + "</span>" +
         '<div class="row-main"><span>' + stamp(CHOSEN[c.action] || [c.action, "s-call"]) + " " + esc(c.label) + "</span>" +
-        '<span class="row-note">Claude couldn\'t record this: ' + esc(c.problem) + "</span></div><span></span></li>";
+        '<span class="row-note">Claude couldn\'t record this: ' + esc(problemOf(c)) + "</span></div><span></span></li>";
     }));
     var lede = mode === "saving"
       ? "Saved on this page. Claude records " + (list.length === 1 ? "it" : "them") + " in your Job Search folder the next time you talk to it. Changed your mind? Undo, or choose again."
@@ -412,7 +431,7 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
         ? "A top pick with nobody to follow up with. Look for the person who would manage this role, and add their name."
         : "Nothing to send without a contact.";
     return '<article class="card todo"><div class="card-top"><span class="num">' + (t.num ? "#" + esc(t.num) : "") + "</span>" + stamp(ROUTE[t.route]) + "</div>" +
-      "<h3>" + esc(t.company) + ", " + esc(t.role) + "</h3><p>" + what + "</p>" + clockBar(t.days, t.closes_on) + saidLines(t.id) +
+      "<h3>" + esc(t.company) + ", " + esc(t.role) + "</h3><p>" + what + "</p>" + clockBar(daysSince(t.applied_date, t.days), t.closes_on) + saidLines(t.id) +
       '<div class="actions">' + button("followed_up", "app", t.id, "primary") +
       (t.route !== "send" ? button("contact", "app", t.id, "quiet") : "") + "</div>" +
       (opened("s-todo") ? panel("app", t.id, "followed_up") + panel("app", t.id, "contact") : "") + "</article>";
@@ -445,7 +464,8 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
       (j.url ? '<a class="row-title" href="' + esc(j.url) + '" target="_blank" rel="noopener">' + esc(t.title) + "</a>" : '<span class="row-title">' + esc(t.title) + "</span>") +
       '<span class="row-meta">' + esc(j.company) + " · " + esc(t.place || "place not stated") +
       (j.salary ? ' · <span class="pay">' + esc(j.salary) + "</span>" : "") + "</span>" +
-      (j.note ? '<span class="row-note">' + esc(j.note) + "</span>" : "") +
+      ((j.claude_said != null ? j.claude_said : j.note) ? '<span class="row-note">' + esc(j.claude_said != null ? j.claude_said : j.note) + "</span>" : "") +
+      (j.you_said ? '<span class="row-note">You said: \u201c' + esc(j.you_said) + "\u201d</span>" : "") +
       (j.flag ? '<span class="row-note flag">' + esc(j.flag) + "</span>" : "") +
       (j.gone ? '<span class="row-note flag">No longer on the company\'s job board since ' + day(j.gone) + ".</span>" : "") +
       "</div>" +
@@ -480,7 +500,7 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
       '<div class="app-main"><span class="app-name"><b>' + esc(a.company) + "</b>, " +
       (a.url ? '<a href="' + esc(a.url) + '" target="_blank" rel="noopener">' + esc(a.role) + "</a>" : esc(a.role)) + "</span>" +
       '<span class="app-meta">' + meta + "</span>" +
-      (a.status === "applied" ? clockBar(a.days, a.closes_on) : "") + "</div>" +
+      (a.status === "applied" ? clockBar(daysSince(a.applied_date, a.days), a.closes_on) : "") + "</div>" +
       '<div class="app-side">' + stamp(st) + (live && !mine ? button("menu", "app", a.id, "mini", "Update", a.num) : "") + "</div>" +
       '<div class="more">' + saidLines(a.id) + menu + (mine && open.action !== "menu" ? panel("app", a.id, open.action) : "") + "</div></li>";
   }
@@ -620,7 +640,23 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
   }
 
   function loadLocal() {
-    try { choices = JSON.parse(localStorage.getItem(LOCAL) || "{}") || {}; } catch (e) { choices = {}; }
+    // Every copy of this page saved under its own name before 0.6.0; gather those too, so clicks a
+    // rebuilt page hid are found again. Then forget the ones Claude has dealt with.
+    choices = {};
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && k.indexOf(PREFIX) === 0) {
+          var saved = JSON.parse(localStorage.getItem(k) || "{}") || {};
+          Object.keys(saved).forEach(function (id) { if (!choices[id]) choices[id] = saved[id]; });
+        }
+      }
+    } catch (e) { choices = choices || {}; }
+    Object.keys(choices).forEach(function (id) {
+      var h = handledAs(choices[id]);
+      if (h && h !== "unknown") delete choices[id];
+    });
+    saveLocal();
   }
 
   function remove(id) {

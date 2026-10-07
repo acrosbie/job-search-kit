@@ -19,7 +19,7 @@ import hashlib
 import json
 import os
 
-from . import __version__, schedule, settings, store, track
+from . import __version__, choices, schedule, settings, store, track
 
 TEMPLATE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "page", "jobs-page.html")
 DATA_SLOT = "__JOBS_DATA__"
@@ -75,12 +75,22 @@ def build(root, clock):
     if app_numbered:
         track.save(root, applications)
 
-    decided_by = {d.get("key"): d.get("by", "") for d in folder.read_decisions()}  # who made the latest decision
+    # Who made the latest decision on each job, and what Claude (or a rule) and the user last said about
+    # it, kept apart: a click with no note must never show Claude's reason as the user's words.
+    decided_by, claude_said, you_said = {}, {}, {}
+    for d in folder.read_decisions():
+        k = d.get("key")
+        decided_by[k] = d.get("by", "")
+        if d.get("by") in ("claude", "rule"):
+            claude_said[k] = d.get("reason", "")
+        elif d.get("by") == "user":
+            you_said[k] = d.get("reason", "")
 
     def job(k, v):
         return {"num": v.get("num"), "key": k, "by": decided_by.get(k, ""), "company": v.get("company", ""),
                 "title": v.get("title", ""), "location": v.get("location", ""), "url": v.get("url", ""), "salary": v.get("salary", ""),
                 "status": v.get("status", ""), "note": v.get("note", ""), "flag": v.get("flag", ""),
+                "claude_said": claude_said.get(k, ""), "you_said": you_said.get(k, ""),
                 "first_seen": v.get("first_seen", ""), "gone": v.get("gone", ""), "source": v.get("source", "")}
 
     order = {st: i for i, st in enumerate(WAITING)}
@@ -101,7 +111,8 @@ def build(root, clock):
                 "last": {"date": last.get("date", ""), "what": last.get("status") or last.get("event", "")}}
         apps_out.append(item)
         if st["due"]:
-            todo.append({**{k: item[k] for k in ("num", "id", "company", "role", "days", "contact", "closes_on")},
+            todo.append({**{k: item[k] for k in ("num", "id", "company", "role", "days", "contact", "closes_on",
+                                                 "applied_date")},
                          "route": st["route"]})
     route_order = {r: i for i, r in enumerate(track.ROUTES)}
     todo.sort(key=lambda t: (route_order[t["route"]], -(t["days"] or 0)))
@@ -117,6 +128,7 @@ def build(root, clock):
                    "applications": len(apps_out)},
         "tracking": {"follow_up_after_days": s.follow_up_after_days, "presume_after_days": s.presume_after_days},
         "review_ready": schedule.review_state(root, s, clock)[0],
+        "handled": choices.handled(root, clock),
         "waiting": waiting_out,
         "todo": todo,
         "applications": apps_out,

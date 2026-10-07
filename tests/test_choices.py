@@ -42,6 +42,35 @@ class ChoicesTest(ScanBase):
         a = track.find(track.load(self.root), "greenhouse-acme-1")
         self.assertEqual((a["status"], a["contact"]), ("replied", "Lee Example"))
 
+    def test_what_happened_to_each_click_is_kept_for_the_page(self):
+        # A page opened from the folder can't be told directly; it reads these back (page.json `handled`).
+        from jobkit import page
+        clicks = [click("c-1", "want", key="greenhouse-acme-1", at="2026-09-24T17:00:00Z"),
+                  click("c-2", "skip", key="greenhouse-acme-1", at="2026-09-24T17:00:01Z"),
+                  click("c-3", "want", key="greenhouse-nowhere-9", at="2026-09-24T17:00:02Z")]
+        choices.record(self.root, CLOCK, clicks)
+        choices.record(self.root, CLOCK, clicks[1:2])  # sent again: already recorded
+        rows = sorted((r["id"], r["outcome"]) for r in self.folder.read_choices())
+        self.assertEqual(rows, [("c-1", "superseded"), ("c-2", "already"), ("c-2", "recorded"), ("c-3", "unknown")])
+        choices.record(self.root, CLOCK, clicks)  # nothing new to log
+        self.assertEqual(len(self.folder.read_choices()), 4)
+        handled = page.build(self.root, CLOCK)["handled"]
+        self.assertEqual({k: v["outcome"] for k, v in handled.items()}, {"c-1": "superseded", "c-2": "already", "c-3": "unknown"})
+        self.assertIn("greenhouse-nowhere-9", handled["c-3"]["why"])
+
+    def test_the_page_keeps_claude_s_reason_apart_from_the_user_s_words(self):
+        # A want with no note used to show Claude's rejection under "You said".
+        from jobkit import page
+        reason = 'Rule 2 (Owns the queue): "Lead the Denver team."'
+        verdicts.mark(self.root, "greenhouse-acme-1", "not_a_fit", "claude", note=reason, clock=CLOCK)
+        choices.record(self.root, CLOCK, [click("c-1", "want", key="greenhouse-acme-1")])
+        j = next(j for j in page.build(self.root, CLOCK)["waiting"] if j["key"] == "greenhouse-acme-1")
+        self.assertEqual((j["by"], j["claude_said"], j["you_said"]), ("user", reason, ""))
+        choices.record(self.root, CLOCK, [click("c-2", "want", key="greenhouse-acme-1", note="it's remote really",
+                                                at="2026-09-24T17:30:00Z")])
+        j = next(j for j in page.build(self.root, CLOCK)["waiting"] if j["key"] == "greenhouse-acme-1")
+        self.assertEqual((j["claude_said"], j["you_said"]), (reason, "it's remote really"))
+
     def test_once_only(self):
         one = [click("c-1", "skip", key="greenhouse-acme-1")]
         choices.record(self.root, CLOCK, one)
