@@ -28,6 +28,8 @@ Degrees, certifications, clearances, languages, industries, years managing peopl
 
 When triage gives tailoring advice, every claim in it comes from **Confirmed** or **Owned hands-on**. Something that isn't there is not experience the user lacks. It's a question to ask them.
 
+A resume the kit makes (the resume skill) rests on this file line by line, and the engine checks it (`resume-format.md`). So keep each claim in a table cell or bullet of its own, and keep the user's own words.
+
 ## what-i-want.md: what they're looking for
 
 ```

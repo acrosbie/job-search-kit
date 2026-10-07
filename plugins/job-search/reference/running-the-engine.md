@@ -54,6 +54,7 @@ Quote every path: folder names often contain spaces.
 | `review` | The weekly review's facts (the review skill) |
 | `replay`, `rule-evidence`, `change-rule`, `decline`, `requeue` | Changing a rule the careful way (the tune skill) |
 | `discover NAME` | Which public job board a company uses |
+| `resume check FILE`, `resume render FILE` | The user's resume, only when they ask (the resume skill) |
 
 **Exit codes:**
 - **0:** done.
@@ -73,6 +74,9 @@ After installing or refreshing the engine, every skill catches up before doing a
    - **`scan_overdue`:** in the scan and triage skills, run a scan first (the scan skill's steps), saying so in one line: "Your morning check didn't run, so I'm checking now; it takes a few minutes." In any other skill, offer it in one line ("Your last check was 3 days ago; want me to check now?") and carry on with what they asked.
    - **`review_ready`, or `review_due`:** offer it in one line: "Your weekly review is ready; want to go through it?" Start it only if they say yes (the review skill).
 4. **The jobs page:** if `due` says `page_behind`, the page in their Claude account doesn't show what the folder holds. A skipped update, or a scheduled check that couldn't reach it, leaves it like this. Bring it up to date quietly, as `jobs-page.md` says under "Keeping it current".
+5. **A resume that no longer matches:** if `due` lists `resume_stale`, offer once, in one line, and remake nothing unless they say yes (then use the resume skill):
+   - `profile_changed`: "Your resume still says 'Lead a team of 6', which you corrected. Want me to update it?" Quote the line.
+   - `changed_since_made`: "Your resume's Word and PDF files are older than its latest changes. Want me to make them again?"
 
 Keep it short: the user asked for something else, so give the catch-up a line or two and move on.
 
@@ -83,6 +87,8 @@ Run the engine straight from `${CLAUDE_PLUGIN_ROOT}/engine` in a shell on Anthro
 1. Copy these into a temporary folder, keeping their paths: `profile/` (every file), plus whichever exist of `data/postings.json`, `data/applications.json`, `data/decisions.log`, `data/runs.log` and `data/page-choices.json`. For `show`, also copy that posting's file from `data/postings/`.
 2. Run the command with `--folder` pointing at the temporary folder.
 3. Copy back into the user's folder: `data/postings.json`, `data/postings.backup.json`, `data/applications.json`, `data/applications.backup.json`, `data/decisions.log`, `data/runs.log`, `data/titles-latest.tsv`, `data/page.json`, `data/jobs-page.html`, `My jobs.html`, and every file that is new in `data/postings/`.
+
+For `resume check` and `resume render`, also copy the resume's source file (keeping its path under `resume/`) and `data/resumes.json` if it exists. Copy back `data/resume-check.json`, `data/resumes.json`, and the Word file and PDF it made. The PDF is plain text inside, so it copies like any text file. If the Word file can't be written into their folder this way, give it to them in the chat instead, and say so.
 
 ## 7. Code mode
 
