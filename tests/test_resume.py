@@ -40,6 +40,7 @@ class AboutTest(unittest.TestCase):
         self.assertEqual(resume.numbers("From 10 business days to 6; $95,000; 1.5 times; 3 of 4; ten years; $250K"),
                          {"10", "6", "95000", "1.5", "3", "4", "250"})
         self.assertEqual(resume.numbers("one of the team, no one else"), set())
+        self.assertEqual(resume.numbers("B2B SaaS, Q4 close, ASC 606, 401(k)"), {"606", "401"})
 
 
 class TraceTest(unittest.TestCase):

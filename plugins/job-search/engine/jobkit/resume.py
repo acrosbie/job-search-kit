@@ -68,12 +68,13 @@ def norm(s):
 
 
 def numbers(s):
-    """The numbers a text states: digits ("10", "95,000", "1.5", "$250K" is 250) and number words."""
+    """The numbers a text states: digits ("10", "95,000", "1.5", "$250K" is 250) and number words.
+    Digits straight after a letter are part of a name, not a count ("B2B", "Q4")."""
     s = norm(s)
     for word, digits in NUMBER_WORDS.items():
         s = re.sub(rf"\b{word}\b", digits, s)
     found = set()
-    for m in re.findall(r"\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?", s):
+    for m in re.findall(r"(?<![a-z\d])(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?", s):
         found.add(m.replace(",", "").lstrip("0") or "0")
     return found
 
