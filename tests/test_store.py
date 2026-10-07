@@ -27,6 +27,56 @@ class StoreTest(unittest.TestCase):
         self.assertEqual(json.loads(read(f.backup_json))["postings"], {"a": {"title": "Café lead"}})
         self.assertEqual(list(f.load_postings()["postings"]), ["b"])
 
+    def test_a_long_scan_never_undoes_what_was_saved_meanwhile(self):
+        # Found in a bug hunt: a scan loaded postings.json, fetched for minutes, then saved its old
+        # copy, so "I applied to #12" said meanwhile went back to Worth applying.
+        f = self.folder
+        f.save_postings({"postings": {"a": {"status": "worth_applying", "num": 12, "last_seen": "2026-10-01"},
+                                      "b": {"status": "new", "last_seen": "2026-10-01"}}, "boards": {}})
+        scan = f.load_postings()
+        verdict = store.Folder(self.root).load_postings()
+        verdict["postings"]["a"]["status"] = "applied"
+        verdict["postings"]["a"]["triaged"] = "2026-10-07"
+        store.Folder(self.root).save_postings(verdict)
+        for k in ("a", "b"):
+            scan["postings"][k]["last_seen"] = "2026-10-07"
+        scan["postings"]["a"]["gone"] = "2026-10-07"
+        scan["postings"]["c"] = {"status": "new", "first_seen": "2026-10-07"}
+        scan["boards"]["acme"] = {"jobs": 3}
+        f.save_postings(scan)
+        got = f.load_postings()
+        self.assertEqual(got["postings"]["a"], {"status": "applied", "num": 12, "triaged": "2026-10-07",
+                                                "last_seen": "2026-10-07", "gone": "2026-10-07"})
+        self.assertEqual(got["postings"]["b"]["last_seen"], "2026-10-07")
+        self.assertEqual(got["postings"]["c"], {"status": "new", "first_seen": "2026-10-07"})
+        self.assertEqual(got["boards"], {"acme": {"jobs": 3}})
+
+    def test_applications_merge_too(self):
+        from jobkit import track
+        f = self.folder
+        f.save_applications([{"id": "x", "company": "Acme", "role": "Lead", "status": "applied", "applied_date": "2026-09-01"},
+                             {"id": "y", "company": "Globex", "role": "Lead", "status": "applied", "applied_date": "2026-09-20"}])
+        closing = track.load(self.root)
+        replying = track.load(self.root)
+        replying[1]["status"] = "replied"
+        track.save(self.root, replying)
+        closing[0]["status"] = "presumed_rejected"
+        track.save(self.root, closing)
+        self.assertEqual([a["status"] for a in f.load_applications()], ["presumed_rejected", "replied"])
+
+    def test_a_half_written_file_is_read_from_its_backup(self):
+        f = self.folder
+        f.save_postings({"postings": {"a": {"status": "new"}}, "boards": {}})
+        f.save_postings({"postings": {"a": {"status": "applied"}}, "boards": {}})
+        with open(f.postings_json, "w", encoding="utf-8") as h:
+            h.write('{"postings": {"a": {"sta')
+        state = f.load_postings()
+        self.assertEqual(state["postings"]["a"]["status"], "new")  # the backup: one save behind, not lost
+        state["postings"]["a"]["note"] = "kept"
+        f.save_postings(state)
+        self.assertEqual(f.load_postings()["postings"]["a"], {"status": "new", "note": "kept"})
+        self.assertEqual(json.loads(read(f.backup_json))["postings"]["a"]["status"], "new")  # never the broken file
+
     def test_description_header(self):
         rec = {"key": "greenhouse-acme-1", "title": "Support Manager", "company": "Acme", "location": "",
                "url": "https://acme.test/1", "posted": "", "ats": "greenhouse"}

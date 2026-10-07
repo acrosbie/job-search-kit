@@ -20,13 +20,57 @@
 Nothing here deletes a file. Cowork's workspace on the user's computer isn't allowed to, and
 replacing a file by renaming over it may count as deleting. Files are written in place, after the
 new content is complete, with the previous postings.json and applications.json kept as backups.
+
+Two commands can run at once: a scheduled scan takes minutes, and the user may record a verdict
+meanwhile. So postings.json and applications.json are saved by merging: what this command changed
+since it loaded the file is laid onto the file as it is now, record by record and field by field.
+Anything another command changed in between stays, unless this one changed the same field. (A lock
+file can't be used: the engine couldn't delete it afterwards.)
+
+A file left half-written by a crash is read from its backup instead, and never copied over the
+backup.
 """
 
+import copy
 import json
 import os
 import re
 
 STATUSES = ("new", "worth_applying", "your_call", "not_a_fit", "skipped", "applied")
+
+
+class Loaded(dict):
+    """A file's contents as loaded, remembering them as they were, so saving can merge."""
+    base = None
+
+
+def _merge_records(base, mine, theirs):
+    """theirs, with every record and field `mine` changed since `base` laid on top. Records are
+    dicts keyed by id; a record this writer added is added unless the other writer added it too."""
+    out = copy.deepcopy(theirs)
+    for k in mine.keys() | base.keys():
+        b, m = base.get(k), mine.get(k)
+        if m == b:
+            continue
+        if m is None:  # removed by this writer (the engine never does): leave theirs alone
+            continue
+        t = out.get(k)
+        if b is None or t is None:
+            out.setdefault(k, m)
+            continue
+        if not isinstance(m, dict) or not isinstance(t, dict) or not isinstance(b, dict):
+            out[k] = m
+            continue
+        for f in m.keys() | b.keys():
+            if m.get(f, _MISSING) != b.get(f, _MISSING):
+                if f in m:
+                    t[f] = m[f]
+                else:
+                    t.pop(f, None)
+    return out
+
+
+_MISSING = object()
 
 
 class Folder:
@@ -87,21 +131,57 @@ class Folder:
                 continue
         return rows
 
+    def _read_json_or_backup(self, path, backup):
+        """(contents, read from the backup) for a JSON file; its backup when the file itself is
+        half-written. None when neither exists."""
+        if not os.path.exists(path):
+            return None, False
+        try:
+            return json.loads(self._read(path)), False
+        except ValueError:
+            if os.path.exists(backup):
+                return json.loads(self._read(backup)), True
+            raise
+
+    def _save_merged(self, path, backup, read, base, new_content):
+        """Write `new_content`, keeping the previous good file as the backup. When the file no longer
+        holds `read` (what this command read from it), another command wrote it meanwhile: then only
+        what changed between `base` (the same records as this command first held them) and
+        `new_content` is laid onto the file as it is now."""
+        current, from_backup = self._read_json_or_backup(path, backup)
+        if read is not None and base is not None and current is not None and current != read:
+            new_content = self._merge(base, new_content, current)
+        if current is not None and not from_backup:
+            self._write(backup, self._read(path))
+        self._write(path, json.dumps(new_content, indent=1, ensure_ascii=False))
+
     # ------------------------------------------------------------ postings
 
     def load_postings(self):
-        if os.path.exists(self.postings_json):
-            state = json.loads(self._read(self.postings_json))
-            state.setdefault("postings", {})
-            state.setdefault("boards", {})
-            return state
-        return {"postings": {}, "boards": {}}
+        state, _ = self._read_json_or_backup(self.postings_json, self.backup_json)
+        state = Loaded(state or {})
+        state.setdefault("postings", {})
+        state.setdefault("boards", {})
+        state.base = copy.deepcopy(dict(state))
+        return state
+
+    @staticmethod
+    def _merge(base, mine, theirs):
+        if "applications" in mine:
+            key = lambda rows: {a.get("id") or f"#{i}": a for i, a in enumerate(rows)}
+            merged = _merge_records(key(base.get("applications", [])), key(mine["applications"]),
+                                    key(theirs.get("applications", [])))
+            order = [a.get("id") or f"#{i}" for i, a in enumerate(theirs.get("applications", []))]
+            order += [k for k in key(mine["applications"]) if k not in order]
+            return {**theirs, "applications": [merged[k] for k in order if k in merged]}
+        out = dict(theirs)
+        for part in ("postings", "boards"):
+            out[part] = _merge_records(base.get(part, {}), mine.get(part, {}), theirs.get(part, {}))
+        return out
 
     def save_postings(self, state):
-        text = json.dumps(state, indent=1, ensure_ascii=False)
-        if os.path.exists(self.postings_json):
-            self._write(self.backup_json, self._read(self.postings_json))
-        self._write(self.postings_json, text)
+        base = state.base if isinstance(state, Loaded) else None
+        self._save_merged(self.postings_json, self.backup_json, base, base, dict(state))
 
     def description_path(self, key):
         return os.path.join(self.descriptions, f"{key}.md")
@@ -179,15 +259,17 @@ class Folder:
 
     def load_applications(self):
         """The records as written. track.load() is the same list with older shapes brought up to date."""
-        if not os.path.exists(self.applications_json):
-            return []
-        return json.loads(self._read(self.applications_json)).get("applications", [])
+        data, _ = self._read_json_or_backup(self.applications_json, self.applications_backup_json)
+        return (data or {}).get("applications", [])
 
-    def save_applications(self, applications):
-        text = json.dumps({"applications": applications}, indent=1, ensure_ascii=False)
-        if os.path.exists(self.applications_json):
-            self._write(self.applications_backup_json, self._read(self.applications_json))
-        self._write(self.applications_json, text)
+    def save_applications(self, applications, read=None, base=None):
+        """`read`: the records as this command read them from the file; `base`: the same, as it first
+        held them (track.load brings older shapes up to date). With both, a save merges with anything
+        written since."""
+        self._save_merged(self.applications_json, self.applications_backup_json,
+                          None if read is None else {"applications": read},
+                          None if base is None else {"applications": base},
+                          {"applications": applications})
 
 
 def _norm_title(s):

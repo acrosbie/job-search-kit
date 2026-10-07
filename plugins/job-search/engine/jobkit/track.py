@@ -27,6 +27,7 @@ to receive it, so one with a recorded contact is sent, a top pick with nobody kn
 for a person, and the rest are left to close at day 21.
 """
 
+import copy
 import datetime as dt
 import re
 
@@ -106,12 +107,23 @@ def normalize(a):
     return a
 
 
+class Records(list):
+    """The applications as loaded, remembering the file's records (`read`) and their current shape as
+    first loaded (`base`), so that saving merges with anything another command wrote meanwhile."""
+    read = None
+    base = None
+
+
 def load(root):
-    return [normalize(a) for a in store.Folder(root).load_applications()]
+    raw = store.Folder(root).load_applications()
+    out = Records(normalize(a) for a in raw)
+    out.read, out.base = raw, copy.deepcopy(list(out))
+    return out
 
 
 def save(root, applications):
-    store.Folder(root).save_applications(applications)
+    store.Folder(root).save_applications(list(applications), read=getattr(applications, "read", None),
+                                         base=getattr(applications, "base", None))
 
 
 def find(applications, ident):
