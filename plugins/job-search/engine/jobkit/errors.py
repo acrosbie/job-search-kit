@@ -8,3 +8,8 @@ class Refused(ValueError):
 
 class NotFound(LookupError):
     """A posting or application that isn't in the user's records."""
+
+
+class BadFile(ValueError):
+    """A file Claude wrote that isn't in the shape the engine reads, such as a resume source. The
+    message names the line."""
