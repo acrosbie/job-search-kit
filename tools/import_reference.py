@@ -132,6 +132,8 @@ NO_LONGER_OPEN = "No longer open"
 
 
 def _closed_note(note):
+    if (note or "").lower().startswith(NO_LONGER_OPEN.lower()):
+        return note  # it says so already
     return f"{NO_LONGER_OPEN}: {note}" if note else NO_LONGER_OPEN
 
 

@@ -188,6 +188,8 @@ class ImportTest(unittest.TestCase):
             self.dir, out)
         e = kit["postings"]["greenhouse-acme-8"]
         self.assertEqual((e["status"], e["note"]), ("skipped", "No longer open: req pulled"))
+        self.assertEqual(import_reference._closed_note("No longer open: gone from the board"),
+                         "No longer open: gone from the board")  # not said twice
 
     def test_refuses_to_write_inside_the_repo(self):
         self.assertEqual(self.run_tool(os.path.join(import_reference.REPO, "tmp-personal")), 3)
