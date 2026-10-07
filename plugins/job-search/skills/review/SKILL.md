@@ -1,6 +1,6 @@
 ---
 name: review
-description: The weekly review of the user's job search - where they overturned a rule, a spot-check of what the scan turned away, titles it nearly kept, which rules fire, follow-ups due, and once a month what happened to their applications and whether their profile is still right. Use when the user says "go through my review", "weekly review", "review my rules", "how's my search going", or when a scheduled check says "prepare my weekly review". Needs the user's Job Search folder connected.
+description: The weekly review of the user's job search - where they overturned a rule, a spot-check of what the scan turned away, titles it nearly kept, which rules fire, follow-ups due, and once a month what happened to their applications and whether their profile is still right. Use when the user says "go through my review", "weekly review", "review my rules", "how's my search going", or when a scheduled check says "prepare my weekly review". Also sets up or stops the weekly review ("set up a weekly review"). Needs the user's Job Search folder connected.
 ---
 
 # Weekly review
@@ -14,6 +14,10 @@ Nothing in the review changes anything on its own. Every change goes through the
 ## Before starting
 
 Follow `${CLAUDE_PLUGIN_ROOT}/reference/running-the-engine.md`, sections 1 to 5a.
+
+## Setting up or stopping the weekly review
+
+Follow `${CLAUDE_PLUGIN_ROOT}/reference/schedules.md`.
 
 ## Prepare mode: a scheduled check
 
@@ -29,7 +33,7 @@ Use `data/review.json` if it was prepared today or yesterday and not yet gone th
 
 **Open with three lines at most.** For example: "Your weekly review: one rule you've overturned twice, 10 jobs the scan turned away to spot-check, and 2 follow-ups due. It takes about 10 minutes; we can stop whenever you like." Then take the parts below in order, one at a time. Skip any that are empty, without mentioning them. Keep each part short.
 
-The user can stop at any point ("let's stop there"). Say what's left, and pick it up next time from the same review.
+The user can stop at any point ("let's stop there"). Say what's left, and pick it up next time from the same review. **Before ending, keep the jobs page current**, whether they stopped or finished: anything changed along the way (a rule, a job back on their list, a spot-check overturn) should show there.
 
 ### 1. Rules you've overturned, and reasons that sound like rules
 

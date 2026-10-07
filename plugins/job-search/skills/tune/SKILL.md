@@ -102,7 +102,7 @@ If the replay's `would_pass` (or your flips to `passes` or `your_call`) names jo
 ```
 run.py requeue <key> <key> --why "<the change, in plain words>" --folder "<folder>"
 ```
-Then keep the jobs page current (`${CLAUDE_PLUGIN_ROOT}/reference/jobs-page.md`).
+Then keep the jobs page current (`${CLAUDE_PLUGIN_ROOT}/reference/jobs-page.md`, "Keeping it current"), including `page --pushed` once it's sent.
 
 ## Don't
 

@@ -24,7 +24,7 @@ Do this in setup's last step, or the first time any skill finds `[page] url` emp
    - icon `briefcase`;
    - description "What's waiting on you, what's due, and every application."
    If your publishing tool can't read files in the user's folder, read the file and write its contents to a file in your own workspace, then publish that.
-3. Save its link and version: `run.py settings set page.url "<link>"`, then `run.py settings set page.version "<engine version>"` (from `run.py version`).
+3. Save its link and version: `run.py settings set page.url "<link>"`, then `run.py settings set page.version "<engine version>"` (from `run.py version`). Then run `run.py page --pushed`: the page went out with the folder's current data built in.
 4. Tell the user, once: "Your jobs page is ready: <link>. You can mark jobs there as you read them. Your clicks wait in your Claude account until I copy them into your folder, the next time we talk."
 
 If publishing isn't possible here (for example in a scheduled check), skip it. Don't mention it, and try again in the next conversation.
@@ -38,7 +38,8 @@ Do this at the end of any skill that changed something (scan, triage, add-job, t
    - **`storage`:** with the ArtifactData tool (load it through tool search if needed), `get` the document `page` in collection `data/users/me` to learn its version, then `set` that document to the contents of `data/page.json`, passing the version as `if_version` (leave `if_version` out when the document doesn't exist yet). Use `file_path` if the tool can read the file, otherwise pass the contents as `data`.
    - **`republish`:** publish `data/jobs-page.html` again to the same link.
    - **Empty (not tried yet):** try `storage` first. If it works, run `run.py settings set page.route storage`. If it doesn't, try `republish`, and set the route to `republish` if that works. If neither works, leave the route empty.
-3. If nothing works, skip it quietly. The page shows the time it was last brought up to date, and `My jobs.html` in the folder is always current.
+3. **Once it's sent, record that:** `run.py page --pushed`. That's how the next conversation knows the page is up to date. Without it, catching up sees `page_behind` and sends it again.
+4. If nothing works, skip it quietly. The page shows when it was last brought up to date, `My jobs.html` in the folder is always current, and the next conversation tries again.
 
 ## Reading the user's clicks
 

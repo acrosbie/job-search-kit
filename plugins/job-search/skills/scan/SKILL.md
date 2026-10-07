@@ -1,6 +1,6 @@
 ---
 name: scan
-description: Check the user's job boards for new postings and say what's new. Use when the user says "any new jobs?", "check for new jobs", "scan", "run a scan", or when a scheduled check runs. Needs the user's Job Search folder connected.
+description: Check the user's job boards for new postings and say what's new. Use when the user says "any new jobs?", "check for new jobs", "scan", "run a scan", or when a scheduled check runs. Also sets up or stops the daily check ("check my job boards every morning", "stop the daily check"). Needs the user's Job Search folder connected.
 ---
 
 # Scan: any new jobs?
@@ -23,6 +23,10 @@ Fetch, then report. Judging fit is the triage skill's job, not this one's.
    - **Applications:** if `closed_day_21` lists any, one line: "No reply from Acme in three weeks, so I've marked it closed." If `follow_ups_due` has any `send` or `find_person`, one line: "Two follow-ups are due; ask me what's due."
 4. **Keep the jobs page current** (`${CLAUDE_PLUGIN_ROOT}/reference/jobs-page.md`, "Keeping it current"). In a scheduled check, skip anything it can't do, without comment.
 5. **End by offering the next step:** "Want me to go through the new ones?" If nothing is new, say so and stop.
+
+## Setting up or stopping the daily check
+
+Follow `${CLAUDE_PLUGIN_ROOT}/reference/schedules.md`.
 
 ## Don't
 

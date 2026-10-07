@@ -142,19 +142,9 @@ Tell them in one line what it changes ("That adds 43 Senior Accountant jobs and 
 
 ## Step 7: scheduled checks
 
-**A daily check.** Offer: "Want me to check your job boards every morning?" If yes, ask what time. Then create a **scheduled task** with:
-- **this folder attached**;
-- the prompt **any new jobs?**;
-- daily, at their time (or on weekdays, if they prefer);
-- the approval option that doesn't stop to ask, if there is one.
-
-Save it: `run.py settings set schedule.scan daily` (or `weekdays`).
-
-**A weekly review.** Offer it in one sentence: "Once a week I can also get a short review ready: where you've overturned my verdicts, a spot-check of what the scan turned away, and your follow-ups. You go through it when it suits you. Want that?" If yes, ask which day and time. Then create a second scheduled task the same way, with the prompt **prepare my weekly review**, weekly. Save it: `run.py settings set schedule.review weekly`.
-
-Use your scheduling tool if you have one. Otherwise, walk them through **Scheduled** in the sidebar → **New task** → **Set up manually**, giving them each field to fill in.
-
-Tell them these run while their computer is on and Claude is open. If one is missed, the next conversation catches up.
+Offer two, one at a time, and set up each one they want as `${CLAUDE_PLUGIN_ROOT}/reference/schedules.md` says:
+- **A daily check:** "Want me to check your job boards every morning?"
+- **A weekly review:** "Once a week I can also get a short review ready: where you've overturned my verdicts, a spot-check of what the scan turned away, and your follow-ups. You go through it when it suits you. Want that?"
 
 ## Step 8: wrap up
 
