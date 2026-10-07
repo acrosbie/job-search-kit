@@ -84,10 +84,11 @@ Other fields get their title patterns from setup's field generator.
 | `data/applications.backup.json` | The previous `applications.json` | engine |
 | `data/decisions.log` | One JSON object a line: `at`, `date`, `key`, `company`, `title`, `verdict`, `reason`, `by` (`rule`, `claude` or `user`), plus `rule` for automatic rejects, `reverses` when a user verdict contradicts the last one, and `choice` when it came from a click on the jobs page | engine, `mark` |
 | `data/changes.log` | One JSON object a line for every change to how postings are screened: `what` (`rule N`, `setting KEY`, `phrase rule NAME`), `kind` (`changed`, `retired`, `added`, `declined`), `was`, `now`, `why` (the user's words), `replay`, `accepted_flips` | `settings`, `change-rule`, `decline` |
+| `data/choices.log` | One JSON object a line for every click from the jobs page that `record-choices` handled: `at`, `id`, `outcome` (`recorded`, `already`, `superseded`, `unknown`) and `why`. `page.json` carries the last 30 days as `handled`, so a page opened from the folder drops the clicks dealt with and shows any that couldn't be recorded | `record-choices` |
 | `data/reviews.log` | One JSON object a line: a weekly review `prepared` or `done` | `review` |
 | `data/review.json` | The weekly review last prepared | `review --prepare` |
 | `data/replay-latest.json` | The last replay, which saving a change must match | `replay`, `try-titles` |
-| `data/page.json` | What the jobs page shows: `waiting`, `todo`, `applications`, `screened`, `counts`, `as_of`, `review_ready` | engine |
+| `data/page.json` | What the jobs page shows: `waiting`, `todo`, `applications`, `screened`, `counts`, `as_of`, `review_ready`, `handled`. Each job carries `claude_said` (the last reason Claude or a rule gave) and `you_said` (the user's own last words), kept apart | engine |
 | `data/jobs-page.html` | The jobs page with its data built in, as Claude publishes it (no document skeleton) | engine |
 | `My jobs.html` | The same page as a complete web page, at the top of the folder | engine |
 | `data/runs.log` | One JSON object per scan: the summary counts | engine |
