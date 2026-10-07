@@ -94,7 +94,10 @@ def run(root, only=None, clock=None, workers=WORKERS):
 
     applications = folder.load_applications()
     new, rejected, matched = [], [], 0
-    present = set()
+    # Every job a board lists is still there, whether or not it passes the filters today: one added by
+    # link, or kept under older title or place settings, mustn't read as gone while it's listed.
+    present = {r["key"] for _, recs in answered for r in recs}
+    boards_seen = []
     for name, recs in answered:
         n, dropped_title, dropped_loc = 0, 0, 0
         survivors = []
@@ -122,11 +125,20 @@ def run(root, only=None, clock=None, workers=WORKERS):
                 rec["location"] = "; ".join(dict.fromkeys(places))
                 _, code = screen.location_ok(rec["location"], s)
             deduped.append((rec, code))
+        boards_seen.append((name, deduped, dropped_title, dropped_loc))
 
+    # Descriptions for the jobs not saved yet (or saved before their description could be read),
+    # fetched together rather than one at a time, then used in the board order above.
+    to_read = [r for _, deduped, _, _ in boards_seen for r, _ in deduped
+               if r["key"] not in postings or postings[r["key"]].get("unread")]
+    with cf.ThreadPoolExecutor(max_workers=workers) as pool:
+        fetched = dict(zip([r["key"] for r in to_read], pool.map(read_description, to_read)))
+
+    for name, deduped, dropped_title, dropped_loc in boards_seen:
+        n = 0
         for r, code in deduped:
             matched += 1
             n += 1
-            present.add(r["key"])
             entry = postings.get(r["key"])
             if entry:
                 entry["last_seen"] = today
@@ -138,8 +150,12 @@ def run(root, only=None, clock=None, workers=WORKERS):
                     flags = ([(code, screen.location_flag(code, s))] if code else []) + kept
                     entry["flag"] = _flag_text(flags)
                     entry["flags"] = [{"code": c, "text": t} for c, t in flags]
+                if entry.get("unread"):
+                    done = read_again(folder, r, entry, fetched[r["key"]], code, s, today, stamp)
+                    if done and done.get("rule"):
+                        rejected.append(done)
                 continue
-            desc, place, posted = read_description(r)
+            desc, place, posted, failed = fetched[r["key"]]
             if place:  # a detail call can also return the real place
                 r["location"] = place
                 keep, code = screen.location_ok(r["location"], s)
@@ -147,11 +163,11 @@ def run(root, only=None, clock=None, workers=WORKERS):
                     matched -= 1
                     n -= 1
                     dropped_loc += 1
-                    present.discard(r["key"])
                     continue
             if posted and not r["posted"]:
                 r["posted"] = posted
-            entry, summary = save_new(folder, r, code, desc, s, applications, postings, today, stamp)
+            entry, summary = save_new(folder, r, code, desc, s, applications, postings, today, stamp,
+                                      unread=failed)
             if entry.get("rule"):
                 rejected.append({**summary, "rule": entry["rule"], "reason": entry["note"]})
             else:
@@ -164,12 +180,14 @@ def run(root, only=None, clock=None, workers=WORKERS):
     # missing from its list = gone. Every watched board counts for ownership, answered or not.
     prefixes = [(key_prefix(c.get("ats", ""), c["slug"]), c["slug"]) for c in companies
                 if c.get("ats", "manual") != "manual"]
-    answered_names = {name for name, _ in answered}
+    # A board read only up to a cap (ctx.partial) may still list what it didn't return.
+    answered_names = {name for name, _ in answered} - ctx.partial
     for k, v in postings.items():
         if v.get("source") == "manual":
             continue
         if k in present:
             v.pop("gone", None)
+            v["last_seen"] = today
         elif owner(k, prefixes) in answered_names:
             v.setdefault("gone", today)
 
@@ -192,6 +210,8 @@ def run(root, only=None, clock=None, workers=WORKERS):
     row = {"at": stamp, "boards": len(answered), "failed": len(failures), "read": read,
            "dropped_title": dropped_title, "dropped_location": dropped_loc, "matched": matched,
            "new": len(new), "rejected_by_rule": by_rule, "total_seen": len(postings)}
+    if only:
+        row["only"] = only  # one board: not the scan the schedule asks for (schedule.scan_overdue)
     folder.log_run(row)
     return {
         **row,
@@ -204,24 +224,57 @@ def run(root, only=None, clock=None, workers=WORKERS):
 
 
 def read_description(r):
-    """(description, place, posted date) for one record a reader returned. Some boards need a second
-    call for the description, made only now; it can also return the real place and date ("" if not)."""
+    """(description, place, posted date, failed) for one record a reader returned. Some boards need a
+    second call for the description, made only now; it can also return the real place and date ("" if
+    not). `failed` is the error, in a few words, when that call didn't answer ("" when it did)."""
     try:
         desc = r["description"] if r["description"] is not None else (r["detail"]() if r["detail"] else "")
         if isinstance(desc, dict):
-            return desc["description"], desc.get("location") or "", desc.get("posted") or ""
-        return desc, "", ""
+            return desc["description"], desc.get("location") or "", desc.get("posted") or "", ""
+        return desc, "", "", ""
     except Exception as e:
-        return f"(description fetch failed: {type(e).__name__}: {e})", "", ""
+        return "", "", "", f"{type(e).__name__}: {e}"
 
 
-def save_new(folder, r, code, desc, s, applications, postings, today, stamp, reject=None, extra_flags=()):
+def read_again(folder, r, entry, got, code, s, today, stamp):
+    """A posting saved while its description couldn't be read: if it can be now, save the text, read
+    its pay, and screen it as a new posting is screened, unless someone has decided it already.
+    Returns the summary of an automatic reject, or None."""
+    desc, _, _, failed = got
+    if failed:
+        return None
+    folder.save_description(r, desc, today)
+    rng = salary_range(desc)
+    entry.update({"salary": salary_from(desc), "pay_low": rng[0] if rng else None, "pay_high": rng[1] if rng else None})
+    entry.pop("unread", None)
+    flags = [(f.get("code", ""), f.get("text", "")) for f in entry.get("flags", []) if f.get("code") != "unread"]
+    status, rule, reason, more = screen.assess(entry.get("location", ""), code, desc, s)
+    flags += [f for f in more if f[0] not in {c for c, _ in flags}]
+    entry["flag"] = _flag_text(flags)
+    entry["flags"] = [{"code": c, "text": t} for c, t in flags]
+    if entry.get("status") != "new" or not reason:
+        return None
+    entry.update({"status": status, "note": reason, "rule": rule, "triaged": today})
+    folder.log_decision({"at": stamp, "date": today, "key": r["key"], "company": entry.get("company", ""),
+                         "title": entry.get("title", ""), "verdict": status, "rule": rule, "reason": reason, "by": "rule"})
+    return {"key": r["key"], "company": entry.get("company", ""), "title": entry.get("title", ""),
+            "location": entry.get("location", ""), "flag": entry["flag"], "salary": entry["salary"],
+            "rule": rule, "reason": reason}
+
+
+def save_new(folder, r, code, desc, s, applications, postings, today, stamp, reject=None, extra_flags=(), unread=""):
     """Save one newly found posting: its description file, its record with the automatic verdict and
     flags, and a decisions.log line when a rule rejected it. Scan, add and add-link all come through
     here, so a posting is screened the same way however it arrived. `reject` is (rule, reason) for a
-    rejection decided before this point. Returns (entry, summary); the caller saves postings.json."""
+    rejection decided before this point. `unread` is why its description couldn't be fetched: then no
+    rule that reads the description is applied (an error message has no remote wording), and the next
+    scan tries again. Returns (entry, summary); the caller saves postings.json."""
     body = desc if isinstance(desc, str) else ""
     status, rule, reason, flags = screen.assess(r["location"], code, body, s)
+    if unread:
+        status, rule, reason = "new", "", ""
+        flags = [f for f in flags if f[0] in LOCATION_CODES] + [("unread", s.label("flag_unread"))]
+        desc = f"(The description couldn't be read on {today}: {unread}. The next scan tries again.)"
     if reject:
         status, (rule, reason) = "not_a_fit", reject
     # An application made outside the scan (LinkedIn, a company site) is flagged, never marked
@@ -252,6 +305,8 @@ def save_new(folder, r, code, desc, s, applications, postings, today, stamp, rej
         "flags": [{"code": c, "text": t} for c, t in flags],
         "file": folder.save_description(r, desc, today),
     }
+    if unread:
+        entry["unread"] = True
     postings[r["key"]] = entry
     summary = {"key": r["key"], "company": r["company"], "title": r["title"], "location": r["location"],
                "flag": entry["flag"], "salary": entry["salary"]}

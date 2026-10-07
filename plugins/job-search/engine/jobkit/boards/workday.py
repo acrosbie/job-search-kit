@@ -68,6 +68,8 @@ def read(company, ctx):
                                    f"https://{host}/{site}{path}", posted, detail=detail))
         offset += len(items)
         if offset >= min(total, cap):
+            if total > cap:
+                ctx.partial.add(company["slug"])
             break
         data = page(offset, facets)
     return out

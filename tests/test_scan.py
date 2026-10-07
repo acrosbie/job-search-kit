@@ -113,6 +113,52 @@ class ScanTest(ScanBase):
         self.assertTrue(os.path.exists(self.folder.backup_json))
 
 
+    def test_a_description_that_cant_be_read_is_kept_and_read_again(self):
+        # Found in a bug hunt: the error message was saved as the description, and a job outside
+        # the commute was then turned away for having no remote wording, for good.
+        a = answers()
+        a[f"{GH}/acme/jobs/3"] = TimeoutError("timed out")
+        self.addCleanup(net.use, net.use(Fake(a)))
+        out = scan.run(self.root, clock=Clock("", fixed=FIXED), workers=2)
+        p = self.folder.load_postings()["postings"]["greenhouse-acme-3"]
+        self.assertEqual((p["status"], p.get("unread")), ("new", True))
+        self.assertIn("couldn't be read", p["flag"])
+        self.assertIn("greenhouse-acme-3", [x["key"] for x in out["new_postings"]])
+        self.assertNotIn("greenhouse-acme-3", [d["key"] for d in self.folder.read_decisions()])
+        # The next scan reads it, and screens it as any new posting.
+        out = self.scan()
+        p = self.folder.load_postings()["postings"]["greenhouse-acme-3"]
+        self.assertEqual((p["status"], p["rule"], "unread" in p), ("not_a_fit", "location_in_country", False))
+        self.assertIn("Hybrid in Austin", self.folder.read_description("greenhouse-acme-3"))
+        self.assertEqual([x["key"] for x in out["rejected_postings"]], ["greenhouse-acme-3"])
+
+    def test_a_listed_job_is_not_gone_because_the_filter_would_drop_it_now(self):
+        # Found in a bug hunt: only jobs passing today's filters counted as listed, so a job added
+        # by link, or kept under older settings, read "No longer on the company's job board".
+        self.scan()
+        state = self.folder.load_postings()
+        state["postings"]["greenhouse-acme-7"] = {"company": "Acme", "title": "Customer Support Specialist",
+                                                  "status": "worth_applying", "source": "greenhouse",
+                                                  "first_seen": "2026-09-20", "last_seen": "2026-09-20"}
+        self.folder.save_postings(state)
+        self.scan()
+        p = self.folder.load_postings()["postings"]["greenhouse-acme-7"]
+        self.assertNotIn("gone", p)
+        self.assertEqual(p["last_seen"], "2026-09-24")
+
+    def test_one_board_isnt_the_days_scan(self):
+        from jobkit import schedule, settings
+        self.scan()
+        runs = self.folder.read_runs()
+        self.addCleanup(net.use, net.use(Fake(answers())))
+        scan.run(self.root, only="acme", clock=Clock("", fixed=FIXED + dt.timedelta(days=2)), workers=2)
+        runs = self.folder.read_runs()
+        self.assertEqual(runs[-1]["only"], "acme")
+        s = settings.load(self.root)
+        s.schedule["scan"] = "daily"
+        self.assertTrue(schedule.scan_overdue(s, runs, Clock("", fixed=FIXED + dt.timedelta(days=2))))
+
+
 class MarkTest(ScanBase):
     def mark(self, *args):
         with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()) as err:

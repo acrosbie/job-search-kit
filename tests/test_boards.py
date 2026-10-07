@@ -68,6 +68,7 @@ class ReaderTest(unittest.TestCase):
         recs = READERS["workday"]({"name": "Acme", "slug": "acme", "host": "acme.wd5.myworkdayjobs.com",
                                     "tenant": "acme", "site": "External"}, ctx)
         self.assertEqual(len(recs), 40)  # capped at max_total, though 45 exist
+        self.assertEqual(ctx.partial, {"acme"})  # so the scan won't mark the other 5 gone
         self.assertEqual(recs[0]["location"], "")  # "2 Locations" is treated as unknown
         self.assertEqual(recs[0]["posted"], "Today")
         self.assertEqual(recs[0]["key"], "workday-acme-R0")

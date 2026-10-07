@@ -10,6 +10,9 @@ class Context:
     normalised names of companies read from their own boards, which an aggregator skips."""
     workday: dict = field(default_factory=lambda: {"country_facet": "", "max_total": 2000})
     watched: set = field(default_factory=set)
+    # Slugs of boards a reader stopped reading at a cap: a job missing from what it returned may
+    # still be listed, so the scan doesn't mark their jobs gone.
+    partial: set = field(default_factory=set)
 
 
 def watched_names(companies):

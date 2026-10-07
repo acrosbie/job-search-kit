@@ -39,6 +39,7 @@ DEFAULT_LABELS = {
     "flag_applied": "you already applied here on {applied}",
     "flag_pasted": "the same job as one you pasted in on {date}",
     "flag_title": "not one of the titles your search looks for",
+    "flag_unread": "the posting couldn't be read on its board today; the next check tries again",
     "reason_in_country": "Not a fit: it's in {location}, outside where you'd commute, and the posting doesn't say it's remote.",
     "reason_remote_only": "Not a fit: {location} only works for you if the job is remote, and the posting doesn't say it is.",
     "reason_phrase": "Not a fit: the posting talks about {hits}, which you said to avoid.",

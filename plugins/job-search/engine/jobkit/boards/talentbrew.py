@@ -68,4 +68,6 @@ def read(company, ctx):
         if len(seen_ids) == before:  # the site pages past the end by repeating the last page
             break
         page += 1
+    else:
+        ctx.partial.add(company["slug"])  # stopped at the cap with more pages to read
     return out

@@ -173,7 +173,9 @@ def add_link(root, url, clock, company=""):
     postings = store.Folder(root).load_postings()["postings"]
     if rec["key"] in postings:
         _refuse_duplicate(postings, rec["key"])
-    desc, place, posted = scan.read_description(rec)
+    desc, place, posted, failed = scan.read_description(rec)
+    if failed:  # the board listed it, but its page didn't answer: Claude reads the link another way
+        return {"saved": False, "why": "board_failed", "board": board["name"], "error": failed}
     if place:
         rec["location"] = place
     if posted and not rec["posted"]:

@@ -32,7 +32,8 @@ def scan_overdue(s, runs, clock):
     every = s.schedule.get("scan", "")
     if every not in SCAN_DAYS:
         return False
-    last = _local_day(runs[-1].get("at") if runs else "", clock)
+    full = [r for r in runs if not r.get("only")]  # a one-board check isn't the scan the schedule asks for
+    last = _local_day(full[-1].get("at") if full else "", clock)
     if last is None:
         return True
     today = clock.now().date()
