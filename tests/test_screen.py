@@ -78,6 +78,28 @@ class PlaceTest(unittest.TestCase):
         for loc, want in cases.items():
             self.assertEqual(screen.location_ok(loc, s), want, loc)
 
+    def test_country_codes_that_look_like_states(self):
+        # Found in a bug hunt: "DE", "IN", "IL" and "CA" matched the state codes, so these read as
+        # elsewhere in the US, and "Remote; Toronto, ON, CA" passed as plainly remote.
+        s = settings.parse({"places": {"remote": "remote", "hybrid_ok": "san francisco", "in_country":
+                                       "indiana|california|georgia|(?-i:\\b(CA|DE|GA|IL|IN)\\b)",
+                                       "country_wide": "united states", "abroad": "berlin|india|bengaluru|tel aviv|toronto|dublin|athens"}})
+        cases = {
+            "Berlin, DE": (False, ""),
+            "Bengaluru, IN": (False, ""),
+            "Tel Aviv, IL": (False, ""),
+            "Toronto, ON, CA": (False, ""),
+            "Remote; Toronto, ON, CA": (False, ""),
+            "San Francisco, CA; Toronto, ON, CA": (True, ""),
+            # US places that share a word or a code with somewhere abroad stay at home.
+            "Dublin, CA": (True, screen.IN_COUNTRY),
+            "Indianapolis, IN": (True, screen.IN_COUNTRY),
+            "Athens, GA": (True, screen.IN_COUNTRY),
+            "Remote": (True, ""),
+        }
+        for loc, want in cases.items():
+            self.assertEqual(screen.location_ok(loc, s), want, loc)
+
     def test_normalising(self):
         self.assertEqual(screen.norm_loc("san_francisco/new-york"), "san francisco new york")
 

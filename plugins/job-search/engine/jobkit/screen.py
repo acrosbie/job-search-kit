@@ -34,9 +34,42 @@ def norm_loc(location):
     return _NONALNUM.sub(" ", location or "").strip()
 
 
+# A place abroad written the way hiring systems write it, with a country code that is also a US state's
+# code: "Berlin, DE", "Bengaluru, IN", "Tel Aviv, IL", or a Canadian province and CA: "Toronto, ON, CA".
+_PROVINCE_CA = re.compile(r",\s*(?:ON|BC|QC|AB|MB|NS|NB|SK|NL|PE)\s*,\s*CA\s*$")
+_STATE_LIKE_CODE = re.compile(r",\s*(?:DE|IN|IL)\s*$")
+
+
+def _whole_word(rx, text):
+    for m in (rx.finditer(text) if rx else ()):
+        if (m.start() == 0 or text[m.start() - 1] == " ") and (m.end() == len(text) or text[m.end()] == " "):
+            return True
+    return False
+
+
+def _abroad_by_code(place, s):
+    """True for one listed place that is abroad by its country code. DE, IN and IL count only after a
+    city the user's abroad list names as a whole word, so "Indianapolis, IN" stays in Indiana."""
+    place = place.strip()
+    if _PROVINCE_CA.search(place):
+        return True
+    m = _STATE_LIKE_CODE.search(place)
+    return bool(m) and _whole_word(s.abroad, norm_loc(place[:m.start()]))
+
+
+def _home_listed(loc, s):
+    return any(_has(rx, loc) for rx in (s.hybrid_ok, s.remote_only, s.in_country, s.country_wide))
+
+
 def location_ok(location, s):
     """(keep, flag code). An unrecognisable place is kept and flagged, because the description
     usually names it. A place abroad is dropped unless a place at home is also listed."""
+    places = re.split(r"\s*[;|]\s*", location or "")
+    if any(_abroad_by_code(p, s) for p in places):
+        rest = "; ".join(p for p in places if p.strip() and not _abroad_by_code(p, s))
+        if not _home_listed(norm_loc(rest), s):
+            return False, ""
+        location = rest
     loc = norm_loc(location)
     if not loc:
         return True, UNKNOWN
