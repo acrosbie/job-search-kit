@@ -151,6 +151,7 @@ select, input, textarea { background: var(--surface); border: 1px solid var(--li
 
 /* ------------------------------------------------ to do and applications: the 21-day clock */
 .todo { border-color: var(--warn); }
+.soon { border-color: var(--accent); }
 .clock { display: grid; gap: 4px; max-width: 26rem; }
 .clock-bar { height: 6px; border-radius: 3px; background: var(--sunken); overflow: hidden; }
 .clock-bar span { display: block; height: 100%; border-radius: 3px; background: var(--accent); }
@@ -424,6 +425,27 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
       "</section>";
   }
 
+  // An interview: when, who, and (opened from the folder) its prep sheet and calendar file.
+  function comingCard(e) {
+    var t = new Date(e.on.length > 10 ? e.on : e.on + "T12:00:00");
+    var when = isNaN(t) ? e.on : t.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }) +
+      (e.on.length > 10 ? ", " + t.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }) : "");
+    var rel = e.past ? "" : e.days === 0 ? "today" : e.days === 1 ? "tomorrow" : "in " + e.days + " days";
+    var kind = { phone: "Phone", video: "Video call", onsite: "On site" }[e.kind] || "";
+    var local = location.protocol === "file:";
+    var links = [];
+    if (e.prep) links.push(local ? '<a href="' + esc(e.prep) + '">Prep sheet</a>' : "Prep sheet: " + esc(e.prep));
+    if (e.calendar && local) links.push('<a href="' + esc(e.calendar) + '">Add to calendar</a>');
+    return '<article class="card soon"><div class="card-top"><span class="num">' + (e.num ? "#" + esc(e.num) : "") + "</span>" +
+      stamp([e.stage === "screen" ? "Screen" : "Interview", e.past ? "s-closing" : "s-screen"]) +
+      '<span class="pay">' + esc(when) + (rel ? " · " + rel : "") + "</span></div>" +
+      "<h3>" + esc(e.company) + ", " + esc(e.role) + "</h3>" +
+      '<p class="where">' + [kind, e["with"] ? "with " + esc(e["with"]) : "", e.minutes ? e.minutes + " min" : ""].filter(Boolean).join(" · ") + "</p>" +
+      (e.past ? '<p class="flag">How did it go? Tell Claude “how did my ' + esc(e.company) + " " + esc(e.stage || "interview") + " go”.</p>"
+        : (e.prep ? "" : '<p class="muted">No prep sheet yet. Say “prep me for my ' + esc(e.company) + " " + esc(e.stage || "interview") + "”.</p>")) +
+      (links.length ? '<p class="actions">' + links.join(" · ") + "</p>" : "") + "</article>";
+  }
+
   function todoCard(t) {
     var what = t.route === "send"
       ? "Follow up with " + esc(t.contact) + ". Ask Claude to draft a short note, then send it yourself."
@@ -540,15 +562,22 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
     var openApps = apps.filter(function (a) { return ["applied", "replied", "screen", "interview", "offer"].indexOf(a.status) >= 0; }).length;
     var mineCount = pending().length;
 
-    var parts = [["yours", "Your choices", mineCount], ["todo", "To do", todo.length], ["look", "Worth a look", look.length],
+    var coming = data.coming_up || [];
+    var parts = [["yours", "Your choices", mineCount], ["coming", "Coming up", coming.length], ["todo", "To do", todo.length], ["look", "Worth a look", look.length],
                  ["apps", "Applications", apps.length], ["new", "New", fresh.length + (data.more_waiting || 0)], ["out", "Screened out", screened.length]];
     jump.hidden = false;
-    jump.innerHTML = parts.filter(function (p) { return p[0] !== "yours" || p[2]; }).map(function (p) {
-      var hot = (p[0] === "yours" || p[0] === "todo" || p[0] === "look") && p[2];
+    jump.innerHTML = parts.filter(function (p) { return (p[0] !== "yours" && p[0] !== "coming") || p[2]; }).map(function (p) {
+      var hot = (p[0] === "yours" || p[0] === "coming" || p[0] === "todo" || p[0] === "look") && p[2];
       return '<button type="button" data-jump="' + p[0] + '" class="' + (hot ? "hot" : p[2] ? "" : "zero") + '">' + esc(p[1]) + " <b>" + p[2] + "</b></button>";
     }).join("");
 
     var html = [yoursSection()];
+    if (coming.length) {
+      html.push('<section id="s-coming" aria-labelledby="h-coming">' + head("coming", "Coming up", coming.length,
+        "Your interviews, soonest first. Say “prep me for my " + esc(coming[0].company) + " " + esc(coming[0].stage || "interview") +
+        "” to Claude for a prep sheet, or “how did it go” afterwards.") +
+        '<div class="stack">' + coming.map(comingCard).join("") + "</div></section>");
+    }
     html.push('<section id="s-todo" aria-labelledby="h-todo">' + head("todo", "To do", todo.length,
       todo.length ? "Follow-ups that are due. With no reply after " + ((data.tracking || {}).presume_after_days || 21) + " days, an application closes as no reply; a reply after that still counts." : "") +
       (todo.length ? '<div class="stack">' + todo.map(todoCard).join("") + "</div>" : '<p class="empty">Nothing due.</p>') + "</section>");

@@ -12,7 +12,7 @@ import re
 import sys
 
 from . import __version__, net, scan, settings, store
-from . import add, choices, configure, page, replay, resume, review, rules, schedule, titles, track, verdicts
+from . import add, choices, configure, interviews, page, replay, resume, review, rules, schedule, titles, track, verdicts
 from . import init as starter
 from . import queue as triage_queue
 from .clock import Clock
@@ -88,8 +88,30 @@ def cmd_apply(a):
 
 
 def cmd_track(a):
+    if a.on:  # an interview: kept on the application, with a calendar file
+        if a.status not in (None, "screen", "interview"):
+            raise Refused("--on goes with screen or interview")
+        _out(interviews.schedule(a.folder, _clock(a.folder), a.id, a.on, kind=a.kind or "", who=a.who or "",
+                                 minutes=a.minutes or 0, status=a.status or "", note=a.note or ""))
+        return 0
     _out(track.track(a.folder, _clock(a.folder), a.id, status=a.status or "", date=a.date or "", note=a.note or "",
                      contact=a.contact, top_pick=_yes_no(a.top_pick), channel=a.channel, choice=a.choice or ""))
+    return 0
+
+
+def cmd_interview(a):
+    clock = _clock(a.folder)
+    if a.action == "check":
+        _out(interviews.check(a.folder, a.file))
+    elif a.action == "debriefed":
+        _out(interviews.debriefed(a.folder, clock, a.id, on=a.on or ""))
+    else:
+        _out({"interviews": interviews.listing(a.folder, clock)})
+    return 0
+
+
+def cmd_pay(a):
+    _out(interviews.pay(a.folder, ask=a.ask or 0))
     return 0
 
 
@@ -104,6 +126,8 @@ def cmd_due(a):
     _refresh_page(a.folder, False)  # so the page is compared after anything due just closed
     out["page_behind"] = schedule.page_behind(a.folder, settings.load(a.folder))
     out["resume_stale"] = resume.stale(a.folder)
+    out["interviews_soon"] = interviews.soon(a.folder, clock)
+    out["debrief_due"] = interviews.debrief_due(a.folder, clock)
     _out(out)
     return 0
 
@@ -310,7 +334,29 @@ def parser():
     s.add_argument("--top-pick", choices=("yes", "no"))
     s.add_argument("--channel", choices=track.CHANNELS)
     s.add_argument("--choice", help="the id of the jobs-page click this came from")
+    s.add_argument("--on", help="an interview: YYYY-MM-DD, or YYYY-MM-DDTHH:MM in the user's time zone")
+    s.add_argument("--kind", choices=interviews.KINDS, help="with --on: phone, video or onsite")
+    s.add_argument("--with", dest="who", help="with --on: who it's with, in the user's words")
+    s.add_argument("--minutes", type=int, help="with --on: how long (30 if not said)")
     s.set_defaults(func=cmd_track)
+
+    s = sub.add_parser("interview", help="interviews: list them, check a prep sheet, mark one gone through")
+    acts = s.add_subparsers(dest="action", required=True)
+    x = acts.add_parser("list", help="every interview not yet gone through, soonest first")
+    x.add_argument("--folder", required=True)
+    x = acts.add_parser("check", help="every claim in a prep sheet, story bank or quick reference, traced to about-me.md")
+    x.add_argument("--folder", required=True)
+    x.add_argument("file")
+    x = acts.add_parser("debriefed", help="the user went through how an interview went")
+    x.add_argument("--folder", required=True)
+    x.add_argument("id", help="the application's id or its posting's key")
+    x.add_argument("--on", help="which interview, by its date (default the last one held)")
+    s.set_defaults(func=cmd_interview)
+
+    s = sub.add_parser("pay", help="the pay the user's saved postings state: facts, never a prediction")
+    s.add_argument("--folder", required=True)
+    s.add_argument("--ask", type=int, help="the user's ask, a yearly number, to count the ranges below and above it")
+    s.set_defaults(func=cmd_pay)
 
     s = sub.add_parser("applications", help="every application, with its day count and what's due")
     s.add_argument("--folder", required=True)

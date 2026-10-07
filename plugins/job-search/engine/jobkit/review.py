@@ -27,7 +27,7 @@ import os
 import random
 import re
 
-from . import changes, health, rules, settings, store, titles, track
+from . import changes, health, resume, rules, settings, store, titles, track
 
 WINDOW_DAYS = 28
 SPOT_CHECK = 10
@@ -154,9 +154,10 @@ def spot_check(decisions, postings, since, today):
              "rule": last[k].get("rule", ""), "reason": last[k].get("reason", "")} for k in pool[:SPOT_CHECK]]
 
 
-def outcomes(applications, decisions):
-    """Counts only: what happened to the applications, by Claude's verdict, how they were sent, level
-    and top pick. The kit never turns these into odds."""
+def outcomes(applications, decisions, tailored=()):
+    """Counts only: what happened to the applications, by Claude's verdict, how they were sent, level,
+    top pick, and whether a resume tailored to the job went with it (`tailored`: posting keys a copy
+    was made for). The kit never turns these into odds."""
     verdict = {}
     for d in decisions:
         if d.get("by") == "claude":
@@ -168,13 +169,14 @@ def outcomes(applications, decisions):
             return "answered"
         return {"rejected": "turned_down", "presumed_rejected": "no_reply", "applied": "open"}.get(st, "ended")
 
-    totals, by = {}, {"verdict": {}, "channel": {}, "level": {}, "top_pick": {}}
+    totals, by = {}, {"verdict": {}, "channel": {}, "level": {}, "top_pick": {}, "tailored_resume": {}}
     for a in applications:
         b = bucket(a)
         totals[b] = totals.get(b, 0) + 1
         keys = {"verdict": verdict.get(a.get("key"), "") or "none", "channel": a.get("channel") or "not known",
                 "level": a.get("level") or "not known",
-                "top_pick": {True: "yes", False: "no"}.get(a.get("top_pick"), "not asked")}
+                "top_pick": {True: "yes", False: "no"}.get(a.get("top_pick"), "not asked"),
+                "tailored_resume": "yes" if a.get("key") and a.get("key") in set(tailored) else "no"}
         for dim, val in keys.items():
             row = by[dim].setdefault(val, {})
             row[b] = row.get(b, 0) + 1
@@ -238,7 +240,8 @@ def build(root, clock, monthly=None):
         "monthly": monthly,
     }
     if monthly:
-        out["outcomes"] = outcomes(track.load(root), decisions)
+        tailored = {r.get("for") for r in resume.records(root) if r.get("for")}
+        out["outcomes"] = outcomes(track.load(root), decisions, tailored)
         out["profile_refresh"] = profile_refresh(root)
     out["to_raise"] = sum(1 for g in out["disagreements"] if g["propose"]) + len(out["candidate_rules"])
     return out
