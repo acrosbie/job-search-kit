@@ -444,7 +444,7 @@ class CommandTest(unittest.TestCase):
         self.assertEqual(self.run_cli("resume", "check", own, "--own")[1]["flagged"], 1)
         code, _, err = self.run_cli("resume", "render", self.source)
         self.assertEqual(code, 3)
-        self.assertIn("found 1 lines to ask about, and about-me.md hasn't changed since", err)
+        self.assertIn("found 1 lines to ask about, and about-me.md has no new entry since", err)
 
         # A copy for one job isn't held back: it starts from a main resume that was already made.
         path = os.path.join(self.root, "resume", "Acme - Support Lead", "resume.md")
@@ -452,14 +452,26 @@ class CommandTest(unittest.TestCase):
         self.write(SAMPLE, path)
         self.assertEqual(self.run_cli("resume", "render", path, "--for", "greenhouse-acme-1")[0], 0)
 
-        # The user chose not to answer: their words let it through, and are kept.
-        code, out, _ = self.run_cli("resume", "render", self.source, "--why", "leave those off for now")
-        self.assertEqual((code, out["why"]), (0, "leave those off for now"))
+        # No way round it with words: the second Cowork run passed the user's request as the reason.
+        with self.assertRaises(SystemExit) as cm:  # the command line has no such option any more
+            self.run_cli("resume", "render", self.source, "--why", "make me a clean resume")
+        self.assertEqual(cm.exception.code, 2)
 
-        # Or their answer goes into about-me.md, and it goes through.
+        # An edit to about-me.md that records nothing doesn't count.
         about = os.path.join(self.root, "profile", "about-me.md")
         with open(about, encoding="utf-8") as f:
             text = f.read()
+        self.write(text + "\n", about)
+        self.assertEqual(self.run_cli("resume", "render", self.source)[0], 3)
+
+        # A line they won't answer, recorded as not answered, lets it through.
+        declined = text.replace("## Not confirmed yet (never use in an application)\n",
+                                "## Not confirmed yet (never use in an application)\n"
+                                "- 'Rolled out Expensify company-wide in 2023': not answered, 2026-09-24.\n", 1)
+        self.write(declined, about)
+        self.assertEqual(self.run_cli("resume", "render", self.source)[0], 0)
+
+        # So does their answer.
         self.write(text.replace("| Backs themself on:", "| Rolled out Expensify company-wide in 2023 | Morgan said so, 2026-09-24 |\n"
                                                          "| Backs themself on:", 1), about)
         self.assertEqual(self.run_cli("resume", "render", self.source)[0], 0)

@@ -153,7 +153,7 @@ def cmd_resume(a):
     if a.action == "check":
         _out(resume.check(a.folder, a.file, _clock(a.folder), own=a.own))
     else:
-        _out(resume.render(a.folder, a.file, _clock(a.folder), for_key=a.for_key or "", why=a.why or ""))
+        _out(resume.render(a.folder, a.file, _clock(a.folder), for_key=a.for_key or ""))
     return 0
 
 
@@ -376,7 +376,6 @@ def parser():
     x.add_argument("--folder", required=True)
     x.add_argument("file", help="a resume source, resume/<name>.md")
     x.add_argument("--for", dest="for_key", metavar="KEY", help="the saved posting a tailored copy is for")
-    x.add_argument("--why", help="the user's words, when they chose not to answer the check's questions")
     s.set_defaults(func=cmd_resume)
 
     s = sub.add_parser("replay", help="what a change to the scan's rules would do to every saved posting")

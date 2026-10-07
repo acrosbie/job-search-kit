@@ -69,7 +69,7 @@ So the engine checks every line against `about-me.md` before it makes a file.
 3. **Check it:** `run.py resume check "<folder>/resume/main.md" --folder "<folder>"`. It must come back with `flagged` 0. If not, fix or drop each line it names, and check again.
 4. **Make it:** `run.py resume render "<folder>/resume/main.md" --folder "<folder>"`.
    - **Refused because the check's answers aren't recorded** (`about-me.md` hasn't changed since the check)? Record the answers they gave in this conversation, as in step 1, then make it again. Don't ask them again.
-   - **They chose not to answer?** Make it with `--why "<their words>"`. What they didn't confirm stays off it.
+   - **They chose not to answer some?** Record each of those lines under Not confirmed yet ("'<the line>': not answered, <date>"), then make it. There's no other way past this refusal, and none is needed: what they didn't confirm stays off the resume either way.
 5. **Tell them:**
    - **Where the files are:** "Jordan Lee resume.docx and Jordan Lee resume.pdf, in the resume folder of your Job Search folder."
    - **How many pages it is.**
