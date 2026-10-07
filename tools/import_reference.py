@@ -122,10 +122,17 @@ def applications(pipeline_text, relative=None):
     return rows
 
 
+# The reference's "closed" (the job came down) has no status of its own in the kit: it is skipped,
+# with "No longer open" in front of its note, so it shows and reads the same as the page's own button.
 STATUS = {"new": "new", "apply": "worth_applying", "maybe": "your_call", "reject": "not_a_fit",
-          "skipped": "skipped", "applied": "applied"}
+          "skipped": "skipped", "applied": "applied", "closed": "skipped"}
 VERDICT = {"APPLY": "worth_applying", "MAYBE": "your_call", "REJECT": "not_a_fit", "SKIPPED": "skipped",
-           "APPLIED": "applied"}
+           "APPLIED": "applied", "CLOSED": "skipped"}
+NO_LONGER_OPEN = "No longer open"
+
+
+def _closed_note(note):
+    return f"{NO_LONGER_OPEN}: {note}" if note else NO_LONGER_OPEN
 
 
 def rule_of(note):
@@ -150,6 +157,8 @@ def postings(seen, descriptions_from, out):
         e = {x: v[x] for x in ("salary", "first_seen", "last_seen", "company", "title", "location", "url", "posted",
                                "source", "flag", "file", "note", "triaged", "gone") if x in v}
         e["status"] = STATUS.get(v.get("status"), v.get("status"))
+        if v.get("status") == "closed":
+            e["note"] = _closed_note(v.get("note", ""))
         e["flags"] = [{"code": "imported", "text": t} for t in (v.get("flag") or "").split("; ") if t]
         if rule_of(v.get("note")):
             e["rule"] = rule_of(v.get("note"))
@@ -189,6 +198,8 @@ def decisions(log_text):
             continue
         date, company, title, verdict, why, key = m
         why = why.strip()
+        if verdict == "CLOSED":
+            why = _closed_note(why)
         row = {"date": date, "key": key, "company": company.strip(), "title": title.strip(),
                "verdict": VERDICT.get(verdict, verdict.lower()), "reason": why,
                "by": "user" if "page:" in why else "claude"}
