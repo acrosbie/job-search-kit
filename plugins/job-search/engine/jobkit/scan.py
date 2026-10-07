@@ -15,6 +15,22 @@ WORKERS = 16  # boards fetched at once: I/O bound, and polite to any one host
 
 # The system name a board's posting keys start with, where it differs from its `ats` value.
 KEY_SYSTEM = {"careers_api": "careers-api"}
+LOCATION_CODES = {screen.IN_COUNTRY, screen.REMOTE_ONLY, screen.COUNTRY_WIDE, screen.UNKNOWN}
+
+
+def key_prefix(ats, slug):
+    """The start of every posting key a board gives: <system>-<company slug>-."""
+    return f"{KEY_SYSTEM.get(ats, ats)}-{re.sub(r'[^a-z0-9]+', '-', slug.lower()).strip('-')}-"
+
+
+def owner(key, prefixes):
+    """The board a posting key belongs to: the longest board prefix it starts with, so that acme's
+    postings are never taken for acme-health's (or the other way round). None if no board's."""
+    best = None
+    for prefix, name in prefixes:
+        if key.startswith(prefix) and (best is None or len(prefix) > len(best[0])):
+            best = (prefix, name)
+    return best[1] if best else None
 
 
 def _group_key(r):
@@ -115,9 +131,11 @@ def run(root, only=None, clock=None, workers=WORKERS):
             if entry:
                 entry["last_seen"] = today
                 entry["title"] = r["title"]
-                if entry.get("location") != r["location"]:  # a role that moves must not keep its old flag
+                if entry.get("location") != r["location"]:  # a role that moves must not keep its old place flag
                     entry["location"] = r["location"]
-                    flags = [(code, screen.location_flag(code, s))] if code else []
+                    kept = [(f.get("code", ""), f.get("text", "")) for f in entry.get("flags", [])
+                            if f.get("code") not in LOCATION_CODES]  # contract, on-site, applied: still true
+                    flags = ([(code, screen.location_flag(code, s))] if code else []) + kept
                     entry["flag"] = _flag_text(flags)
                     entry["flags"] = [{"code": c, "text": t} for c, t in flags]
                 continue
@@ -142,18 +160,17 @@ def run(root, only=None, clock=None, workers=WORKERS):
             boards[name].update({"matched": n, "dropped_title": dropped_title, "dropped_location": dropped_loc,
                                  "stale": False})
 
-    # Only a board that answered this scan can retire its postings: missing from its list = gone.
-    prefixes = set()
-    for name, _ in answered:
-        ats = boards.get(name, {}).get("ats", "")
-        slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
-        prefixes.add(f"{KEY_SYSTEM.get(ats, ats)}-{slug}-")
+    # Only the board a posting belongs to can retire it, and only when that board answered this scan:
+    # missing from its list = gone. Every watched board counts for ownership, answered or not.
+    prefixes = [(key_prefix(c.get("ats", ""), c["slug"]), c["slug"]) for c in companies
+                if c.get("ats", "manual") != "manual"]
+    answered_names = {name for name, _ in answered}
     for k, v in postings.items():
         if v.get("source") == "manual":
             continue
         if k in present:
             v.pop("gone", None)
-        elif any(k.startswith(p) for p in prefixes):
+        elif owner(k, prefixes) in answered_names:
             v.setdefault("gone", today)
 
     # Postings added by hand carry no pay yet; read it from their saved description.

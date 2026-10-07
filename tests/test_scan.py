@@ -119,6 +119,34 @@ class MarkTest(ScanBase):
             code = cli.main(["mark", "--folder", self.root, *args])
         return code, err.getvalue()
 
+    def test_a_job_that_moves_keeps_its_other_flags(self):
+        self.scan()
+        state = self.folder.load_postings()
+        state["postings"]["greenhouse-acme-1"]["flags"].append({"code": "contract", "text": "contract or interim (contract)"})
+        self.folder.save_postings(state)
+        self.scan({"jobs": [job(1, "Customer Support Manager", "Denver, CO")]})  # Chicago no longer listed
+        e = self.folder.load_postings()["postings"]["greenhouse-acme-1"]
+        self.assertEqual(e["location"], "Denver, CO")
+        self.assertEqual([f["code"] for f in e["flags"]], ["contract"])  # the old place flag went; contract stayed
+        self.assertEqual(e["flag"], "contract or interim (contract)")
+
+    def test_a_job_is_gone_only_when_its_own_board_answered(self):
+        # acme answers; acme-health, whose keys also start "greenhouse-acme-", is down today.
+        with open(os.path.join(self.root, "profile", "companies.toml"), "a", encoding="utf-8") as f:
+            f.write('\n[[company]]\nname = "Acme Health"\nslug = "acme-health"\nats = "greenhouse"\ntoken = "acmehealth"\n')
+        state = self.folder.load_postings()
+        state["postings"]["greenhouse-acme-health-77"] = {
+            "company": "Acme Health", "title": "Support Manager", "status": "new", "source": "greenhouse",
+            "first_seen": "2026-09-01", "last_seen": "2026-09-01", "location": "Denver", "url": "", "salary": ""}
+        self.folder.save_postings(state)
+        a = answers()
+        a[f"{GH}/acmehealth/jobs"] = RuntimeError("board down")
+        self.addCleanup(net.use, net.use(Fake(a)))
+        scan.run(self.root, clock=Clock("", fixed=FIXED), workers=2)
+        self.assertNotIn("gone", self.folder.load_postings()["postings"]["greenhouse-acme-health-77"])
+        self.assertEqual(scan.owner("greenhouse-acme-health-77", [("greenhouse-acme-", "acme"),
+                                                                   ("greenhouse-acme-health-", "acme-health")]), "acme-health")
+
     def test_user_decision_stands(self):
         self.scan()
         self.assertEqual(self.mark("greenhouse-acme-3", "worth_applying", "--by", "user")[0], 0)
