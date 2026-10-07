@@ -1,139 +1,220 @@
 <title>__PAGE_TITLE__</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Mono:wght@500&family=Public+Sans:ital,wght@0,400;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Mono:wght@500&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
 <style>
-/* Layout: one reading column. A summary line; then the user's own choices, the moment they make one;
-   then the three lists they act on (waiting on you, to do, applications); then what was screened out.
-   Statuses are rubber-stamp labels in the stamp-pad blue of an application form. */
+/* Layout: one column, urgent first. A header and a sticky bar of counts; then the user's own choices
+   (only when there are some), what's due, the jobs worth a look as full cards, the applications with
+   their 21-day clock, the new jobs as compact rows, and what was screened out, folded away.
+   Status labels are stamps in the stamp-pad blue of an application form. */
 :root {
-  --bg: #f2f5f8;
+  --bg: #f3f5f8;
   --surface: #ffffff;
-  --ink: #16202a;
-  --muted: #5a6672;
-  --line: #d6dde4;
-  --accent: #2a4fa3;
-  --accent-soft: #e2e9f7;
-  --good: #1d774a;
-  --good-soft: #e0f1e7;
-  --warn: #8f5500;
-  --warn-soft: #faefd9;
-  --bad: #a03a31;
-  --bad-soft: #f7e2df;
+  --sunken: #eaeef3;
+  --ink: #15202b;
+  --muted: #5b6875;
+  --faint: #8a96a3;
+  --line: #dbe1e8;
+  --accent: #2b4ea2;
+  --accent-ink: #ffffff;
+  --accent-soft: #e4eaf7;
+  --good: #1c7449;
+  --good-soft: #e1f2e8;
+  --warn: #8c5300;
+  --warn-soft: #fbf0db;
+  --bad: #a23b31;
+  --bad-soft: #f8e3e0;
+  --shadow: 0 1px 2px rgb(21 32 43 / 0.06), 0 2px 8px rgb(21 32 43 / 0.04);
   --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --body: "Public Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0f151b; --surface: #17202a; --ink: #e5ebf0; --muted: #98a5b1; --line: #29343f;
-    --accent: #93abf0; --accent-soft: #1d2943; --good: #6cc69a; --good-soft: #14301f;
-    --warn: #e6b45f; --warn-soft: #33270f; --bad: #ee8f85; --bad-soft: #3a1a17; color-scheme: dark;
+    --bg: #0f151c; --surface: #172029; --sunken: #121a22; --ink: #e6ecf1; --muted: #9aa7b3; --faint: #6f7c88;
+    --line: #2a3542; --accent: #94acf0; --accent-ink: #0f151c; --accent-soft: #1d2944; --good: #6fc79c;
+    --good-soft: #14301f; --warn: #e7b660; --warn-soft: #33270f; --bad: #ef9087; --bad-soft: #3a1a17;
+    --shadow: none; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0f151b; --surface: #17202a; --ink: #e5ebf0; --muted: #98a5b1; --line: #29343f;
-  --accent: #93abf0; --accent-soft: #1d2943; --good: #6cc69a; --good-soft: #14301f;
-  --warn: #e6b45f; --warn-soft: #33270f; --bad: #ee8f85; --bad-soft: #3a1a17; color-scheme: dark;
+  --bg: #0f151c; --surface: #172029; --sunken: #121a22; --ink: #e6ecf1; --muted: #9aa7b3; --faint: #6f7c88;
+  --line: #2a3542; --accent: #94acf0; --accent-ink: #0f151c; --accent-soft: #1d2944; --good: #6fc79c;
+  --good-soft: #14301f; --warn: #e7b660; --warn-soft: #33270f; --bad: #ef9087; --bad-soft: #3a1a17;
+  --shadow: none; color-scheme: dark;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-body { margin: 0; padding-inline: 16px; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); }
-.page { max-width: 52rem; margin: 0 auto; padding-block: 28px 64px; display: grid; gap: 36px; }
-h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
-h1 { font-size: clamp(1.7rem, 4vw, 2.3rem); line-height: 1.15; letter-spacing: -0.01em; }
-h2 { font-size: 1.25rem; display: flex; align-items: baseline; gap: 10px; }
-h2 .count { font: 500 0.85rem var(--mono); color: var(--muted); }
-h3 { font-size: 1.05rem; line-height: 1.3; }
-a { color: var(--accent); text-underline-offset: 2px; }
-a:hover { text-decoration-thickness: 2px; }
+body { margin: 0; padding-inline: 16px; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--body); }
+.page { max-width: 54rem; margin: 0 auto; padding-block: 24px 72px; display: grid; gap: 28px; min-width: 0; }
+h1, h2 { font-family: var(--display); text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(1.6rem, 3.6vw, 2.15rem); line-height: 1.1; letter-spacing: -0.015em; }
+h2 { font-size: 1.15rem; line-height: 1.25; display: flex; align-items: baseline; gap: 8px; }
+h3 { margin: 0; font-size: 1.02rem; line-height: 1.35; font-weight: 600; text-wrap: balance; }
 p { margin: 0; }
+a { color: var(--accent); text-underline-offset: 2px; text-decoration-thickness: 1px; }
+a:hover { text-decoration-thickness: 2px; }
 .muted { color: var(--muted); }
-.mono, .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
-.num { font-size: 0.82rem; color: var(--muted); }
-header { display: grid; gap: 10px; }
-.summary { color: var(--muted); }
-.summary strong { color: var(--ink); font-weight: 600; }
-.mode { padding: 10px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); font-size: 0.92rem; }
-.mode.warn { border-color: var(--warn); background: var(--warn-soft); }
-.notice { padding: 10px 14px; border-radius: 6px; background: var(--good-soft); color: var(--ink); border: 1px solid var(--good); }
-.sections { display: grid; gap: 36px; min-width: 0; }
-section { display: grid; gap: 14px; min-width: 0; }
-.lede { color: var(--muted); max-width: 65ch; }
-.list { display: grid; gap: 12px; }
-.item { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; display: grid; gap: 8px; min-width: 0; }
-.item-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
-.meta { color: var(--muted); font-size: 0.92rem; overflow-wrap: anywhere; }
-.note { max-width: 65ch; overflow-wrap: anywhere; }
-.flag { font-size: 0.9rem; color: var(--warn); }
-.stamp { display: inline-block; font: 600 0.7rem/1 var(--body); letter-spacing: 0.08em; text-transform: uppercase;
+.num { font: 500 0.78rem/1 var(--mono); color: var(--faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pay { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.count { font: 500 0.8rem var(--mono); color: var(--muted); }
+
+/* ------------------------------------------------ header and the bar of counts */
+.top { display: grid; gap: 6px; }
+.updated { color: var(--muted); font-size: 0.9rem; }
+.status { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; font-size: 0.9rem; color: var(--muted); }
+.status:empty { display: none; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 0.85rem; font-weight: 600; }
+.chip.review { background: var(--good-soft); color: var(--good); }
+.chip.local { background: var(--warn-soft); color: var(--warn); }
+.jump { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; display: flex; gap: 6px; overflow-x: auto;
+  scrollbar-width: none; padding-block: 10px; background: var(--bg); border-bottom: 1px solid var(--line); }
+.jump::-webkit-scrollbar { display: none; }
+.jump button { flex: none; display: inline-flex; align-items: baseline; gap: 7px; padding: 6px 12px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-size: 0.88rem; min-height: 34px; }
+.jump button b { font: 600 0.84rem var(--mono); font-variant-numeric: tabular-nums; }
+.jump button.hot { border-color: var(--accent); }
+.jump button.hot b { color: var(--accent); }
+.jump button.zero { color: var(--faint); }
+
+/* ------------------------------------------------ sections */
+.sections { display: grid; gap: 34px; min-width: 0; }
+section { display: grid; gap: 12px; min-width: 0; scroll-margin-top: 64px; }
+.section-head { display: grid; gap: 4px; }
+.lede { color: var(--muted); font-size: 0.92rem; max-width: 64ch; }
+.empty { padding: 14px 16px; border: 1px dashed var(--line); border-radius: 8px; color: var(--muted); font-size: 0.92rem; }
+.stack { display: grid; gap: 12px; }
+
+/* stamps: a job's verdict, an application's status, what's due */
+.stamp { display: inline-block; font: 600 0.68rem/1 var(--body); letter-spacing: 0.08em; text-transform: uppercase;
   padding: 4px 7px 3px; border: 1.5px solid currentColor; border-radius: 3px; white-space: nowrap; }
-.s-worth, .s-offer, .s-interview, .s-screen, .s-replied { color: var(--good); background: var(--good-soft); }
+.s-worth, .s-offer, .s-interview, .s-screen, .s-replied, .s-send { color: var(--good); background: var(--good-soft); }
 .s-call, .s-new, .s-applied { color: var(--accent); background: var(--accent-soft); }
 .s-closing, .s-find { color: var(--warn); background: var(--warn-soft); }
 .s-out, .s-rejected, .s-presumed, .s-withdrawn, .s-closed { color: var(--muted); background: transparent; }
-.s-send { color: var(--good); background: var(--good-soft); }
-.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* ------------------------------------------------ jobs worth a look: full cards */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow);
+  padding: 16px 18px; display: grid; gap: 10px; min-width: 0; }
+.card-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.card-top .pay { margin-left: auto; font-weight: 600; }
+.where { color: var(--muted); font-size: 0.92rem; overflow-wrap: anywhere; }
+.where b { color: var(--ink); font-weight: 600; }
+.why { border-radius: 8px; padding: 10px 12px; font-size: 0.93rem; max-width: 68ch; overflow-wrap: anywhere; display: grid; gap: 2px; }
+.why .k { font-size: 0.74rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.why.question { background: var(--accent-soft); }
+.why.question .k { color: var(--accent); }
+.why.tip { background: var(--good-soft); }
+.why.tip .k { color: var(--good); }
+.why.said { background: var(--sunken); }
+.why.said .k { color: var(--muted); }
+.why.plain { background: var(--sunken); }
+.flag { font-size: 0.88rem; color: var(--warn); }
+
+/* buttons */
 button, select, input, textarea { font: inherit; color: inherit; }
-button { cursor: pointer; border: 1px solid var(--line); background: var(--bg); border-radius: 5px; padding: 6px 12px; min-height: 36px; }
+button { cursor: pointer; border: 1px solid var(--line); background: var(--surface); border-radius: 7px; padding: 6px 14px;
+  min-height: 38px; font-weight: 500; }
 button:hover { border-color: var(--accent); }
-button.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 600; }
-button.link { border: 0; background: none; padding: 0; min-height: 0; color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+button.quiet { border-color: transparent; background: transparent; color: var(--muted); }
+button.quiet:hover { color: var(--ink); background: var(--sunken); }
+button.mini { min-height: 32px; padding: 4px 11px; font-size: 0.86rem; }
+button.link { border: 0; background: none; padding: 0; min-height: 0; color: var(--accent); text-decoration: underline; text-underline-offset: 2px; font-weight: 500; }
 button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visible, summary:focus-visible {
   outline: 2px solid var(--accent); outline-offset: 2px; }
-.panel { display: grid; gap: 10px; padding: 12px; border-radius: 5px; background: var(--bg); border: 1px solid var(--line); }
-.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 10px; }
-label { display: grid; gap: 4px; font-size: 0.88rem; color: var(--muted); }
-select, input, textarea { background: var(--surface); border: 1px solid var(--line); border-radius: 5px; padding: 7px 9px; min-width: 0; width: 100%; }
-/* The user's own choices: the one boxed, tinted block on the page, so a click visibly lands somewhere. */
-.yours { background: var(--accent-soft); border: 2px solid var(--accent); border-radius: 8px; padding: 16px; }
-.yours .lede { color: var(--ink); }
-.choice { display: grid; grid-template-columns: 3.2rem minmax(0, 1fr) auto; gap: 4px 12px; align-items: start;
-  background: var(--surface); border-radius: 6px; padding: 10px 12px; }
-.choice .what { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
-.choice .detail { grid-column: 2 / -1; font-size: 0.9rem; color: var(--muted); }
-.choice .undo { grid-column: 3; grid-row: 1; }
-.choice.problem { border: 1px solid var(--bad); }
-.choice.problem .detail { color: var(--bad); }
-.yours textarea { min-height: 7rem; font: 0.8rem/1.4 var(--mono); }
-.said { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 8px 10px; border-radius: 5px;
-  background: var(--accent-soft); font-size: 0.92rem; }
-.apps { display: grid; gap: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
-.app { display: grid; grid-template-columns: 3.2rem minmax(0, 1fr) auto; gap: 4px 12px; padding: 12px 14px; border-top: 1px solid var(--line); align-items: start; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+
+/* the form a choice opens */
+.panel { display: grid; gap: 10px; padding: 12px; border-radius: 8px; background: var(--sunken); border: 1px solid var(--line); min-width: 0; }
+.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr)); gap: 10px; }
+label { display: grid; gap: 4px; font-size: 0.86rem; color: var(--muted); }
+select, input, textarea { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; min-width: 0; width: 100%; }
+.choices-menu { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* ------------------------------------------------ compact rows: new jobs, screened out */
+.rows { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; min-width: 0; }
+.row { display: grid; grid-template-columns: 3rem minmax(0, 1fr) auto; gap: 2px 12px; align-items: center; padding: 10px 14px;
+  border-top: 1px solid var(--line); }
+.row:first-child { border-top: 0; }
+.row .num { align-self: start; padding-top: 4px; }
+.row-main { display: grid; gap: 1px; min-width: 0; }
+.row-title { font-weight: 600; overflow-wrap: anywhere; }
+.row-meta { color: var(--muted); font-size: 0.87rem; overflow-wrap: anywhere; }
+.row-note { font-size: 0.87rem; color: var(--muted); overflow-wrap: anywhere; }
+.row-note.flag { color: var(--warn); }
+.row .actions { flex-wrap: nowrap; }
+.row .panel { grid-column: 2 / -1; margin-top: 8px; }
+.filter { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.filter input { max-width: 22rem; }
+.filter .count { font-size: 0.82rem; }
+
+/* ------------------------------------------------ to do and applications: the 21-day clock */
+.todo { border-color: var(--warn); }
+.clock { display: grid; gap: 4px; max-width: 26rem; }
+.clock-bar { height: 6px; border-radius: 3px; background: var(--sunken); overflow: hidden; }
+.clock-bar span { display: block; height: 100%; border-radius: 3px; background: var(--accent); }
+.clock.late .clock-bar span { background: var(--warn); }
+.clock-label { font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.apps { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); }
+.app { display: grid; grid-template-columns: 3rem minmax(0, 1fr) auto; gap: 6px 12px; padding: 14px 16px; border-top: 1px solid var(--line); }
 .app:first-child { border-top: 0; }
-.app .when { grid-column: 2; color: var(--muted); font-size: 0.9rem; }
-.app .side { grid-column: 3; grid-row: 1; justify-self: end; }
-.app .more { grid-column: 2 / -1; display: grid; gap: 8px; }
-@media (max-width: 34rem) {
-  .app, .choice { grid-template-columns: 2.6rem minmax(0, 1fr); }
-  .app .side, .choice .undo { grid-column: 2; grid-row: auto; justify-self: start; }
-}
-details { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px 16px; }
-summary { cursor: pointer; font-family: var(--display); font-weight: 600; font-size: 1.05rem; }
-details .list { margin-top: 12px; gap: 0; }
-details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; padding-inline: 0; }
-.empty { padding: 18px; border: 1px dashed var(--line); border-radius: 6px; color: var(--muted); }
+.app .num { padding-top: 4px; }
+.app-main { display: grid; gap: 4px; min-width: 0; }
+.app-name { overflow-wrap: anywhere; }
+.app-name b { font-weight: 600; }
+.app-meta { color: var(--muted); font-size: 0.87rem; }
+.app-side { display: grid; justify-items: end; align-content: start; gap: 8px; }
+.app .more { grid-column: 2 / -1; display: grid; gap: 8px; min-width: 0; }
+.said-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 7px 10px; border-radius: 6px;
+  background: var(--accent-soft); font-size: 0.88rem; }
+
+/* ------------------------------------------------ the user's own choices: the one tinted block, so a click lands */
+.yours { background: var(--accent-soft); border: 2px solid var(--accent); border-radius: 12px; padding: 16px; }
+.yours .lede { color: var(--ink); }
+.yours .rows { box-shadow: none; }
+.choice .row-note { color: var(--muted); }
+.choice.problem .row-note { color: var(--bad); }
+.yours textarea { min-height: 7rem; font: 0.8rem/1.4 var(--mono); }
+
+details.out { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+details.out > summary { cursor: pointer; padding: 14px 16px; font-family: var(--display); font-weight: 600; font-size: 1.05rem;
+  display: flex; align-items: baseline; gap: 8px; }
+details.out[open] > summary { border-bottom: 1px solid var(--line); }
+details.out .lede { padding: 12px 16px 0; }
+details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
+
 .toast { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px); left: 50%; transform: translateX(-50%);
-  width: min(32rem, calc(100% - 32px)); background: var(--ink); color: var(--bg); border-radius: 8px; padding: 12px 16px;
-  box-shadow: 0 8px 28px rgb(0 0 0 / 0.25); z-index: 10; font-size: 0.95rem; }
-.sendbar { position: sticky; bottom: env(safe-area-inset-bottom, 0px); display: flex; flex-wrap: wrap; align-items: center;
-  justify-content: space-between; gap: 10px; background: var(--ink); color: var(--bg); border-radius: 8px; padding: 10px 14px; }
+  width: min(32rem, calc(100% - 32px)); background: var(--ink); color: var(--bg); border-radius: 10px; padding: 12px 16px;
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.25); z-index: 10; font-size: 0.93rem; }
+.sendbar { position: sticky; bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); display: flex; flex-wrap: wrap; align-items: center;
+  justify-content: space-between; gap: 10px; background: var(--ink); color: var(--bg); border-radius: 10px; padding: 10px 14px;
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.2); }
 .sendbar button { background: var(--bg); color: var(--ink); border-color: var(--bg); font-weight: 600; }
 .error { color: var(--bad); }
+
+@media (max-width: 36rem) {
+  .jump { margin-inline: -16px; padding-inline: 16px; }
+  .row, .app { grid-template-columns: 2.6rem minmax(0, 1fr); }
+  .row .actions, .app-side { grid-column: 2; justify-items: start; }
+  .app-side { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .card { padding: 14px; }
+  .card-top .pay { margin-left: 0; width: 100%; }
+}
 @media (prefers-reduced-motion: no-preference) {
-  button { transition: border-color 0.12s; }
+  button { transition: border-color 0.12s, background-color 0.12s, color 0.12s; }
   .toast { animation: drop 0.18s ease-out; }
   @keyframes drop { from { transform: translate(-50%, -8px); opacity: 0.4; } }
 }
 </style>
 
 <div class="page">
-  <header>
+  <header class="top">
     <h1 id="title">Your job search</h1>
-    <p class="summary" id="summary">Loading your jobs.</p>
-    <p class="notice" id="review" hidden></p>
-    <p class="mode" id="mode" hidden></p>
+    <p class="updated" id="updated">Loading your jobs.</p>
+    <p class="status" id="status"></p>
   </header>
+  <nav class="jump" id="jump" aria-label="Sections" hidden></nav>
   <main id="app" class="sections"></main>
   <div class="sendbar" id="sendbar" hidden></div>
 </div>
@@ -147,7 +228,7 @@ details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; 
   var ACTIONS = {
     want: "Want it", skip: "Skip", applied: "I applied", followed_up: "I followed up", replied: "They replied",
     screen: "Screen booked", interview: "Interview", offer: "Offer", rejected: "Turned down", withdrawn: "I withdrew",
-    contact: "Contact"
+    contact: "Add a contact"
   };
   // What a saved choice says, and how its stamp looks.
   var CHOSEN = {
@@ -170,18 +251,22 @@ details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; 
                   ["referral", "Through someone I know"], ["other", "Some other way"]];
   var VIA = { company_site: "on their site", linkedin: "through LinkedIn", referral: "through someone you know", other: "another way" };
   var EVENTS = { followed_up: true, contact: true };   // kept alongside a status choice, never replacing one
+  var APP_CHOICES = ["replied", "screen", "interview", "offer", "rejected", "withdrawn", "followed_up", "contact"];
 
   var data = null;
   try { data = JSON.parse(document.getElementById("jobs-data").textContent); } catch (e) { data = null; }
   // Clicks kept in this browser belong to this copy of the page; a newer copy starts afresh.
   var LOCAL = "job-search-choices " + (data ? data.as_of : "");
+  var FILTER = "job-search-filter";
   var mode = "file";          // "file": opened from the folder; "saving": an artifact whose clicks save
   var clicks = null;          // the store's collection of clicks, when saving
   var choices = {};           // id -> choice
-  var open = null;            // {kind, ref, action} of the panel being filled in
-  var draft = {};             // what has been typed into that panel
+  var open = null;            // {kind, ref, action} of the form being filled in ("menu": an application's choices)
+  var draft = {};             // what has been typed into that form
   var problem = "";
   var toastTimer = null;
+  var filter = "";
+  try { filter = localStorage.getItem(FILTER) || ""; } catch (e) { filter = ""; }
 
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
@@ -195,12 +280,21 @@ details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; 
   }
   function stamp(pair) { return '<span class="stamp ' + pair[1] + '">' + esc(pair[0]) + "</span>"; }
   function newId() { return "c-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7); }
+  function plural(n, one, many) { return n + " " + (n === 1 ? one : many); }
 
   function toast(text) {
     var t = document.getElementById("toast");
     t.textContent = text; t.hidden = false;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { t.hidden = true; }, 6000);
+  }
+
+  // A board's title sometimes carries its places after a bar: "Controller | United States | Remote".
+  function cleanTitle(j) {
+    var parts = String(j.title || "").split(/\s+\|\s+/);
+    var place = j.location || "";
+    var extra = parts.slice(1).filter(function (p) { return place.toLowerCase().indexOf(p.toLowerCase()) < 0; });
+    return { title: parts[0], place: [place].concat(extra).filter(Boolean).join(" · ") };
   }
 
   // ---------------------------------------------------------------- the user's choices
@@ -222,7 +316,12 @@ details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; 
     return best;
   }
 
-  // ---------------------------------------------------------------- rendering
+  // ---------------------------------------------------------------- pieces
+
+  function button(action, kind, ref, cls, label, num) {
+    return '<button type="button" class="' + (cls || "") + '" data-open="' + action + '" data-kind="' + kind + '" data-ref="' + esc(ref) + '"' +
+      (num ? ' aria-label="' + esc((label || ACTIONS[action]) + ", #" + num) + '"' : "") + ">" + esc(label || ACTIONS[action]) + "</button>";
+  }
 
   function panel(kind, ref, action) {
     if (!open || open.kind !== kind || open.ref !== ref || open.action !== action) return "";
@@ -243,8 +342,11 @@ details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; 
     f.push('<label for="f-note">' + hint + '<input id="f-note" data-field="note" maxlength="300" value="' + esc(draft.note || "") + '"></label>');
     return '<div class="panel"><div class="fields">' + f.join("") + '</div><div class="actions">' +
       '<button type="button" class="primary" data-save>Save: ' + esc(ACTIONS[action]) + '</button>' +
-      '<button type="button" data-cancel>Cancel</button></div></div>';
+      '<button type="button" class="quiet" data-cancel>Cancel</button></div></div>';
   }
+
+  // An application can show in To do and in Applications: its form opens only where it was asked for.
+  function opened(section) { return !!open && open.from === section; }
 
   function chosenDetail(c) {
     var bits = [];
@@ -255,56 +357,107 @@ details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; 
     return bits.join(" · ");
   }
 
+  // Claude's note, shown by what it is: a question to answer, advice for the resume, or the user's own words.
+  function why(j) {
+    var n = String(j.note || "");
+    if (!n) return "";
+    var m = n.match(/^Question:\s*([\s\S]*)$/);
+    if (m) return '<div class="why question"><span class="k">The question</span>' + esc(m[1]) + "</div>";
+    m = n.match(/^Tailor:\s*([\s\S]*)$/);
+    if (m) return '<div class="why tip"><span class="k">For your resume</span>' + esc(m[1]) + "</div>";
+    if (j.by === "user") return '<div class="why said"><span class="k">You said</span>“' + esc(n) + "”</div>";
+    return '<div class="why plain">' + esc(n) + "</div>";
+  }
+
+  function clockBar(days, closesOn) {
+    var total = (data.tracking || {}).presume_after_days || 21;
+    if (days == null) return "";
+    var pct = Math.max(4, Math.min(100, Math.round(100 * days / total)));
+    return '<div class="clock' + (days >= total - 5 ? " late" : "") + '"><div class="clock-bar" role="img" aria-label="Day ' + days + " of " + total + '"><span style="width:' + pct + '%"></span></div>' +
+      '<span class="clock-label">Day ' + days + " of " + total + (closesOn ? " · closes " + esc(day(closesOn)) + " if there’s no reply" : "") + "</span></div>";
+  }
+
+  // ---------------------------------------------------------------- sections
+
   function yoursSection() {
     var list = pending();
     var bad = problems();
     if (!list.length && !bad.length) return "";
     var rows = list.map(function (c) {
       var detail = chosenDetail(c);
-      return '<div class="choice"><span class="num">' + (c.num ? "#" + esc(c.num) : "") + "</span>" +
-        '<div class="what">' + stamp(CHOSEN[c.action] || [c.action, "s-call"]) + "<span>" + esc(c.label) + "</span></div>" +
-        (detail ? '<p class="detail">' + esc(detail) + "</p>" : "") +
-        '<button type="button" class="link undo" data-undo="' + esc(c.id) + '">Undo</button></div>';
+      return '<li class="row choice"><span class="num">' + (c.num ? "#" + esc(c.num) : "") + "</span>" +
+        '<div class="row-main"><span>' + stamp(CHOSEN[c.action] || [c.action, "s-call"]) + " " + esc(c.label) + "</span>" +
+        (detail ? '<span class="row-note">' + esc(detail) + "</span>" : "") + "</div>" +
+        '<div class="actions"><button type="button" class="mini quiet" data-undo="' + esc(c.id) + '">Undo</button></div></li>';
     }).concat(bad.map(function (c) {
-      return '<div class="choice problem"><span class="num">' + (c.num ? "#" + esc(c.num) : "") + "</span>" +
-        '<div class="what">' + stamp(CHOSEN[c.action] || [c.action, "s-call"]) + "<span>" + esc(c.label) + "</span></div><span></span>" +
-        '<p class="detail">Claude couldn\'t record this: ' + esc(c.problem) + "</p></div>";
+      return '<li class="row choice problem"><span class="num">' + (c.num ? "#" + esc(c.num) : "") + "</span>" +
+        '<div class="row-main"><span>' + stamp(CHOSEN[c.action] || [c.action, "s-call"]) + " " + esc(c.label) + "</span>" +
+        '<span class="row-note">Claude couldn\'t record this: ' + esc(c.problem) + "</span></div><span></span></li>";
     }));
     var lede = mode === "saving"
-      ? "Saved on this page. Claude records " + (list.length === 1 ? "it" : "them") + " in your Job Search folder the next time you talk to it. Changed your mind? Press Undo, or choose again."
-      : "Not sent to Claude yet. Press <strong>Copy my choices</strong>, then paste them into Claude.";
-    return '<section class="yours" aria-labelledby="h-yours"><h2 id="h-yours">Your choices <span class="count">' + list.length + "</span></h2>" +
-      '<p class="lede">' + lede + "</p>" + '<div class="list">' + rows.join("") + "</div>" +
-      (mode === "file" && list.length ? '<div class="actions"><button type="button" class="primary" data-copy>Copy my choices</button></div>' +
-        '<p class="muted" id="copy-note">Then paste them into Claude.</p>' +
+      ? "Saved on this page. Claude records " + (list.length === 1 ? "it" : "them") + " in your Job Search folder the next time you talk to it. Changed your mind? Undo, or choose again."
+      : "This copy of the page can't send them to Claude by itself. Press <strong>Copy my choices</strong>, then paste them into Claude.";
+    return '<section class="yours" id="s-yours" aria-labelledby="h-yours"><div class="section-head"><h2 id="h-yours">Your choices <span class="count">' + list.length + "</span></h2>" +
+      '<p class="lede">' + lede + "</p></div>" + '<ul class="rows">' + rows.join("") + "</ul>" +
+      (mode === "file" && list.length ? '<div class="actions"><button type="button" class="primary" data-copy>Copy my choices</button>' +
+        '<span class="muted" id="copy-note">Then paste them into Claude.</span></div>' +
         '<textarea id="copy-text" readonly hidden aria-label="Your choices, to copy"></textarea>' : "") +
       "</section>";
   }
 
-  function jobCard(j, kind) {
-    var verdict = j.status === "worth_applying" && j.by === "user" ? ["You want it", "s-worth"] : (VERDICT[j.status] || ["", ""]);
-    var meta = [esc(j.company), esc(j.location || "place not stated"), j.salary ? esc(j.salary) : "pay not stated",
-                "found " + day(j.first_seen)];
-    var note = j.note || (j.status === "new" ? "Not gone through yet. Ask Claude to go through the new ones." : "");
-    var buttons = kind === "screened" ? ["want"] : ["want", "skip", "applied"];
-    return '<article class="item">' +
-      '<div class="item-head"><span class="num">#' + esc(j.num) + "</span>" + stamp(verdict) + "</div>" +
-      "<h3>" + (j.url ? '<a href="' + esc(j.url) + '" target="_blank" rel="noopener">' + esc(j.title) + "</a>" : esc(j.title)) + "</h3>" +
-      '<p class="meta">' + meta.join(" · ") + "</p>" +
-      (note ? '<p class="note">' + esc(note) + "</p>" : "") +
-      (j.flag ? '<p class="flag">Note: ' + esc(j.flag) + "</p>" : "") +
+  function todoCard(t) {
+    var what = t.route === "send"
+      ? "Follow up with " + esc(t.contact) + ". Ask Claude to draft a short note, then send it yourself."
+      : t.route === "find_person"
+        ? "A top pick with nobody to follow up with. Look for the person who would manage this role, and add their name."
+        : "Nothing to send without a contact.";
+    return '<article class="card todo"><div class="card-top"><span class="num">' + (t.num ? "#" + esc(t.num) : "") + "</span>" + stamp(ROUTE[t.route]) + "</div>" +
+      "<h3>" + esc(t.company) + ", " + esc(t.role) + "</h3><p>" + what + "</p>" + clockBar(t.days, t.closes_on) + saidLines(t.id) +
+      '<div class="actions">' + button("followed_up", "app", t.id, "primary") +
+      (t.route !== "send" ? button("contact", "app", t.id, "quiet") : "") + "</div>" +
+      (opened("s-todo") ? panel("app", t.id, "followed_up") + panel("app", t.id, "contact") : "") + "</article>";
+  }
+
+  function jobCard(j) {
+    var wanted = j.status === "worth_applying" && j.by === "user";
+    var verdict = wanted ? ["You want it", "s-worth"] : (VERDICT[j.status] || ["", ""]);
+    var t = cleanTitle(j);
+    var acts = wanted ? [["applied", "primary"], ["skip", "quiet"]] : [["want", "primary"], ["skip", "quiet"], ["applied", "quiet"]];
+    return '<article class="card">' +
+      '<div class="card-top"><span class="num">#' + esc(j.num) + "</span>" + stamp(verdict) +
+      (j.salary ? '<span class="pay">' + esc(j.salary) + "</span>" : "") + "</div>" +
+      "<h3>" + (j.url ? '<a href="' + esc(j.url) + '" target="_blank" rel="noopener">' + esc(t.title) + "</a>" : esc(t.title)) + "</h3>" +
+      '<p class="where"><b>' + esc(j.company) + "</b> · " + esc(t.place || "place not stated") + (j.salary ? "" : " · pay not stated") + "</p>" +
+      why(j) +
+      (j.flag ? '<p class="flag">' + esc(j.flag) + "</p>" : "") +
       (j.gone ? '<p class="flag">No longer on the company\'s job board since ' + day(j.gone) + ".</p>" : "") +
-      '<div class="actions">' + buttons.map(function (a) {
-        return '<button type="button" data-open="' + a + '" data-kind="job" data-ref="' + esc(j.key) + '">' + ACTIONS[a] + "</button>";
-      }).join("") + "</div>" +
-      buttons.map(function (a) { return panel("job", j.key, a); }).join("") +
+      '<div class="actions">' + acts.map(function (a) { return button(a[0], "job", j.key, a[1]); }).join("") + "</div>" +
+      acts.map(function (a) { return panel("job", j.key, a[0]); }).join("") +
       "</article>";
+  }
+
+  function jobRow(j, kind) {
+    var t = cleanTitle(j);
+    var acts = kind === "screened" ? [["want", "Want it anyway"]] : [["want", "Want it"], ["skip", "Skip"]];
+    var search = (t.title + " " + j.company + " " + t.place).toLowerCase();
+    return '<li class="row" data-search="' + esc(search) + '"><span class="num">#' + esc(j.num) + "</span>" +
+      '<div class="row-main">' +
+      (j.url ? '<a class="row-title" href="' + esc(j.url) + '" target="_blank" rel="noopener">' + esc(t.title) + "</a>" : '<span class="row-title">' + esc(t.title) + "</span>") +
+      '<span class="row-meta">' + esc(j.company) + " · " + esc(t.place || "place not stated") +
+      (j.salary ? ' · <span class="pay">' + esc(j.salary) + "</span>" : "") + "</span>" +
+      (j.note ? '<span class="row-note">' + esc(j.note) + "</span>" : "") +
+      (j.flag ? '<span class="row-note flag">' + esc(j.flag) + "</span>" : "") +
+      (j.gone ? '<span class="row-note flag">No longer on the company\'s job board since ' + day(j.gone) + ".</span>" : "") +
+      "</div>" +
+      '<div class="actions">' + acts.map(function (a) { return button(a[0], "job", j.key, "mini", a[1], j.num); }).join("") + "</div>" +
+      acts.map(function (a) { return panel("job", j.key, a[0]); }).join("") +
+      "</li>";
   }
 
   function saidLines(id) {
     return pending().filter(function (c) { return c.app === id; }).map(function (c) {
       var detail = chosenDetail(c);
-      return '<p class="said">You said: ' + stamp(CHOSEN[c.action] || [c.action, "s-call"]) +
+      return '<p class="said-line">You said: ' + stamp(CHOSEN[c.action] || [c.action, "s-call"]) +
         (detail ? " " + esc(detail) : "") + ' <span class="muted">' + (mode === "saving" ? "Saved for Claude." : "Not sent to Claude yet.") + "</span> " +
         '<button type="button" class="link" data-undo="' + esc(c.id) + '">Undo</button></p>';
     }).join("");
@@ -313,101 +466,124 @@ details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; 
   function appRow(a) {
     var st = STATUS[a.status] || [a.status, "s-closed"];
     var how = [VIA[a.channel], a.top_pick === true ? "a top pick" : ""].filter(Boolean).join(", ");
-    var when = "applied " + day(a.applied_date) + (a.estimated ? " (about)" : "") + (how ? " " + esc(how) : "") +
-      (a.days != null ? ', day <span class="mono">' + a.days + "</span>" : "") +
-      (a.status === "applied" && a.closes_on ? " · closes " + day(a.closes_on) + " if no reply" : "") +
+    var meta = "Applied " + day(a.applied_date) + (a.estimated ? " (about)" : "") + (how ? " " + esc(how) : "") +
       (a.contact ? " · contact " + esc(a.contact) : "") +
-      (a.followed_up ? " · followed up " + day(a.followed_up) : "");
+      (a.followed_up ? " · followed up " + day(a.followed_up) : "") +
+      (a.status !== "applied" && a.last && a.last.date ? " · last news " + day(a.last.date) : "");
     var live = ["applied", "replied", "screen", "interview", "offer", "presumed_rejected"].indexOf(a.status) >= 0;
-    var options = ["replied", "screen", "interview", "offer", "rejected", "withdrawn", "followed_up", "contact"];
-    var picked = open && open.kind === "app" && open.ref === a.id ? open.action : "";
-    var said = saidLines(a.id);
-    return '<div class="app"><span class="num">' + (a.num ? "#" + esc(a.num) : "") + "</span>" +
-      '<div><strong>' + esc(a.company) + "</strong>, " +
-      (a.url ? '<a href="' + esc(a.url) + '" target="_blank" rel="noopener">' + esc(a.role) + "</a>" : esc(a.role)) + "</div>" +
-      '<span class="side">' + stamp(st) + "</span>" +
-      '<p class="when">' + when + "</p>" +
-      '<div class="more">' + said +
-      (live ? '<label for="what-' + esc(a.id) + '">' + (said ? "Anything else?" : "What happened?") + '<select id="what-' + esc(a.id) + '" data-what="' + esc(a.id) + '">' +
-        '<option value="">Choose…</option>' + options.map(function (o) {
-          return '<option value="' + o + '"' + (picked === o ? " selected" : "") + ">" + (o === "contact" ? "Add a contact" : ACTIONS[o]) + "</option>";
-        }).join("") + "</select></label>" : "") +
-      (picked ? panel("app", a.id, picked) : "") + "</div></div>";
+    var mine = opened("s-apps") && open.kind === "app" && open.ref === a.id;
+    var menu = mine && open.action === "menu"
+      ? '<div class="panel"><span class="muted">What happened?</span><div class="choices-menu">' + APP_CHOICES.map(function (o) {
+          return button(o, "app", a.id, "mini");
+        }).join("") + '<button type="button" class="mini quiet" data-cancel>Cancel</button></div></div>' : "";
+    return '<li class="app"><span class="num">' + (a.num ? "#" + esc(a.num) : "") + "</span>" +
+      '<div class="app-main"><span class="app-name"><b>' + esc(a.company) + "</b>, " +
+      (a.url ? '<a href="' + esc(a.url) + '" target="_blank" rel="noopener">' + esc(a.role) + "</a>" : esc(a.role)) + "</span>" +
+      '<span class="app-meta">' + meta + "</span>" +
+      (a.status === "applied" ? clockBar(a.days, a.closes_on) : "") + "</div>" +
+      '<div class="app-side">' + stamp(st) + (live && !mine ? button("menu", "app", a.id, "mini", "Update", a.num) : "") + "</div>" +
+      '<div class="more">' + saidLines(a.id) + menu + (mine && open.action !== "menu" ? panel("app", a.id, open.action) : "") + "</div></li>";
   }
 
-  function todoItem(t) {
-    var r = ROUTE[t.route];
-    var what = t.route === "send"
-      ? "Day " + t.days + ". Follow up with " + esc(t.contact) + ": ask Claude to draft a short note, then send it yourself."
-      : t.route === "find_person"
-        ? "Day " + t.days + ". A top pick with nobody to follow up with. Look for the person who would manage this role, and add their name."
-        : "Day " + t.days + ". Nothing to send without a contact. It closes on " + day(t.closes_on) + " if there's no reply.";
-    return '<article class="item"><div class="item-head"><span class="num">' + (t.num ? "#" + esc(t.num) : "") + "</span>" + stamp(r) + "</div>" +
-      "<h3>" + esc(t.company) + ", " + esc(t.role) + "</h3><p class=\"note\">" + what + "</p>" + saidLines(t.id) +
-      '<div class="actions"><button type="button" data-open="followed_up" data-kind="app" data-ref="' + esc(t.id) + '">I followed up</button>' +
-      (t.route !== "send" ? '<button type="button" data-open="contact" data-kind="app" data-ref="' + esc(t.id) + '">Add a contact</button>' : "") +
-      "</div>" + panel("app", t.id, "followed_up") + panel("app", t.id, "contact") + "</article>";
+  function head(id, title, n, lede) {
+    return '<div class="section-head"><h2 id="h-' + id + '">' + title + ' <span class="count">' + n + "</span></h2>" +
+      (lede ? '<p class="lede">' + lede + "</p>" : "") + "</div>";
   }
+
+  // ---------------------------------------------------------------- the page
 
   function render() {
     var app = document.getElementById("app");
-    var modeEl = document.getElementById("mode");
-    modeEl.hidden = false;
-    modeEl.className = "mode" + (mode === "file" ? " warn" : "");
-    modeEl.innerHTML = mode === "saving"
-      ? "Mark jobs here as you read them. Each choice is saved on this page straight away, and Claude records it in your folder the next time you talk to it."
-      : "This copy of the page can't save your clicks. Make your choices, then use <strong>Copy my choices</strong> and paste them into Claude. You can also tell Claude by number, such as “skip #12”.";
-    if (problem) modeEl.innerHTML += '<br><span class="error">' + esc(problem) + "</span>";
-
-    var waitingCount = pending().length;
+    var status = document.getElementById("status");
+    var jump = document.getElementById("jump");
     if (!data) {
-      document.getElementById("summary").textContent = "";
+      document.getElementById("updated").textContent = "";
       app.innerHTML = yoursSection() + '<p class="empty">Your jobs appear here after Claude next checks your job boards. Ask Claude “show me my jobs page” to fill it in.</p>';
       renderSendbar();
       return;
     }
     document.getElementById("title").textContent = data.title || "Your job search";
-    var rv = document.getElementById("review");
-    rv.hidden = !data.review_ready;
-    if (data.review_ready) rv.innerHTML = "<strong>Your weekly review is ready</strong> (" + esc(day(data.review_ready)) +
-      "). Say \u201cgo through my review\u201d to Claude. Nothing changes without your yes.";
+    var asOf = new Date(data.as_of);
+    document.getElementById("updated").textContent = "Updated " + day(data.as_of) +
+      (isNaN(asOf) ? "" : ", " + asOf.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }));
+    status.innerHTML = (data.review_ready ? '<span class="chip review">Your weekly review is ready</span><span>Say “go through my review” to Claude.</span>' : "") +
+      (mode === "file" ? '<span class="chip local">Opened from your folder</span><span>Clicks here stay in this browser until you copy them to Claude.</span>' : "") +
+      (problem ? '<span class="error">' + esc(problem) + "</span>" : "");
 
     // A job with a choice waiting for Claude moves up into Your choices, so the click visibly lands.
     var waiting = data.waiting.filter(function (j) { return !waitingOn("key", j.key); });
+    var look = waiting.filter(function (j) { return j.status !== "new"; });
+    var fresh = waiting.filter(function (j) { return j.status === "new"; });
     var screened = data.screened.filter(function (j) { return !waitingOn("key", j.key); });
-    var k = data.counts || {};
-    document.getElementById("summary").innerHTML = "As of " + esc(day(data.as_of)) + ", " +
-      esc(new Date(data.as_of).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })) + ": " +
-      "<strong>" + waiting.length + "</strong> waiting on you, <strong>" + (k.to_do || 0) + "</strong> to do, <strong>" +
-      (k.open || 0) + "</strong> open applications" +
-      (waitingCount ? ", and <strong>" + waitingCount + "</strong> of your choices " +
-        (mode === "saving" ? "saved for Claude." : "not sent to Claude yet.") : ".");
+    var todo = data.todo;
+    var apps = data.applications;
+    var openApps = apps.filter(function (a) { return ["applied", "replied", "screen", "interview", "offer"].indexOf(a.status) >= 0; }).length;
+    var mineCount = pending().length;
+
+    var parts = [["yours", "Your choices", mineCount], ["todo", "To do", todo.length], ["look", "Worth a look", look.length],
+                 ["apps", "Applications", apps.length], ["new", "New", fresh.length + (data.more_waiting || 0)], ["out", "Screened out", screened.length]];
+    jump.hidden = false;
+    jump.innerHTML = parts.filter(function (p) { return p[0] !== "yours" || p[2]; }).map(function (p) {
+      var hot = (p[0] === "yours" || p[0] === "todo" || p[0] === "look") && p[2];
+      return '<button type="button" data-jump="' + p[0] + '" class="' + (hot ? "hot" : p[2] ? "" : "zero") + '">' + esc(p[1]) + " <b>" + p[2] + "</b></button>";
+    }).join("");
 
     var html = [yoursSection()];
-    html.push('<section aria-labelledby="h-waiting"><h2 id="h-waiting">Waiting on you <span class="count">' + waiting.length + "</span></h2>" +
-      (waiting.length ? '<div class="list">' + waiting.map(function (j) { return jobCard(j, "waiting"); }).join("") + "</div>"
-        : '<p class="empty">Nothing waiting. New jobs appear here after each check.</p>') +
-      (data.more_waiting ? '<p class="lede">And ' + data.more_waiting + " older ones not gone through yet, left off this page to keep it quick. Ask Claude to go through the new ones.</p>" : "") +
-      "</section>");
-    html.push('<section aria-labelledby="h-todo"><h2 id="h-todo">To do <span class="count">' + data.todo.length + "</span></h2>" +
-      '<p class="lede">Applications ' + ((data.tracking || {}).follow_up_after_days || 5) + " or more days old with no follow-up yet. With no reply after " +
-      ((data.tracking || {}).presume_after_days || 21) + " days, an application closes as no reply; a reply after that still counts.</p>" +
-      (data.todo.length ? '<div class="list">' + data.todo.map(todoItem).join("") + "</div>" : '<p class="empty">Nothing due.</p>') + "</section>");
-    html.push('<section aria-labelledby="h-apps"><h2 id="h-apps">Applications <span class="count">' + data.applications.length + "</span></h2>" +
-      (data.applications.length ? '<div class="apps">' + data.applications.map(appRow).join("") + "</div>"
+    html.push('<section id="s-todo" aria-labelledby="h-todo">' + head("todo", "To do", todo.length,
+      todo.length ? "Follow-ups that are due. With no reply after " + ((data.tracking || {}).presume_after_days || 21) + " days, an application closes as no reply; a reply after that still counts." : "") +
+      (todo.length ? '<div class="stack">' + todo.map(todoCard).join("") + "</div>" : '<p class="empty">Nothing due.</p>') + "</section>");
+    html.push('<section id="s-look" aria-labelledby="h-look">' + head("look", "Worth a look", look.length,
+      look.length ? "The jobs Claude thinks are worth applying to, the ones that need your call, and the ones you want." : "") +
+      (look.length ? '<div class="stack">' + look.map(jobCard).join("") + "</div>"
+        : '<p class="empty">Nothing here yet. Ask Claude to go through the new ones.</p>') + "</section>");
+    html.push('<section id="s-apps" aria-labelledby="h-apps">' + head("apps", "Applications", apps.length,
+      apps.length ? plural(openApps, "is open", "are open") + ". Press Update when you hear back." : "") +
+      (apps.length ? '<ul class="apps">' + apps.map(appRow).join("") + "</ul>"
         : '<p class="empty">No applications yet. When you apply, tell Claude or press I applied on the job.</p>') + "</section>");
+    html.push('<section id="s-new" aria-labelledby="h-new">' + head("new", "New", fresh.length,
+      fresh.length ? "Claude hasn’t gone through these yet. Say “go through the new ones” and they’ll be sorted, or mark any here." : "") +
+      (fresh.length ? '<div class="filter"><input type="search" id="filter-new" placeholder="Filter by title, company or place" value="' + esc(filter) + '" aria-label="Filter the new jobs">' +
+        '<span class="count" id="filter-count"></span></div><ul class="rows" id="new-rows">' + fresh.map(function (j) { return jobRow(j, "new"); }).join("") + "</ul>"
+        : '<p class="empty">Nothing new. New jobs appear here after each check.</p>') +
+      (data.more_waiting ? '<p class="lede">And ' + data.more_waiting + " older ones not gone through yet, left off this page to keep it quick.</p>" : "") +
+      "</section>");
     if (screened.length) {
-      html.push('<details><summary>Screened out in the last two weeks (' + screened.length + ")</summary>" +
-        '<p class="lede" style="margin-top:8px">Each with the reason. Press Want it on any you disagree with; your rules get reviewed against these.</p>' +
-        '<div class="list">' + screened.map(function (j) { return jobCard(j, "screened"); }).join("") + "</div></details>");
+      html.push('<section id="s-out" aria-labelledby="h-out"><details class="out"' + (openOut() ? " open" : "") + '><summary id="h-out">Screened out <span class="count">' + screened.length + "</span></summary>" +
+        '<p class="lede">The last two weeks, each with its reason. Press Want it anyway on any you disagree with; your weekly review looks at these.</p>' +
+        '<ul class="rows">' + screened.map(function (j) { return jobRow(j, "screened"); }).join("") + "</ul></details></section>");
     }
-    var d0 = document.querySelector("details");
-    var wasOpen = d0 && d0.open;
+
+    // Keep focus and the caret where they were (the page redraws when a choice saves or new data arrives).
+    var focused = document.activeElement && document.activeElement.id;
+    var caret = focused && document.activeElement.selectionStart;
     app.innerHTML = html.join("");
-    if (wasOpen || (open && open.kind === "job" && screened.some(function (j) { return j.key === open.ref; }))) {
-      var d = app.querySelector("details"); if (d) d.open = true;
+    if (focused && document.getElementById(focused)) {
+      var el = document.getElementById(focused);
+      el.focus();
+      try { if (caret != null) el.setSelectionRange(caret, caret); } catch (e) { /* not a text field */ }
     }
+    applyFilter();
     renderSendbar();
+  }
+
+  function openOut() {
+    var d = document.querySelector("details.out");
+    return (d && d.open) || (open && open.kind === "job" && data.screened.some(function (j) { return j.key === open.ref; }));
+  }
+
+  function applyFilter() {
+    var list = document.getElementById("new-rows");
+    if (!list) return;
+    var words = filter.toLowerCase().split(/\s+/).filter(Boolean);
+    var rows = list.querySelectorAll(".row");
+    var shown = 0;
+    Array.prototype.forEach.call(rows, function (r) {
+      var hit = words.every(function (w) { return r.getAttribute("data-search").indexOf(w) >= 0; });
+      r.hidden = !hit;
+      shown += hit ? 1 : 0;
+    });
+    var c = document.getElementById("filter-count");
+    if (c) c.textContent = words.length ? "Showing " + shown + " of " + rows.length : "";
   }
 
   // Opened from the folder, a bar at the bottom keeps the one step that sends choices in reach.
@@ -435,7 +611,8 @@ details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; 
   function labelFor(kind, ref) {
     var list = kind === "job" ? data.waiting.concat(data.screened) : data.applications;
     var x = list.filter(function (i) { return (kind === "job" ? i.key : i.id) === ref; })[0] || {};
-    return { num: x.num || null, label: (x.company || "") + ", " + (x.title || x.role || "") };
+    var title = kind === "job" ? cleanTitle(x).title : x.role;
+    return { num: x.num || null, label: (x.company || "") + ", " + (title || "") };
   }
 
   function saveLocal() {
@@ -477,6 +654,8 @@ details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; 
       toast("Noted: " + (CHOSEN[c.action] || [c.action])[0] + (c.num ? ", #" + c.num : "") + ". Use Copy my choices to send it to Claude.");
     }
     render();
+    var yours = document.getElementById("s-yours");
+    if (yours) yours.scrollIntoView({ block: "start", behavior: "smooth" });
   }
 
   function undo(id) {
@@ -491,10 +670,18 @@ details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; 
   document.addEventListener("click", function (e) {
     var t = e.target.closest("button");
     if (!t) return;
-    if (t.hasAttribute("data-open")) {
-      open = { kind: t.getAttribute("data-kind"), ref: t.getAttribute("data-ref"), action: t.getAttribute("data-open") };
+    if (t.hasAttribute("data-jump")) {
+      var target = document.getElementById("s-" + t.getAttribute("data-jump"));
+      if (target) {
+        if (target.querySelector("details.out")) target.querySelector("details.out").open = true;
+        target.scrollIntoView({ block: "start", behavior: "smooth" });
+      }
+    } else if (t.hasAttribute("data-open")) {
+      var from = t.closest("section");
+      open = { kind: t.getAttribute("data-kind"), ref: t.getAttribute("data-ref"), action: t.getAttribute("data-open"),
+               from: from ? from.id : "" };
       draft = {}; problem = ""; render();
-      var first = document.querySelector(".panel select, .panel input"); if (first) first.focus();
+      var first = document.querySelector(".panel select, .panel input, .panel .choices-menu button"); if (first) first.focus();
     } else if (t.hasAttribute("data-save")) {
       save();
     } else if (t.hasAttribute("data-cancel")) {
@@ -516,17 +703,21 @@ details .item { border: 0; border-top: 1px solid var(--line); border-radius: 0; 
     }
   });
   document.addEventListener("input", function (e) {
+    if (e.target.id === "filter-new") {
+      filter = e.target.value;
+      try { localStorage.setItem(FILTER, filter); } catch (err) { /* remembered only for now */ }
+      applyFilter();
+      return;
+    }
     var f = e.target.getAttribute && e.target.getAttribute("data-field");
     if (f) draft[f] = e.target.value;
   });
   document.addEventListener("change", function (e) {
     var f = e.target.getAttribute("data-field");
-    if (f) { draft[f] = e.target.value; return; }
-    var app = e.target.getAttribute("data-what");
-    if (app) {
-      open = e.target.value ? { kind: "app", ref: app, action: e.target.value } : null;
-      draft = {}; problem = ""; render();
-    }
+    if (f) draft[f] = e.target.value;
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && open) { open = null; draft = {}; render(); }
   });
 
   // ---------------------------------------------------------------- connecting to the page's storage
