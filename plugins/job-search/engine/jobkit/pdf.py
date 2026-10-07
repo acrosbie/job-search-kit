@@ -1,5 +1,5 @@
-"""A resume as a PDF, standard library only, laid out like the Word file (docx.py): one column of
-real text that hiring systems can read, US Letter, Helvetica.
+"""A resume as a PDF, standard library only, in the look resume_style.py sets out and the Word file
+(docx.py) shares: one column of real text that hiring systems can read, US Letter, Helvetica.
 
 Helvetica is one of the standard fonts every PDF reader has, so nothing is embedded. It draws the
 Western European letters (Windows code page 1252). A resume with any other character can't be made
@@ -10,6 +10,8 @@ survives any route that copies files as text into the user's folder.
 """
 
 import re
+
+from .resume_style import ACCENT, HAIRLINE, INK, MUTED, Style, rgb
 
 
 def _widths(text):
@@ -48,7 +50,6 @@ FONTS = {"regular": ("F1", "Helvetica", REGULAR), "bold": ("F2", "Helvetica-Bold
 PAGE_W, PAGE_H = 612, 792  # US Letter, in points
 MARGIN_X, MARGIN_TOP, MARGIN_BOTTOM = 50.4, 43.2, 43.2  # 0.7 and 0.6 inch, as in the Word file
 TEXT_W = PAGE_W - 2 * MARGIN_X
-GRAY = "0.35"
 
 
 class CantDraw(ValueError):
@@ -126,68 +127,87 @@ class _Pages:
             self.pages.append([])
             self.y = PAGE_H - MARGIN_TOP
 
-    def text(self, x, size, font, text, gray=False, leading=None):
-        """One line of text whose top is at the current position; moves down by `leading`."""
-        leading = leading or size * 1.28
+    def draw(self, x, base, size, font, text, color=INK, tracking=0.0):
+        """Text with its baseline at `base`, without moving down."""
+        tc = f"{tracking:g} Tc " if tracking else ""
+        self.pages[-1].append(f"q {rgb(color)} rg BT /{FONTS[font][0]} {size:.2f} Tf {tc}{x:.2f} {base:.2f} Td "
+                              f"{_literal(text)} Tj ET Q")
+
+    def text(self, x, size, font, text, leading, color=INK, tracking=0.0):
+        """One line of text whose top is at the current position; moves down by `leading`. Returns
+        its baseline."""
         self.room(leading)
         base = self.y - size
-        op = f"BT /{FONTS[font][0]} {size:g} Tf {x:.2f} {base:.2f} Td {_literal(text)} Tj ET"
-        self.pages[-1].append(f"{GRAY} g {op} 0 g" if gray else op)
+        self.draw(x, base, size, font, text, color, tracking)
         self.y -= leading
         return base
 
-    def rule(self, y):
-        self.pages[-1].append(f"q 0.55 G 0.6 w {MARGIN_X:.2f} {y:.2f} m {PAGE_W - MARGIN_X:.2f} {y:.2f} l S Q")
+    def rule(self, y, color, weight):
+        self.pages[-1].append(f"q {rgb(color)} RG {weight:g} w {MARGIN_X:.2f} {y:.2f} m {PAGE_W - MARGIN_X:.2f} {y:.2f} l S Q")
 
 
-def _lay_out(blocks):
+def _lay_out(blocks, st):
+    """(each page's drawing operations, how full the last page is, from 0 to 1)."""
     p = _Pages()
+    header_done, first_in_section, seen_heading = False, False, False
     for b in blocks:
         kind = b[0]
+        if kind not in ("name", "contact") and not header_done:
+            p.y -= 4
+            p.rule(p.y, ACCENT, st.header_rule)
+            p.y -= st.after_header
+            header_done = True
         if kind == "name":
-            p.text(MARGIN_X, 18, "bold", b[1], leading=24)
+            p.text(MARGIN_X, st.name, "bold", b[1], leading=st.name * 1.22, color=ACCENT)
         elif kind == "contact":
-            for line in wrap(b[1], "regular", 9.5, TEXT_W):
-                p.text(MARGIN_X, 9.5, "regular", line, gray=True, leading=12.5)
+            for line in wrap(b[1], "regular", st.contact, TEXT_W):
+                p.text(MARGIN_X, st.contact, "regular", line, leading=st.contact * 1.45, color=MUTED)
         elif kind == "heading":
-            p.y -= 9
-            p.room(13 + 6 + 3 * 13)  # keep a heading with what follows it
-            base = p.text(MARGIN_X, 10.5, "bold", b[1].upper(), leading=13)
-            p.rule(base - 3.5)
-            p.y -= 5
+            if seen_heading:  # the first one sits under the header rule's own gap
+                p.y -= st.before_section
+            seen_heading = True
+            p.room(st.heading * 1.5 + st.after_heading + 3 * st.body * st.leading)  # keep a heading with what follows
+            base = p.text(MARGIN_X, st.heading, "bold", b[1].upper(), leading=st.heading * 1.5, color=ACCENT,
+                          tracking=st.tracking)
+            p.rule(base - 4, HAIRLINE, 0.6)
+            p.y -= st.after_heading
+            first_in_section = True
         elif kind == "job":
             _, title, place, dates = b
-            p.y -= 5
-            p.room(13 + 12.5 + 13)  # keep a job's first lines together
-            room = TEXT_W - (width(dates, "regular", 9.5) + 14 if dates else 0)
-            first = True
-            for line in wrap(title, "bold", 10.5, room):
-                top = p.y
-                p.text(MARGIN_X, 10.5, "bold", line, leading=13)
-                if first and dates:
-                    x = PAGE_W - MARGIN_X - width(dates, "regular", 9.5)
-                    p.pages[-1].append(f"{GRAY} g BT /F1 9.5 Tf {x:.2f} {top - 10.5:.2f} Td {_literal(dates)} Tj ET 0 g")
-                first = False
-            for line in wrap(place, "italic", 10, TEXT_W) if place else []:
-                p.text(MARGIN_X, 10, "italic", line, leading=12.5)
-            p.y -= 1.5
+            if not first_in_section:
+                p.y -= st.before_job
+            p.room(st.title * 1.35 + st.place * 1.45 + st.body * st.leading)  # keep a job's first lines together
+            room = TEXT_W - (width(dates, "regular", st.dates) + 14 if dates else 0)
+            for i, line in enumerate(wrap(title, "bold", st.title, room)):
+                base = p.text(MARGIN_X, st.title, "bold", line, leading=st.title * 1.35)
+                if i == 0 and dates:
+                    p.draw(PAGE_W - MARGIN_X - width(dates, "regular", st.dates), base, st.dates, "regular", dates, MUTED)
+            for line in wrap(place, "regular", st.place, TEXT_W) if place else []:
+                p.text(MARGIN_X, st.place, "regular", line, leading=st.place * 1.45, color=MUTED)
+            p.y -= 2
+            first_in_section = False
         elif kind == "bullet":
-            for i, line in enumerate(wrap(b[1], "regular", 10, TEXT_W - 14)):
+            lead = st.body * st.leading
+            for i, line in enumerate(wrap(b[1], "regular", st.body, TEXT_W - 12)):
                 if i == 0:  # the mark first, so text read from the file comes in reading order
-                    p.room(12.8)
-                    p.pages[-1].append(f"BT /F1 10 Tf {MARGIN_X + 3:.2f} {p.y - 10:.2f} Td {_literal(chr(8226))} Tj ET")
-                p.text(MARGIN_X + 14, 10, "regular", line, leading=12.8)
-            p.y -= 1.5
+                    p.room(lead)
+                    p.draw(MARGIN_X + 1.5, p.y - st.body, st.body, "regular", chr(8226), ACCENT)
+                p.text(MARGIN_X + 12, st.body, "regular", line, leading=lead)
+            p.y -= st.after_bullet
+            first_in_section = False
         else:
-            for line in wrap(b[1], "regular", 10, TEXT_W):
-                p.text(MARGIN_X, 10, "regular", line, leading=12.8)
-            p.y -= 3
-    return p.pages
+            for line in wrap(b[1], "regular", st.body, TEXT_W):
+                p.text(MARGIN_X, st.body, "regular", line, leading=st.body * st.leading)
+            p.y -= st.after_para
+            first_in_section = False
+    if not header_done:
+        p.y -= 4
+        p.rule(p.y, ACCENT, st.header_rule)
+    fill = (PAGE_H - MARGIN_TOP - p.y) / (PAGE_H - MARGIN_TOP - MARGIN_BOTTOM)
+    return p.pages, fill
 
 
-def build(blocks, title="", author=""):
-    """(the .pdf file's bytes, its number of pages). Raises CantDraw for a character Helvetica
-    can't draw."""
+def _check(blocks):
     bad = set()
     for b in blocks:
         for part in b[1:]:
@@ -198,7 +218,49 @@ def build(blocks, title="", author=""):
                     bad.add(c)
     if bad:
         raise CantDraw(sorted(bad))
-    pages = _lay_out(blocks)
+
+
+GROW = (1.03, 1.06, 1.09)  # body type up to about 11pt
+SPREAD = (1.2, 1.4, 1.6)
+TIGHTEN = ((1.0, 0.9), (0.97, 0.9), (0.97, 0.8), (0.94, 0.8))  # body type down to about 9.5pt
+FULL = 0.93
+
+
+def fit(blocks):
+    """The Style that fills the page best. A resume that fits on one page grows its type, then its
+    gaps, while it stays on one page and no more than 93% full. One that spills onto a second page
+    by less than a third of it tightens until it fits on one. A longer one keeps the normal size."""
+    _check(blocks)
+
+    def measure(style):
+        pages, fill = _lay_out(blocks, style)
+        return len(pages), fill
+
+    best = Style()
+    pages, fill = measure(best)
+    if pages == 1:
+        for scale in GROW:
+            n, f = measure(Style(scale))
+            if n > 1 or f > FULL:
+                break
+            best = Style(scale)
+        for space in SPREAD:
+            n, f = measure(Style(best.scale, space))
+            if n > 1 or f > FULL:
+                break
+            best = Style(best.scale, space)
+    elif pages == 2 and fill < 0.33:
+        for scale, space in TIGHTEN:
+            if measure(Style(scale, space))[0] == 1:
+                return Style(scale, space)
+    return best
+
+
+def build(blocks, title="", author="", style=None):
+    """(the .pdf file's bytes, its number of pages). Raises CantDraw for a character Helvetica
+    can't draw. Without a style, the one fit() picks."""
+    _check(blocks)
+    pages, _ = _lay_out(blocks, style or fit(blocks))
 
     objects = []  # object n is objects[n - 1]
 

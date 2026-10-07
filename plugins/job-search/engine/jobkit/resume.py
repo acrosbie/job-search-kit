@@ -28,6 +28,7 @@ import os
 import re
 
 from . import docx, pdf, store
+from .resume_style import Style
 from .errors import BadFile, NotFound, Refused
 
 ABOUT = os.path.join("profile", "about-me.md")
@@ -372,10 +373,14 @@ def render(root, path, clock, for_key=""):
     base = os.path.join(os.path.dirname(os.path.abspath(path)),
                         (re.sub(r'[<>:"/\\|?*\x00-\x1f]', "", name).strip() or "My") + " resume")
     title = f"{name} resume"
-    _write_bytes(base + ".docx", docx.build(lay, title, name))
+    try:  # the size that fills the page, measured on the PDF's layout; the Word file uses the same
+        style = pdf.fit(lay)
+    except pdf.CantDraw:
+        style = Style()
+    _write_bytes(base + ".docx", docx.build(lay, title, name, style))
     files, pages, warnings = [_rel(root, base + ".docx")], 0, []
     try:
-        data, pages = pdf.build(lay, title, name)
+        data, pages = pdf.build(lay, title, name, style)
     except pdf.CantDraw as e:
         warnings.append(f"no PDF: it can't show {' '.join(e.chars)}. The Word file can be saved as a PDF from Word")
     else:
@@ -383,7 +388,7 @@ def render(root, path, clock, for_key=""):
         files.append(_rel(root, base + ".pdf"))
     record = {"source": _rel(root, path), "for": for_key, "company": posting.get("company", ""),
               "role": posting.get("title", ""), "made_at": clock.stamp(), "source_digest": _digest(text),
-              "files": files, "pages": pages}
+              "files": files, "pages": pages, "style": {"scale": style.scale, "space": style.space}}
     rows = [r for r in records(root) if r.get("source") != record["source"]] + [record]
     store.Folder(root).write_json(os.path.join(root, RECORDS_JSON), {"resumes": rows})
     return {**record, "lines": result["lines"], "warnings": warnings}

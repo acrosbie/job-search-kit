@@ -296,6 +296,72 @@ class PdfTest(unittest.TestCase):
         self.assertEqual(cm.exception.chars, ["Ł", "京", "東"])
 
 
+class LookTest(unittest.TestCase):
+    """The look both files share (resume_style.py), and sizing it to fill the page."""
+
+    def setUp(self):
+        from jobkit import pdf
+        self.pdf = pdf
+        self.blocks = resume.blocks(resume.parse_source(SAMPLE))
+
+    def lay_out(self, blocks, style):
+        pages, fill = self.pdf._lay_out(blocks, style)
+        return len(pages), fill
+
+    def with_bullets(self, n):
+        return self.blocks + [("bullet", f"Reconciled account {i} and closed the month on time, with the schedules ready for review.")
+                              for i in range(n)]
+
+    def test_a_short_resume_grows_to_fill_its_page(self):
+        from jobkit.resume_style import Style
+        style = self.pdf.fit(self.blocks)
+        self.assertGreater(style.scale, 1.0)
+        pages, fill = self.lay_out(self.blocks, style)
+        self.assertEqual(pages, 1)
+        self.assertLessEqual(fill, self.pdf.FULL)
+        self.assertGreater(fill, self.lay_out(self.blocks, Style())[1])
+
+    def test_a_slight_spill_tightens_onto_one_page(self):
+        from jobkit.resume_style import Style
+        n = next(n for n in range(10, 80) if self.lay_out(self.with_bullets(n), Style())[0] == 2)
+        blocks = self.with_bullets(n)
+        style = self.pdf.fit(blocks)
+        self.assertLess(style.scale, 1.0 + 1e-9)
+        self.assertEqual(self.lay_out(blocks, style)[0], 1)
+
+    def test_a_long_career_keeps_the_normal_size(self):
+        style = self.pdf.fit(self.with_bullets(120))
+        self.assertEqual((style.scale, style.space), (1.0, 1.0))
+        self.assertGreater(self.lay_out(self.with_bullets(120), style)[0], 1)
+
+    def test_the_pdf_draws_in_the_accent(self):
+        from jobkit.resume_style import ACCENT, rgb
+        data, _ = self.pdf.build(self.blocks, "Morgan Reyes resume", "Morgan Reyes")
+        self.assertIn(f"q {rgb(ACCENT)} rg BT /F2".encode(), data)  # the name and the headings
+        self.assertIn(f"q {rgb(ACCENT)} RG".encode(), data)  # the rule under the name
+
+    def test_the_word_file_carries_the_same_look(self):
+        import io
+        import zipfile
+        from jobkit import docx
+        from jobkit.resume_style import ACCENT, HAIRLINE, Style
+        style = Style(1.06, 1.2)
+        data = docx.build(self.blocks, "Morgan Reyes resume", "Morgan Reyes", style)
+        with zipfile.ZipFile(io.BytesIO(data)) as z:
+            styles = z.read("word/styles.xml").decode("utf-8")
+            body = z.read("word/document.xml").decode("utf-8")
+            numbering = z.read("word/numbering.xml").decode("utf-8")
+        title = styles[styles.index('w:styleId="Title"'):styles.index('w:styleId="Heading1"')]
+        heading = styles[styles.index('w:styleId="Heading1"'):styles.index('w:styleId="ListBullet"')]
+        self.assertIn(f'<w:color w:val="{ACCENT}"/>', title)
+        self.assertIn(f'<w:sz w:val="{round(style.name * 2)}"/>', title)
+        for part in ("<w:caps/>", f'<w:color w:val="{ACCENT}"/>', '<w:spacing w:val="22"/>', f'w:color="{HAIRLINE}"'):
+            self.assertIn(part, heading)
+        self.assertIn(f'<w:color w:val="{ACCENT}"/>', numbering)  # the bullet marks
+        self.assertEqual(body.count(f'w:color="{ACCENT}"/></w:pBdr>'), 1)  # one rule, under the contact lines
+        self.assertEqual(docx.text_of(data), SAMPLE_PARAGRAPHS)
+
+
 class CommandTest(unittest.TestCase):
     """resume check and resume render, through the command line, in a folder with Morgan's profile and
     the saved jobs of test_scan's made-up boards."""
@@ -341,6 +407,7 @@ class CommandTest(unittest.TestCase):
                           " ".join(pdf.text_of(f.read())))
         [rec] = resume.records(self.root)
         self.assertEqual((rec["source"], rec["for"]), ("resume/main.md", ""))
+        self.assertGreater(rec["style"]["scale"], 1.0)  # a short resume, grown to fill its page
 
     def test_render_refuses_a_line_that_doesnt_trace(self):
         self.write(SAMPLE + "- Designed and tested SOX controls.\n")
