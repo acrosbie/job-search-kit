@@ -46,6 +46,7 @@ So the engine checks every line against `about-me.md` before it makes a file.
 
    Never accuse. "This says a team of 8. You told me 4 direct reports. Which is right?"
 8. **Ask about each one, one question at a time,** the way setup asks about their background. Then ask the direct questions about numbers.
+   - **A sum of money, a percentage or another measured result needs more than a yes.** Ask how it was measured ("Where does the $250K come from?"), and record their answer with it. If they can't say, it goes under Not confirmed yet. That's how the reference search's unsourceable numbers were caught.
 9. **Record each answer in `about-me.md` as soon as they give it,** before you ask the next question. Don't save them up for the end: in the first test run, every answer was given and none was saved. Use its sections, as setup does:
    - **Confirmed:** the claim in their words, with "<first name> said so, <date>: '<their words>'".
    - **Corrected:** Was (the resume's words, quoted, with "(resume)"), Now (what's true), Why (their words and the date). Skip it if `about-me.md` already has that correction.
