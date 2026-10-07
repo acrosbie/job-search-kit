@@ -56,6 +56,19 @@ class VersionTest(unittest.TestCase):
         self.assertEqual(engine.split(".")[:2], plugin.split(".")[:2])
 
 
+class OnRequestTest(unittest.TestCase):
+    def test_only_the_resume_skill_makes_a_resume(self):
+        # Resume help is on request only: nothing is made because a job was marked worth applying.
+        skills = os.path.join(REPO, "plugins", "job-search", "skills")
+        for name in sorted(os.listdir(skills)):
+            text = read(os.path.join(skills, name, "SKILL.md"))
+            if name == "resume":
+                self.assertIn("resume render", text)
+            else:
+                self.assertNotIn("resume render", text, name)
+                self.assertNotIn("resume check", text, name)
+
+
 class PrivacyTest(unittest.TestCase):
     # The reference system's own file names may appear only where the reference format is the subject:
     # the tools that read it, the tests of those tools, this file, and the docs that explain them.
