@@ -168,6 +168,19 @@ class ImportTest(unittest.TestCase):
                          [("not_a_fit", "claude"), ("worth_applying", "claude"), ("not_a_fit", "user")])
         self.assertEqual((d[0]["rule"], d[2]["reverses"]), ("rule_11", "worth_applying"))
 
+    def test_a_title_with_a_bar_in_it(self):
+        # Found moving the reference search onto the kit: a board's title "REQ-7 | Support Lead" split
+        # into two cells, and the row was skipped.
+        rows = import_reference.decisions(
+            "| 2026-09-23 | Globex | REQ-7 | Support Lead | REJECT | Rule 6: \"on-site\" | himalayas-globex-req-7 |\n"
+            "| 2026-09-23 | Globex | Support Lead | MAYBE | Question: remote? | page: maybe | himalayas-globex-2 |\n"
+            "| 2026-09-24 | Globex | Support Lead | CLOSED | the posting came down | himalayas-globex-3 |\n")
+        self.assertEqual([(r["title"], r["verdict"], r["reason"], r["key"]) for r in rows],
+                         [("REQ-7 | Support Lead", "not_a_fit", 'Rule 6: "on-site"', "himalayas-globex-req-7"),
+                          ("Support Lead", "your_call", "Question: remote? | page: maybe", "himalayas-globex-2"),
+                          ("Support Lead", "closed", "the posting came down", "himalayas-globex-3")])
+        self.assertEqual(rows[0]["rule"], "rule_6")
+
     def test_refuses_to_write_inside_the_repo(self):
         self.assertEqual(self.run_tool(os.path.join(import_reference.REPO, "tmp-personal")), 3)
         self.assertFalse(os.path.exists(os.path.join(import_reference.REPO, "tmp-personal")))

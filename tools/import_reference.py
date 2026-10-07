@@ -164,7 +164,19 @@ def postings(seen, descriptions_from, out):
     return kit, copied
 
 
-_LOG_ROW = re.compile(r"^\|\s*(\d{4}-\d{2}-\d{2})\s*\|([^|]*)\|([^|]*)\|\s*([A-Z]+)\s*\|(.*)\|\s*(\S+)\s*\|\s*$")
+def _log_row(line):
+    """A triage-log row as (date, company, title, verdict, reason, key), or None. Found by the verdict
+    cell's value rather than its place, because a job title can itself contain a "|"."""
+    if not re.match(r"^\|\s*\d{4}-\d{2}-\d{2}\s*\|", line):
+        return None
+    cells = [c.strip() for c in line.strip().strip("|").split("|")]
+    if len(cells) < 6:
+        return None
+    known = [i for i in range(3, len(cells) - 1) if cells[i] in VERDICT]
+    other = [i for i in range(3, len(cells) - 1) if re.fullmatch(r"[A-Z]+", cells[i])]  # CLOSED, say
+    for i in (known or other)[:1]:
+        return cells[0], cells[1], " | ".join(cells[2:i]), cells[i], " | ".join(cells[i + 1:-1]), cells[-1]
+    return None
 
 
 def decisions(log_text):
@@ -172,10 +184,10 @@ def decisions(log_text):
     is the user's decision; every other row was Claude's."""
     rows = []
     for line in log_text.splitlines():
-        m = _LOG_ROW.match(line)
+        m = _log_row(line)
         if not m:
             continue
-        date, company, title, verdict, why, key = m.groups()
+        date, company, title, verdict, why, key = m
         why = why.strip()
         row = {"date": date, "key": key, "company": company.strip(), "title": title.strip(),
                "verdict": VERDICT.get(verdict, verdict.lower()), "reason": why,
