@@ -193,7 +193,7 @@ Ask for a daily check and a weekly review, and Claude sets them up as scheduled 
 - **Apply, email or message anyone for you.** It drafts; you send.
 - **Say anything about you that you haven't confirmed.** Resumes, prep sheets and drafts are checked line by line against your own confirmed facts. Inflated or unconfirmed claims are flagged, never smoothed over.
 - **Guess your odds.** No predicted response rates, applicant counts or chances of an offer.
-- **Send your data anywhere.** Everything about you lives in one folder on your computer. The kit's only requests are to public job boards. This repository never contains anyone's personal data, and its tests check for that.
+- **Send your data anywhere.** Everything about you lives in one folder on your computer. The one exception is your choice: the jobs page can live in your own Claude account, where it keeps a private copy of your jobs list and your clicks until Claude records them in your folder (or keep it as a file in the folder only). Otherwise the kit's only requests are to public job boards. This repository never contains anyone's personal data, and its tests check for that.
 - **Read LinkedIn by itself.** You paste the posting; it works from that.
 - **Change a rule behind your back.** Every change is tried on your saved jobs and waits for your yes.
 
