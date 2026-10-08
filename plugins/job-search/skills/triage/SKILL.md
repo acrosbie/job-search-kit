@@ -30,9 +30,13 @@ Read its description file (`description_file`) **in full**. Then:
    - **Not a fit:** name the rule and quote the line that fired it.
 6. **Record it:**
    ```
-   python3 "<folder>/.kit/engine/run.py" mark KEY <worth_applying|your_call|not_a_fit> --by claude --note "<note>" --folder "<folder>"
+   python3 "<folder>/.kit/engine/run.py" mark KEY not_a_fit --by claude --rule N --quote "<the posting's words>" --note "<note>" --folder "<folder>"
+   python3 "<folder>/.kit/engine/run.py" mark KEY your_call --by claude --quote "<the posting's words>" --note "<note>" --folder "<folder>"
+   python3 "<folder>/.kit/engine/run.py" mark KEY worth_applying --by claude --note "<note>" --folder "<folder>"
    ```
-   The note is one line. For Not a fit: `Rule N (<plain name>): "<quoted line>"`. For Your call: `Question: <the question>`. For Worth applying: `Tailor: <the two changes, briefly>`.
+   - `--rule` is the rule's number in rules.md. `--quote` is the line that decides it, copied word for word from the saved posting (put `...` between two parts). The engine checks the quote is in the posting and refuses it if not: then copy it again from `show KEY`. Never paraphrase it.
+   - The note is one line. For Not a fit: `Rule N (<plain name>): "<quoted line>"`. For Your call: `Question: <the question>`. For Worth applying: `Tailor: <the two changes, briefly>`.
+   - Refused because the description couldn't be read yet (`unread`)? Leave it for the next scan, and say so in your report.
 
    **Exit code 3 means the user already decided this posting. Their decision stands:** leave it and don't mention it again. Never mark anything `applied`: that is recorded only when the user says they applied (the track skill).
 
@@ -59,7 +63,7 @@ Then keep their jobs page current (`${CLAUDE_PLUGIN_ROOT}/reference/jobs-page.md
 - Record each one with `--by user` and their words as the note. Their verdict overrides Claude's, and the engine notes a reversal.
 - **"I applied" is recorded with the track skill's "I applied to …" steps** (`run.py apply`), which ask how they applied and whether it's a top pick. Only once they say they have applied. Never assume it.
 - **A resume for a job** ("tailor my resume for #12") is the resume skill's, and only when they ask. Never make one because a job is Worth applying.
-- When they give a reason that sounds like a rule ("too far", "no more contract work"), write it in the note as `candidate rule: <their words>`. Don't change any rule now: the weekly review brings it up. If they ask to change the rule now, use the tune skill, which shows what the change would do to their saved jobs and saves it only after their yes.
+- When they give a reason that sounds like a rule ("too far", "no more contract work"), add `--candidate-rule` and put their words in the note. Don't change any rule now: the weekly review brings it up. If they ask to change the rule now, use the tune skill, which shows what the change would do to their saved jobs and saves it only after their yes.
 
 ## Don't
 

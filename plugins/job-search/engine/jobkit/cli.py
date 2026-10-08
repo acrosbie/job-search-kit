@@ -78,7 +78,8 @@ def cmd_mark(a):
         raise Refused("record an application with apply KEY --channel ... --top-pick ..., after asking the user how "
                       "they applied and whether it's a top pick")
     _out(verdicts.mark(a.folder, a.key, a.status, a.by, note=a.note, force=a.force, clock=_clock(a.folder),
-                       record_only=a.record_only))
+                       record_only=a.record_only, rule=a.rule or "", quote=a.quote or "", evidence=a.by == "claude",
+                       candidate_rule=a.candidate_rule))
     return 0
 
 
@@ -321,6 +322,9 @@ def parser():
     s.add_argument("--note", default="")
     s.add_argument("--by", choices=("claude", "user"), required=True)
     s.add_argument("--force", action="store_true", help="overwrite the user's own decision (only when they ask)")
+    s.add_argument("--rule", help="Claude's Not a fit: the number of the rule in rules.md it rests on")
+    s.add_argument("--quote", help="Claude's Not a fit or Your call: the posting's own words it rests on")
+    s.add_argument("--candidate-rule", action="store_true", help="the user's reason sounds like a rule, for the review")
     s.add_argument("--record-only", action="store_true",
                    help="log Claude's verdict without changing the posting (a job the user already applied to)")
     s.set_defaults(func=cmd_mark)

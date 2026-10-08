@@ -170,3 +170,59 @@ class DeclineAndRequeueTest(RuleBase):
 if __name__ == "__main__":
     import unittest
     unittest.main()
+
+
+class TriageEvidenceTest(RuleBase):
+    """Claude's Not a fit names its rule and quotes the posting; the engine checks both. Found in an
+    audit: the weekly review grouped overturns by the note's wording, so a note worded differently
+    dropped out of it, and nothing showed the posting had been read."""
+
+    def mark(self, *args):
+        import contextlib
+        import io
+        from jobkit import cli
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()) as err:
+            code = cli.main(["mark", "--folder", self.root, *args])
+        return code, err.getvalue()
+
+    def test_a_not_a_fit_needs_its_rule_and_a_quote_from_the_posting(self):
+        k = "greenhouse-acme-9"
+        self.assertIn("--rule", self.mark(k, "not_a_fit", "--by", "claude")[1])
+        self.assertIn("--quote", self.mark(k, "not_a_fit", "--by", "claude", "--rule", "2")[1])
+        code, err = self.mark(k, "not_a_fit", "--by", "claude", "--rule", "2", "--quote", "Answer tickets all day")
+        self.assertEqual(code, 3)
+        self.assertIn("isn't in the posting", err)
+        self.assertIn("no rule 7", self.mark(k, "not_a_fit", "--by", "claude", "--rule", "7", "--quote", "Run support operations")[1])
+        code, _ = self.mark(k, "not_a_fit", "--by", "claude", "--rule", "Rule 2", "--quote", "“run support operations.”",
+                            "--note", "Owns the queue")
+        self.assertEqual(code, 0)
+        row = self.folder.read_decisions()[-1]
+        self.assertEqual((row["rule"], row["quote"]), ("rule 2", "“run support operations.”"))
+
+    def test_a_your_call_quotes_and_a_worth_applying_needs_neither(self):
+        self.assertEqual(self.mark("greenhouse-acme-9", "your_call", "--by", "claude", "--note", "Question: remote?")[0], 3)
+        self.assertEqual(self.mark("greenhouse-acme-3", "worth_applying", "--by", "claude", "--note", "Tailor: x")[0], 0)
+
+    def test_the_review_groups_by_the_rule_named_however_the_note_reads(self):
+        from jobkit import review
+        for k in ("greenhouse-acme-3", "greenhouse-acme-9"):
+            text = self.folder.read_description(k).split("---", 1)[1].strip().splitlines()[0]
+            self.assertEqual(self.mark(k, "not_a_fit", "--by", "claude", "--rule", "2", "--quote", text,
+                                       "--note", "It owns the queue, so no")[0], 0)
+            self.assertEqual(self.mark(k, "worth_applying", "--by", "user", "--candidate-rule", "--note", "I'd do it")[0], 0)
+        out = review.build(self.root, CLOCK)
+        g = [x for x in out["disagreements"] if x["rule"] == "rule 2"]
+        self.assertEqual(len(g), 1)
+        self.assertLessEqual({"greenhouse-acme-3", "greenhouse-acme-9"}, {o["key"] for o in g[0]["overturns"]})
+        self.assertEqual(sorted(c["key"] for c in out["candidate_rules"]), ["greenhouse-acme-3", "greenhouse-acme-9"])
+
+    def test_claude_leaves_an_applied_job_applied(self):
+        # Applied with no decision of the user's logged: brought over from an older tracker.
+        state = self.folder.load_postings()
+        state["postings"]["greenhouse-acme-3"]["status"] = "applied"
+        self.folder.save_postings(state)
+        code, err = self.mark("greenhouse-acme-3", "worth_applying", "--by", "claude", "--note", "Tailor: x")
+        self.assertEqual(code, 3)
+        self.assertIn("--record-only", err)
+        self.assertEqual(self.mark("greenhouse-acme-3", "worth_applying", "--by", "claude", "--record-only")[0], 0)
+        self.assertEqual(self.folder.load_postings()["postings"]["greenhouse-acme-3"]["status"], "applied")

@@ -39,7 +39,7 @@ The user can stop at any point ("let's stop there"). Say what's left, and pick i
 
 - **Each group in `disagreements` with `propose: true`:** say which rule, how many times they overturned it since it last changed, and their words, quoted. Then propose a rewrite through the tune skill, which replays it and asks.
 - **Groups without `propose`:** mention them only if there's something to learn ("You overturned the location rule once, for a hybrid job in Austin"). One overturn isn't a pattern yet.
-- **`candidate_rules`:** the reasons they gave when deciding jobs ("candidate rule: too far"). Read each back, and ask whether it should become a rule. If yes, go through the tune skill.
+- **`candidate_rules`:** the reasons they gave when deciding jobs that sounded like a rule ("too far"). Read each back, and ask whether it should become a rule. If yes, go through the tune skill.
 - **A rewrite they turned down in the last four weeks** (`declined_recently`) isn't raised again.
 
 ### 2. Spot-check the scan

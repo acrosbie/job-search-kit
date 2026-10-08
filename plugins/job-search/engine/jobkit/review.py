@@ -55,6 +55,8 @@ def rule_of(d):
     if d.get("by") == "rule":
         return d.get("rule", "")
     if d.get("by") == "claude":
+        if d.get("verdict") == "not_a_fit" and re.fullmatch(r"rule \d+", d.get("rule") or ""):
+            return d["rule"]  # named when it was marked (mark --rule)
         m = re.match(r"\s*Rule (\d+)(?!\d)", d.get("reason") or "")
         if d.get("verdict") == "not_a_fit" and m:
             return f"rule {m.group(1)}"
@@ -230,7 +232,7 @@ def build(root, clock, monthly=None):
         "candidate_rules": [{"key": d.get("key"), "company": d.get("company", ""), "title": d.get("title", ""),
                              "their_words": d.get("reason", ""), "date": d.get("date", "")}
                             for d in decisions if d.get("by") == "user" and d.get("date", "") >= since
-                            and "candidate rule:" in (d.get("reason") or "").lower()],
+                            and (d.get("candidate_rule") or "candidate rule:" in (d.get("reason") or "").lower())],
         "rule_activity": activity(decisions, names, retired, first_day, today),
         "spot_check": spot_check(decisions, postings, since, today),
         "missed_titles": [{"title": t["title"], "company": t["board"], "location": t["location"], "count": t["count"]}

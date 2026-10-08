@@ -42,7 +42,7 @@ Quote every path: folder names often contain spaces.
 | `scan` | Read every board in `profile/companies.toml` and save what's new. Prints a JSON summary |
 | `queue` | The postings waiting for triage, each with its cooldown facts |
 | `show KEY` | One saved posting, as text |
-| `mark KEY STATUS --by claude\|user --note "..."` | Record a verdict: `worth_applying`, `your_call`, `not_a_fit` or `skipped` |
+| `mark KEY STATUS --by claude\|user --note "..."` | Record a verdict: `worth_applying`, `your_call`, `not_a_fit` or `skipped`. Claude's Not a fit adds `--rule N --quote "..."`, and Your call `--quote "..."`: the posting's words, which the engine checks are in it |
 | `add-link URL` | Save a pasted link to a job board the engine reads, exactly as a scan would |
 | `add FILE` | Save a posting the user found, from a file with the scan's header |
 | `apply KEY` | The user applied (only ever when they say so): records the application and marks the posting applied |
