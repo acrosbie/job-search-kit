@@ -44,7 +44,7 @@ class ScheduleTest(ScanBase):
 
     def overdue(self, every, when):
         configure.set_value(self.root, "schedule.scan", every)
-        clock = Clock("", fixed=dt.datetime.fromisoformat(when))
+        clock = Clock("America/Denver", fixed=dt.datetime.fromisoformat(when))  # the times below are Denver's
         return schedule.scan_overdue(settings.load(self.root), self.folder.read_runs(limit=1), clock)
 
     def test_scan_overdue(self):

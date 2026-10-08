@@ -36,6 +36,15 @@ sys.dont_write_bytecode = True
 
 from jobkit import net  # noqa: E402
 
+
+def _inside(path, top):
+    """True when `path` is `top` or inside it. Paths on different drives (Windows) are never inside."""
+    path, top = os.path.abspath(path), os.path.abspath(top)
+    try:
+        return os.path.commonpath([path, top]) == top
+    except ValueError:
+        return False
+
 AS_OF = "2026-09-24T19:00:00+00:00"  # noon Pacific: far from midnight in either time zone
 STATUS = {"new": "new", "reject": "not_a_fit", "apply": "worth_applying", "maybe": "your_call",
           "skipped": "skipped", "applied": "applied"}
@@ -213,10 +222,10 @@ def main(argv):
     p.add_argument("--engine-python", default="py -3.10" if os.name == "nt" else "python3.10")
     a = p.parse_args(argv)
     a.work = os.path.abspath(a.work)
-    if os.path.commonpath([a.work, REPO]) == REPO:
+    if _inside(a.work, REPO):
         print("refusing to work inside the repository: the results are personal data", file=sys.stderr)
         return 3
-    if os.path.commonpath([a.work, os.path.abspath(a.reference_jobs)]) == os.path.abspath(a.reference_jobs):
+    if _inside(a.work, os.path.abspath(a.reference_jobs)):
         print("refusing to work inside the reference folder: it must stay untouched", file=sys.stderr)
         return 3
     if sys.version_info < (3, 11):

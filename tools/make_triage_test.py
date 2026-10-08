@@ -27,6 +27,15 @@ sys.dont_write_bytecode = True
 
 from jobkit import store  # noqa: E402
 
+
+def _inside(path, top):
+    """True when `path` is `top` or inside it. Paths on different drives (Windows) are never inside."""
+    path, top = os.path.abspath(path), os.path.abspath(top)
+    try:
+        return os.path.commonpath([path, top]) == top
+    except ValueError:
+        return False
+
 JUDGED = ("worth_applying", "your_call", "not_a_fit")
 RULE_ORDER = ["rule_1", "rule_3", "rule_4", "rule_5", "rule_6", "rule_7", "rule_10", "rule_11"]
 
@@ -105,11 +114,11 @@ def main(argv):
     p.add_argument("--seed", type=int, default=7)
     a = p.parse_args(argv)
     folder, key_file = os.path.abspath(a.folder), os.path.abspath(a.answer_key)
-    if os.path.commonpath([key_file, folder]) == folder:
+    if _inside(key_file, folder):
         print("the answer key must be outside the folder, or the triage session could read it", file=sys.stderr)
         return 3
     for path in (folder, key_file):
-        if os.path.commonpath([path, REPO]) == REPO:
+        if _inside(path, REPO):
             print("refusing to write inside the repository: this is personal data", file=sys.stderr)
             return 3
     cands = candidates(folder, a.since)

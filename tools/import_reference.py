@@ -36,6 +36,15 @@ from jobkit.toml import load_file  # noqa: E402
 from jobkit.track import normalize as normalize_application  # noqa: E402
 from jobkit.tomlwrite import value as toml_value  # noqa: E402
 
+
+def _inside(path, top):
+    """True when `path` is `top` or inside it. Paths on different drives (Windows) are never inside."""
+    path, top = os.path.abspath(path), os.path.abspath(top)
+    try:
+        return os.path.commonpath([path, top]) == top
+    except ValueError:
+        return False
+
 # Reference config.toml [location] keys -> settings.toml [places] keys.
 PLACES = {"remote": "remote", "bay_core": "hybrid_ok", "bay_outer": "remote_only",
           "us": "in_country", "us_national": "country_wide", "drop": "abroad"}
@@ -282,7 +291,7 @@ def main(argv):
     a = p.parse_args(argv)
 
     out = os.path.abspath(a.out)
-    if os.path.commonpath([out, REPO]) == REPO:
+    if _inside(out, REPO):
         print("refusing to write inside the repository: the result is personal data", file=sys.stderr)
         return 3
     if any(os.path.exists(os.path.join(out, *p)) for p in (("profile", "settings.toml"), ("data", "postings.json"),

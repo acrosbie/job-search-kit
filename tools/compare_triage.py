@@ -23,6 +23,15 @@ sys.dont_write_bytecode = True
 
 from jobkit import store  # noqa: E402
 
+
+def _inside(path, top):
+    """True when `path` is `top` or inside it. Paths on different drives (Windows) are never inside."""
+    path, top = os.path.abspath(path), os.path.abspath(top)
+    try:
+        return os.path.commonpath([path, top]) == top
+    except ValueError:
+        return False
+
 LABEL = {"worth_applying": "Worth applying", "your_call": "Your call", "not_a_fit": "Not a fit",
          "skipped": "Skipped", "applied": "Applied", None: "(no verdict)"}
 
@@ -85,7 +94,7 @@ def main(argv):
     rows = score(a.folder, key)
     text, agree = report(rows)
     out = a.out or os.path.join(os.path.dirname(os.path.abspath(a.answer_key)), "results")
-    if os.path.commonpath([os.path.abspath(out), REPO]) == REPO:
+    if _inside(os.path.abspath(out), REPO):
         print("refusing to write inside the repository: this is personal data", file=sys.stderr)
         return 3
     os.makedirs(out, exist_ok=True)
