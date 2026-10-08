@@ -65,18 +65,65 @@ class ApplyTest(TrackBase):
         code, _, err = self.run_cli("mark", "greenhouse-acme-1", "applied", "--by", "claude")
         self.assertEqual(code, 3)
         self.assertIn("only the user", err)
-        self.assertEqual(self.run_cli("apply", "no-such-key")[0], 1)
-        code, _, err = self.run_cli("apply", "greenhouse-acme-1", "--date", "2027-01-01")
+        how = ("--channel", "linkedin", "--top-pick", "not_sure")
+        self.assertEqual(self.run_cli("apply", "no-such-key", *how)[0], 1)
+        code, _, err = self.run_cli("apply", "greenhouse-acme-1", "--date", "2027-01-01", *how)
         self.assertEqual(code, 3)
         self.assertIn("after today", err)
-        self.assertEqual(self.run_cli("apply", "--company", "Globex")[0], 3)
+        self.assertEqual(self.run_cli("apply", "--company", "Globex", *how)[0], 3)
+        # How they applied and whether it's a top pick are asked, every time: without them nothing
+        # about how applications fare can be counted, and a top pick is never routed to a person.
+        code, _, err = self.run_cli("apply", "greenhouse-acme-1")
+        self.assertEqual(code, 3)
+        self.assertIn("--top-pick yes|no|not_sure", err)
         self.assertEqual(list(self.apps()), [track.app_id("Acme", "Head of Support Operations Manager")])
 
-    def test_mark_applied_by_the_user_records_an_application_too(self):
-        code, out, _ = self.run_cli("mark", "greenhouse-acme-4", "applied", "--by", "user", "--note", "sent today")
+    def test_applied_goes_through_apply_with_how_and_top_pick(self):
+        code, _, err = self.run_cli("mark", "greenhouse-acme-4", "applied", "--by", "user", "--note", "sent today")
+        self.assertEqual(code, 3)
+        self.assertNotIn("greenhouse-acme-4", self.apps())
+        code, out, _ = self.run_cli("apply", "greenhouse-acme-4", "--channel", "not_sure", "--top-pick", "not_sure")
         self.assertEqual(code, 0)
-        self.assertEqual(json.loads(out)["id"], "greenhouse-acme-4")
-        self.assertIn("greenhouse-acme-4", self.apps())
+        a = self.apps()["greenhouse-acme-4"]
+        self.assertEqual((a["channel"], a["top_pick"]), ("", None))
+
+
+    def test_two_long_roles_stay_two_applications(self):
+        # Found in a bug hunt: ids cut the role at 40 characters, so East and West became one.
+        east = track.apply(self.root, on(20), company="Acme", role="Senior Customer Success Manager, Strategic Accounts (East)")
+        west = track.apply(self.root, on(21), company="Acme", role="Senior Customer Success Manager, Strategic Accounts (West)")
+        self.assertNotEqual(east["id"], west["id"])
+        self.assertTrue(west["created"])
+        self.assertEqual(track.app_id("Globex", "Head of Support"), "app-globex-head-of-support")  # short ones unchanged
+
+    def test_an_application_recorded_before_long_ids_is_still_found(self):
+        role = "Senior Customer Success Manager, Strategic Accounts (East)"
+        state = track.load(self.root)
+        state.append(track.normalize({"id": track._legacy_app_id("Acme", role), "company": "Acme", "role": role,
+                                      "applied_date": "2026-09-10", "status": "applied"}))
+        track.save(self.root, state)
+        again = track.apply(self.root, on(22), company="Acme", role=role, channel="referral")
+        self.assertFalse(again["created"])
+        self.assertEqual(again["channel"], "referral")
+
+    def test_a_click_never_moves_the_date_already_recorded(self):
+        # Found in a bug hunt: "I applied" clicked on an old page restarted the 21-day clock.
+        track.apply(self.root, on(1), key="greenhouse-acme-1", date="2026-09-01")
+        a = track.apply(self.root, on(7), key="greenhouse-acme-1", date="2026-09-07", choice="c-1")
+        self.assertEqual(a["applied_date"], "2026-09-01")
+        a = track.apply(self.root, on(7), key="greenhouse-acme-1", date="2026-09-02")  # the user correcting it
+        self.assertEqual(a["applied_date"], "2026-09-02")
+
+    def test_an_old_application_by_name_isnt_joined_to_a_new_opening(self):
+        from jobkit import add
+        track.apply(self.root, on("06-01"), company="Acme", role="Customer Support Manager", date="2026-06-01")
+        state = self.folder.load_postings()
+        state["postings"]["greenhouse-acme-1"]["status"] = "worth_applying"
+        self.folder.save_postings(state)
+        self.assertIsNone(track.link(self.root, on(24), "greenhouse-acme-1"))  # same title, four months later
+        self.assertEqual(self.folder.load_postings()["postings"]["greenhouse-acme-1"]["status"], "worth_applying")
+        track.apply(self.root, on(20), company="Acme", role="Customer Support Manager", date="2026-09-20")
+        self.assertIsNotNone(track.link(self.root, on(24), "greenhouse-acme-1"))  # four days later: the same one
 
 
 class TrackStatusTest(TrackBase):
@@ -92,6 +139,22 @@ class TrackStatusTest(TrackBase):
         self.assertEqual([h.get("status") or h.get("event") for h in a["history"]],
                          ["applied", "replied", "screen", "contact"])
         self.assertEqual(a["history"][1]["note"], "recruiter email")
+
+    def test_a_screen_needs_its_day(self):
+        code, _, err = self.run_cli("track", "greenhouse-acme-1", "screen")
+        self.assertEqual(code, 3)
+        self.assertIn("--on", err)
+        self.assertEqual(self.run_cli("track", "greenhouse-acme-1", "screen", "--time-unknown")[0], 0)
+        self.assertEqual(self.apps()["greenhouse-acme-1"]["status"], "screen")
+
+    def test_an_interview_booked_without_a_stage_cant_close_at_day_21(self):
+        # Found in a bug hunt: --on with no status left the application at "applied".
+        from jobkit import interviews
+        interviews.schedule(self.root, on(10), "greenhouse-acme-1", "2026-09-25T10:00")
+        self.assertEqual(self.apps()["greenhouse-acme-1"]["status"], "interview")
+        closed = [a["id"] for a in track.close_due(self.root, on("10-01"))]
+        self.assertNotIn("greenhouse-acme-1", closed)
+        self.assertEqual(self.apps()["greenhouse-acme-1"]["status"], "interview")
 
     def test_a_follow_up_is_an_event_not_a_status(self):
         a = track.track(self.root, on(7), "greenhouse-acme-1", "followed_up")

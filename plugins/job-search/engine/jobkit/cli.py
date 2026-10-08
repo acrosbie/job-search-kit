@@ -69,20 +69,26 @@ def cmd_mark(a):
     if a.status == "applied":
         if a.by != "user":
             raise Refused("only the user marks a posting applied")
-        _out(track.apply(a.folder, _clock(a.folder), key=a.key, note=a.note))
-        return 0
+        raise Refused("record an application with apply KEY --channel ... --top-pick ..., after asking the user how "
+                      "they applied and whether it's a top pick")
     _out(verdicts.mark(a.folder, a.key, a.status, a.by, note=a.note, force=a.force, clock=_clock(a.folder),
                        record_only=a.record_only))
     return 0
 
 
 def _yes_no(v):
-    return None if v is None else v == "yes"
+    return None if v in (None, "not_sure") else v == "yes"
 
 
 def cmd_apply(a):
+    # Without these, nothing about how applications fare can be counted later, and a top pick with
+    # nobody to follow up with is never offered as a search for a person.
+    if not a.channel or not a.top_pick:
+        raise Refused("ask the user how they applied (--channel company_site|linkedin|referral|other|not_sure) and "
+                      "whether it's a top pick (--top-pick yes|no|not_sure), in one question, then record both")
     _out(track.apply(a.folder, _clock(a.folder), key=a.key or "", company=a.company or "", role=a.role or "",
-                     url=a.url or "", date=a.date or "", estimated=a.estimated, channel=a.channel or "",
+                     url=a.url or "", date=a.date or "", estimated=a.estimated,
+                     channel="" if a.channel == "not_sure" else a.channel,
                      top_pick=_yes_no(a.top_pick), contact=a.contact or "", note=a.note or "", choice=a.choice or ""))
     return 0
 
@@ -94,6 +100,10 @@ def cmd_track(a):
         _out(interviews.schedule(a.folder, _clock(a.folder), a.id, a.on, kind=a.kind or "", who=a.who or "",
                                  minutes=a.minutes or 0, status=a.status or "", note=a.note or ""))
         return 0
+    if a.status in ("screen", "interview") and not a.time_unknown:
+        # Booked with its day and time, it gets a calendar file, a prep offer and a debrief.
+        raise Refused(f"a {a.status} needs its day: --on YYYY-MM-DDTHH:MM (or YYYY-MM-DD), in the user's time zone. "
+                      "Ask when it is; if they don't know yet, --time-unknown")
     _out(track.track(a.folder, _clock(a.folder), a.id, status=a.status or "", date=a.date or "", note=a.note or "",
                      contact=a.contact, top_pick=_yes_no(a.top_pick), channel=a.channel, choice=a.choice or ""))
     return 0
@@ -317,8 +327,8 @@ def parser():
     s.add_argument("--url")
     s.add_argument("--date", help="YYYY-MM-DD, the day they applied (default today)")
     s.add_argument("--estimated", action="store_true", help="the date is only roughly known")
-    s.add_argument("--channel", choices=track.CHANNELS)
-    s.add_argument("--top-pick", choices=("yes", "no"))
+    s.add_argument("--channel", choices=track.CHANNELS + ("not_sure",), help="how they applied: ask, then give it")
+    s.add_argument("--top-pick", choices=("yes", "no", "not_sure"), help="whether it's a top pick: ask, then give it")
     s.add_argument("--contact")
     s.add_argument("--note")
     s.add_argument("--choice", help="the id of the jobs-page click this came from")
@@ -335,6 +345,7 @@ def parser():
     s.add_argument("--channel", choices=track.CHANNELS)
     s.add_argument("--choice", help="the id of the jobs-page click this came from")
     s.add_argument("--on", help="an interview: YYYY-MM-DD, or YYYY-MM-DDTHH:MM in the user's time zone")
+    s.add_argument("--time-unknown", action="store_true", help="a screen or interview whose day isn't known yet")
     s.add_argument("--kind", choices=interviews.KINDS, help="with --on: phone, video or onsite")
     s.add_argument("--with", dest="who", help="with --on: who it's with, in the user's words")
     s.add_argument("--minutes", type=int, help="with --on: how long (30 if not said)")

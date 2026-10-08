@@ -279,7 +279,7 @@ def save_new(folder, r, code, desc, s, applications, postings, today, stamp, rej
         status, (rule, reason) = "not_a_fit", reject
     # An application made outside the scan (LinkedIn, a company site) is flagged, never marked
     # applied: that is the user's action.
-    app = store.application_for({"company": r["company"], "title": r["title"], "url": r["url"]}, applications)
+    app = store.application_for({"company": r["company"], "title": r["title"], "url": r["url"]}, applications, loose=True)
     if app:
         flags.append(("applied", s.label("flag_applied", applied=app.get("applied_date") or app.get("applied", ""))))
     pasted = store.pasted_match(r["company"], r["title"], postings) if r["ats"] != "manual" else None

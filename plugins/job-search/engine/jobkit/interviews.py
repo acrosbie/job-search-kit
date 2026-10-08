@@ -138,12 +138,13 @@ def schedule(root, clock, ident, on, kind="", who="", minutes=0, status="", note
     a = track.find(applications, ident)
     if a is None:
         raise NotFound(f"no application {ident}")
-    if status and a["status"] != status:
-        a["status"] = status
-        a["history"].append(track._event(clock, clock.today(), note, status=status))
+    stage = status or (a["status"] if a["status"] in ("screen", "interview") else "interview")
+    # An interview booked moves an application that hadn't got that far, so day 21 can't close it.
+    if a["status"] != stage and (status or a["status"] in ("applied", "replied", "presumed_rejected")):
+        a["status"] = stage
+        a["history"].append(track._event(clock, clock.today(), note, status=stage))
     elif note:
         a["history"].append(track._event(clock, clock.today(), note, event="note"))
-    stage = status or (a["status"] if a["status"] in ("screen", "interview") else "interview")
     entries = a.setdefault("upcoming", [])
     entry = next((e for e in entries if e["on"][:10] == on[:10] and not e.get("debriefed")), None)
     if entry is None:
@@ -162,7 +163,8 @@ def schedule(root, clock, ident, on, kind="", who="", minutes=0, status="", note
     os.makedirs(folder, exist_ok=True)
     name = f"{on[:10]} {stage}.ics"
     with open(os.path.join(folder, name), "w", encoding="utf-8", newline="") as f:
-        f.write(calendar(a, entry, clock.now().tzinfo, clock.now().astimezone(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")))
+        # The zone itself, not today's offset: an interview after a clock change keeps its hour.
+        f.write(calendar(a, entry, clock.tz, clock.now().astimezone(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")))
     entry["calendar"] = f"{folder_for(a)}/{name}"
     track.save(root, applications)
     return {"application": a["id"], "company": a.get("company", ""), "role": a.get("role", ""), **entry,
@@ -188,12 +190,13 @@ def debriefed(root, clock, ident, on=""):
 
 def _when(entry, tz):
     start = _start(entry, tz)
-    return start if start is not None else dt.datetime.fromisoformat(entry["on"][:10] + "T23:59").replace(tzinfo=tz)
+    end_of_day = dt.datetime.fromisoformat(entry["on"][:10] + "T23:59")
+    return start if start is not None else (end_of_day.replace(tzinfo=tz) if tz else end_of_day.astimezone())
 
 
 def listing(root, clock):
     """Every interview not yet gone through, soonest first, each with its application and files."""
-    tz = clock.now().tzinfo
+    tz = clock.tz
     now = clock.now()
     out = []
     for a in track.load(root):

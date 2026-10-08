@@ -273,26 +273,45 @@ class Folder:
 
 
 def _norm_title(s):
-    """Loose title key for matching a posting to an application: anything from the first
-    parenthesis off, & to and, CX and PM spelled out, punctuation collapsed."""
+    """Title key for matching a posting to an application: anything from the first parenthesis off,
+    & to and, CX, PM, Sr. and Mgr spelled out, punctuation collapsed."""
     s = re.sub(r"\s*\(.*", "", s or "").lower().replace("&", " and ")
     s = re.sub(r"\bcx\b", "customer experience", s)
     s = re.sub(r"\bpm\b", "product manager", s)
+    s = re.sub(r"\bsr\b\.?", "senior", s)
+    s = re.sub(r"\bmgr\b\.?", "manager", s)
     return re.sub(r"[^a-z0-9]+", " ", s).strip()
 
 
-def application_for(posting, applications):
+def _contains(longer, shorter):
+    return f" {shorter} " in f" {longer} "
+
+
+def application_for(posting, applications, loose=False):
     """The application this posting corresponds to, or None: the same link first, then the same
-    company with a matching title. Anything looser is for Claude to judge, not the engine."""
+    company with the same title once tidied. That is what joining a posting to an application, or
+    marking it applied, goes by: "Manager" isn't "Engineering Manager".
+
+    `loose` also takes one title inside the other when the shorter has three words or more
+    ("Support Operations Manager" in "Senior Support Operations Manager, Americas"): enough to flag a
+    new posting "you already applied here" for the user to judge, never to record anything."""
     url = (posting.get("url") or "").rstrip("/")
     for a in applications:
         if url and url in {u.rstrip("/") for u in a.get("urls", [])}:
             return a
     company, title = posting["company"].lower(), _norm_title(posting["title"])
-    for a in applications:
-        role = _norm_title(a.get("role", ""))
-        if a.get("company", "").lower() == company and title and role and (title == role or title in role or role in title):
+    if not title:
+        return None
+    same = [a for a in applications if a.get("company", "").lower() == company]
+    for a in same:
+        if _norm_title(a.get("role", "")) == title:
             return a
+    if loose:
+        for a in same:
+            role = _norm_title(a.get("role", ""))
+            short, long_ = sorted((role, title), key=len)
+            if role and len(short.split()) >= 3 and _contains(long_, short):
+                return a
     return None
 
 

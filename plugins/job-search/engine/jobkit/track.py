@@ -29,6 +29,7 @@ for a person, and the rest are left to close at day 21.
 
 import copy
 import datetime as dt
+import hashlib
 import re
 
 from . import schedule, settings, store, verdicts
@@ -50,7 +51,20 @@ def _slug(s, n=40):
 
 
 def app_id(company, role):
-    return f"app-{_slug(company, 30)}-{_slug(role)}"
+    """The id of an application with no saved posting. A role too long to spell out whole keeps a
+    short fingerprint of all of it, so "... Strategic Accounts (East)" and "(West)" stay two."""
+    ident = f"app-{_slug(company, 30)}-{_slug(role)}"
+    if len(_slug(role, 1000)) > 40:
+        ident += "-" + hashlib.sha1(_slug(role, 1000).encode("utf-8")).hexdigest()[:6]
+    return ident
+
+
+def _legacy_app_id(company, role):
+    return f"app-{_slug(company, 30)}-{_slug(role)}"  # before 0.8.0: long roles were cut off
+
+
+# How recent an application recorded by name must be for a newly saved posting to join it on its own.
+JOIN_WITHIN_DAYS = 60
 
 
 def _date(s):
@@ -137,12 +151,21 @@ def find(applications, ident):
     return None
 
 
-def unlinked(applications, posting):
+def unlinked(applications, posting, today=None):
     """An application recorded by company and role, with no saved posting, that is this posting
-    (the same link, or the same company with a matching title), or None."""
+    (the same link, or the same company and the same title), or None. With `today`, a match by
+    title only counts for an application sent in the last JOIN_WITHIN_DAYS days: the same title
+    months later is likely a new opening, for the user to say."""
     loose = [a for a in applications if not a.get("key")]
-    return store.application_for({"company": posting.get("company", ""), "title": posting.get("title", ""),
-                                  "url": posting.get("url", "")}, loose)
+    p = {"company": posting.get("company", ""), "title": posting.get("title", ""), "url": posting.get("url", "")}
+    a = store.application_for(p, loose)
+    if a is None or today is None:
+        return a
+    url = (p["url"] or "").rstrip("/")
+    if url and url in {u.rstrip("/") for u in a.get("urls", [])}:
+        return a
+    d = _date(a.get("applied_date"))
+    return a if d and (dt.date.fromisoformat(today) - d).days <= JOIN_WITHIN_DAYS else None
 
 
 def link(root, clock, key):
@@ -152,7 +175,7 @@ def link(root, clock, key):
     folder = store.Folder(root)
     posting = folder.load_postings()["postings"].get(key)
     applications = load(root)
-    a = unlinked(applications, posting) if posting else None
+    a = unlinked(applications, posting, clock.today()) if posting else None
     if a is None:
         return None
     a["key"] = key
@@ -205,8 +228,12 @@ def apply(root, clock, key="", company="", role="", url="", date="", estimated=F
     applications = load(root)
     ident = key or app_id(company, role)
     a = find(applications, ident)
+    if a is None and not key:
+        old = find(applications, _legacy_app_id(company, role))  # recorded before ids kept long roles whole
+        if old is not None and store._norm_title(old.get("role")) == store._norm_title(role):
+            a = old
     if a is None and posting is not None:
-        a = unlinked(applications, posting)  # recorded by name before the posting was saved
+        a = unlinked(applications, posting, today)  # recorded by name before the posting was saved
         if a is not None:
             a["key"] = key
     created = a is None
@@ -218,7 +245,8 @@ def apply(root, clock, key="", company="", role="", url="", date="", estimated=F
              "status": "applied", "history": [_event(clock, when, note, choice, at, status="applied")], "note": note}
         applications.append(a)
     else:
-        if date and when != a["applied_date"]:
+        # A click on the page says "I applied", not when: it never moves a date already recorded.
+        if date and when != a["applied_date"] and not choice:
             a["applied_date"], a["applied_date_estimated"] = when, bool(estimated)
             a["history"].append(_event(clock, today, choice=choice, at=at, event="applied_date", value=when))
         for field, value in (("channel", channel), ("contact", contact)):

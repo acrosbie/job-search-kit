@@ -205,7 +205,10 @@ class MarkTest(ScanBase):
     def test_only_the_user_marks_applied(self):
         self.scan()
         self.assertEqual(self.mark("greenhouse-acme-1", "applied", "--by", "claude")[0], 3)
-        self.assertEqual(self.mark("greenhouse-acme-1", "applied", "--by", "user")[0], 0)
+        # Even the user's goes through apply, which asks how they applied and if it's a top pick.
+        code, err = self.mark("greenhouse-acme-1", "applied", "--by", "user")
+        self.assertEqual(code, 3)
+        self.assertIn("apply KEY --channel", err)
 
 
 if __name__ == "__main__":

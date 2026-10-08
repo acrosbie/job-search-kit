@@ -112,9 +112,24 @@ class ApplicationMatchTest(unittest.TestCase):
         self.assertEqual(store.application_for(by_link, self.APPS)["company"], "Acme")
         by_title = {"company": "Acme", "title": "Head of Customer Experience", "url": ""}
         self.assertEqual(store.application_for(by_title, self.APPS)["applied"], "2026-09-20")
+        # A longer title holding the whole of a 3-word role is enough to flag "you already applied here",
+        # never to record anything.
         wider = {"company": "globex", "title": "Senior Support Operations Manager, Americas", "url": ""}
-        self.assertEqual(store.application_for(wider, self.APPS)["company"], "Globex")
+        self.assertEqual(store.application_for(wider, self.APPS, loose=True)["company"], "Globex")
+        self.assertIsNone(store.application_for(wider, self.APPS))
         self.assertIsNone(store.application_for({"company": "Globex", "title": "Engineer", "url": ""}, self.APPS))
+
+    def test_a_short_title_inside_a_longer_one_is_not_the_same_job(self):
+        # Found in a bug hunt: "Manager" was inside "Engineering Manager", so pasting a new Acme job
+        # could mark it applied with an old application's date.
+        apps = [{"company": "Acme", "role": "Manager", "urls": []},
+                {"company": "Acme", "role": "Customer Success Manager", "urls": []}]
+        for title in ("Engineering Manager", "Senior Customer Success Manager, Enterprise"):
+            self.assertIsNone(store.application_for({"company": "Acme", "title": title, "url": ""}, apps), title)
+        self.assertIsNone(store.application_for({"company": "Acme", "title": "Engineering Manager", "url": ""}, apps, loose=True))
+        self.assertEqual(store.application_for({"company": "Acme", "title": "Sr. Customer Success Mgr", "url": ""},
+                                               [{"company": "Acme", "role": "Senior Customer Success Manager", "urls": []}])["role"],
+                         "Senior Customer Success Manager")
 
 
 if __name__ == "__main__":
