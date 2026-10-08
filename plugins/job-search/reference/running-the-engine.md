@@ -86,11 +86,10 @@ Keep it short: the user asked for something else, so give the catch-up a line or
 
 Run the engine straight from `${CLAUDE_PLUGIN_ROOT}/engine` in a shell on Anthropic's servers, against a copy:
 
-1. Copy these into a temporary folder, keeping their paths: `profile/` (every file), plus whichever exist of `data/postings.json`, `data/applications.json`, `data/decisions.log`, `data/runs.log` and `data/page-choices.json`. For `show`, also copy that posting's file from `data/postings/`.
-2. Run the command with `--folder` pointing at the temporary folder.
-3. Copy back into the user's folder: `data/postings.json`, `data/postings.backup.json`, `data/applications.json`, `data/applications.backup.json`, `data/decisions.log`, `data/runs.log`, `data/titles-latest.tsv`, `data/page.json`, `data/jobs-page.html`, `My jobs.html`, and every file that is new in `data/postings/`.
-
-For `resume check` and `resume render`, also copy the resume's source file (keeping its path under `resume/`) and `data/resumes.json` if it exists. Copy back `data/resume-check.json`, `data/resumes.json`, and the Word file and PDF it made. The PDF is plain text inside, so it copies like any text file. If the Word file can't be written into their folder this way, give it to them in the chat instead, and say so.
+1. Copy into a temporary folder, keeping their paths: `profile/` and `data/` (every file, except the descriptions in `data/postings/`: copy only the ones the command reads, such as the posting for `show`, or the queue's for triage). For `resume` and `interview` commands, also copy `resume/` or `interviews/`.
+2. Note the time: `python3 -c "import datetime; print(datetime.datetime.now(datetime.timezone.utc).isoformat())"`.
+3. Run the command with `--folder` pointing at the temporary folder.
+4. List what it wrote: `python3 "${CLAUDE_PLUGIN_ROOT}/engine/run.py" changed --since "<that time>" --folder "<temporary folder>"`. Copy back into the user's folder exactly the files it lists, keeping their paths. The Word file and PDF of a resume copy like any file; if the Word file can't be written into their folder this way, give it to them in the chat instead, and say so.
 
 ## 7. Code mode
 

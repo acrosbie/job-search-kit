@@ -77,6 +77,25 @@ class StoreTest(unittest.TestCase):
         self.assertEqual(f.load_postings()["postings"]["a"], {"status": "new", "note": "kept"})
         self.assertEqual(json.loads(read(f.backup_json))["postings"]["a"]["status"], "new")  # never the broken file
 
+    def test_changed_lists_what_a_command_wrote(self):
+        # For running on a copy of the user's folder: copy back exactly what changed (the fixed lists
+        # this replaced had left out changes.log, review.json and the interview files).
+        import contextlib
+        import io
+        import time
+        from jobkit import cli
+        os.makedirs(os.path.join(self.root, "data"), exist_ok=True)
+        os.makedirs(os.path.join(self.root, ".kit"))
+        for name in ("data/old.json", ".kit/engine.py"):
+            with open(os.path.join(self.root, *name.split("/")), "w", encoding="utf-8") as f:
+                f.write("{}")
+            os.utime(os.path.join(self.root, *name.split("/")), (time.time() - 3600, time.time() - 3600))
+        with open(os.path.join(self.root, "data", "changes.log"), "w", encoding="utf-8") as f:
+            f.write("{}\n")
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            cli.main(["changed", "--folder", self.root, "--since", time.strftime("%Y-%m-%dT%H:%M:%S+00:00", time.gmtime(time.time() - 60))])
+        self.assertEqual(json.loads(out.getvalue())["files"], ["data/changes.log"])
+
     def test_description_header(self):
         rec = {"key": "greenhouse-acme-1", "title": "Support Manager", "company": "Acme", "location": "",
                "url": "https://acme.test/1", "posted": "", "ats": "greenhouse"}

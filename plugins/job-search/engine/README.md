@@ -44,6 +44,7 @@ python3 run.py <command> --folder "<the user's Job Search folder>" [options]
 | `companies list` / `companies add --name --slug --ats [--token\|--host --tenant --site\|--query ...\|--careers-url]` / `companies drop SLUG` | Edits the watched companies one entry at a time; an entry must carry what its reader needs | JSON |
 | `titles [--sample N]` | From the last scan's `titles-latest.tsv`: what the title filter keeps, and near misses (a `field_words` word, or the function words without the level, or an exclusion), in places the user would take | JSON: counts and samples |
 | `try-titles [--function P] [--level P] [--exclude P] [--field-words P]` | What a change to the title patterns would gain and lose on the same titles, without fetching | JSON: counts and samples |
+| `changed --since TIME` | The files in the folder written at or after TIME (ISO), except `.kit/`: what to copy back after running the engine on a copy of the user's folder | JSON: `files` |
 | `version` | Engine and Python version | text |
 
 `scan` also takes `--record DIR` (save every board answer to a cassette folder), `--replay DIR` (read answers from one, with no network) and `--as-of TIME` (pin the clock, for replays).

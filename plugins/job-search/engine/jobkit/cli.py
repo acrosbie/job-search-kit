@@ -8,6 +8,7 @@ says why).
 import argparse
 import datetime as dt
 import json
+import os
 import re
 import sys
 
@@ -290,6 +291,23 @@ def cmd_discover(a):
     return 0
 
 
+def cmd_changed(a):
+    """Files in the folder written at or after a time: what to copy back when the engine ran on a
+    copy of the user's folder (running-the-engine.md, section 6)."""
+    since = dt.datetime.fromisoformat(a.since.replace("Z", "+00:00"))
+    if since.tzinfo is None:
+        since = since.astimezone()
+    out = []
+    for top, dirs, names in os.walk(a.folder):
+        dirs[:] = [d for d in dirs if d != ".kit"]
+        for n in names:
+            p = os.path.join(top, n)
+            if os.path.getmtime(p) >= since.timestamp() - 1:
+                out.append(os.path.relpath(p, a.folder).replace(os.sep, "/"))
+    _out({"since": a.since, "files": sorted(out)})
+    return 0
+
+
 def cmd_version(a):
     print(f"job-search-kit engine {__version__}, Python {sys.version.split()[0]}")
     return 0
@@ -547,6 +565,11 @@ def parser():
 
     s = sub.add_parser("version")
     s.set_defaults(func=cmd_version)
+
+    s = sub.add_parser("changed", help="files in the folder written since a time, to copy back from a working copy")
+    s.add_argument("--folder", required=True)
+    s.add_argument("--since", required=True, help="an ISO time, taken just before the command ran")
+    s.set_defaults(func=cmd_changed)
     return p
 
 
