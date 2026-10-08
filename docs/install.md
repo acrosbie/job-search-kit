@@ -2,7 +2,7 @@
 
 The kit helps you find jobs and decide which ones are worth applying to, by talking to Claude. It reads company job boards for you, screens each posting against what you've told it, and keeps track of what you apply to. Everything about you stays in one folder on your computer.
 
-It takes about 10 minutes to install. Setup is then one conversation of about 30 to 40 minutes. You won't need to type a command or open a file.
+It takes about 10 minutes to install. Setup is then one conversation of about an hour, one question at a time, and you can stop and pick it up later. You won't need to type a command or open a file.
 
 ## What you need
 
@@ -45,6 +45,13 @@ Open a conversation with your Job Search folder connected, and say what you want
 - **Paste a job link** from LinkedIn or anywhere to have it screened too.
 
 If you set up a daily check, it runs while your computer is on and the Claude app is open.
+
+## If something goes wrong
+
+- **"I can't reach job boards"**: Claude needs network access. In the Claude app, open **Settings**, then **Capabilities**, and turn on network access. On a work account your administrator may have to.
+- **Claude talks about code or files you don't recognise**: you're in the `</>` view. Switch to the speech bubble and start a new conversation.
+- **The kit doesn't seem to know a recent fix**: plugin updates arrive a few minutes after they're released. In **Customize**, then **Plugins**, check the version.
+- **Anything else**: [open an issue](https://github.com/acrosbie/job-search-kit/issues), saying what you said and what happened. Never paste your resume or personal details there.
 
 ## Your privacy
 
