@@ -110,13 +110,13 @@ Offer this when catching up lists the interview under `debrief_due`, or when the
    - what happens next;
    - the names of anyone they met.
 2. **Record it:**
-   - **The stage:** `run.py track <id> <status> --note "<their words>"` when it moved on, or ended.
+   - **The stage:** `run.py track <id> <status> --note "<their words>"` when it moved on, or ended. A next screen or interview takes its day (`--on`, step 1), or `--time-unknown` until they know it.
    - **Anyone they named:** `--contact "<name>"`. Only a name they gave you.
    - **A next round already booked:** step 1's `track … --on`.
 3. **New facts:** something they said about themselves that isn't in `about-me.md` gets confirmed with them first, then saved.
 4. **Write it down:**
-   - add `## Debrief, <date>` to the prep sheet, in their words;
-   - then run `run.py interview debriefed <id> --folder "<folder>"`.
+   - add `## Debrief, <date>` to the prep sheet, in their words (make `prep.md` with just this if there was no prep sheet);
+   - then run `run.py interview debriefed <id> --folder "<folder>"`. It's refused until the debrief is written there.
 5. **Offer a short thank-you note:** three or four sentences, one specific thing from the conversation, nothing unconfirmed. It's theirs to send.
 
 ## 5. The story bank and the quick reference

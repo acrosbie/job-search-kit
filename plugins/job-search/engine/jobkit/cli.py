@@ -122,6 +122,8 @@ def cmd_interview(a):
         _out(interviews.check(a.folder, a.file))
     elif a.action == "debriefed":
         _out(interviews.debriefed(a.folder, clock, a.id, on=a.on or ""))
+    elif a.action == "cancel":
+        _out(interviews.cancel(a.folder, clock, a.id, a.on))
     else:
         _out({"interviews": interviews.listing(a.folder, clock)})
     return 0
@@ -369,6 +371,11 @@ def parser():
     x = acts.add_parser("check", help="every claim in a prep sheet, story bank or quick reference, traced to about-me.md")
     x.add_argument("--folder", required=True)
     x.add_argument("file")
+    x = acts.add_parser("cancel", help="an interview moved or called off (record a moved one again with track --on)")
+    x.add_argument("--folder", required=True)
+    x.add_argument("id")
+    x.add_argument("--on", required=True, help="the day it was on, YYYY-MM-DD")
+    x.set_defaults(func=cmd_interview)
     x = acts.add_parser("debriefed", help="the user went through how an interview went")
     x.add_argument("--folder", required=True)
     x.add_argument("id", help="the application's id or its posting's key")

@@ -72,9 +72,27 @@ class ScheduleTest(InterviewBase):
         self.assertEqual([(x["on"], x["days"]) for x in soon], [("2026-09-26T10:00", 2)])
         self.assertEqual([x["on"] for x in interviews.debrief_due(self.root, CLOCK)], ["2026-09-20T09:00"])
 
+        # Found in phase 5b: a debrief was marked done with nothing written. Now it's written first.
+        from jobkit.errors import Refused
+        with self.assertRaises(Refused):
+            interviews.debriefed(self.root, CLOCK, self.app)
+        a = track.find(track.load(self.root), self.app)
+        prep = os.path.join(self.root, *interviews.folder_for(a).split("/"), "prep.md")
+        with open(prep, "w", encoding="utf-8") as f:
+            f.write("# Prep\n\n## Debrief, 2026-09-24\n\n")
+        with self.assertRaises(Refused):  # a heading with nothing under it isn't a debrief
+            interviews.debriefed(self.root, CLOCK, self.app)
+        with open(prep, "a", encoding="utf-8") as f:
+            f.write("They asked about the month-end close. Next: a panel.\n")
         interviews.debriefed(self.root, CLOCK, self.app)
         self.assertEqual(interviews.debrief_due(self.root, CLOCK), [])
         self.assertEqual([x["on"] for x in page.build(self.root, CLOCK)["coming_up"]], ["2026-09-26T10:00"])
+
+    def test_a_moved_interview(self):
+        interviews.schedule(self.root, CLOCK, self.app, "2026-09-26T10:00", status="interview")
+        interviews.cancel(self.root, CLOCK, self.app, "2026-09-26")
+        interviews.schedule(self.root, CLOCK, self.app, "2026-09-29T14:00")
+        self.assertEqual([x["on"] for x in interviews.listing(self.root, CLOCK)], ["2026-09-29T14:00"])
 
     def test_folder_names_lose_what_windows_refuses(self):
         self.assertEqual(interviews.folder_for({"company": "Glo/bex", "role": "Senior Manager, Customer Service "

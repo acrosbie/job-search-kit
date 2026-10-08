@@ -146,7 +146,7 @@ def schedule(root, clock, ident, on, kind="", who="", minutes=0, status="", note
     elif note:
         a["history"].append(track._event(clock, clock.today(), note, event="note"))
     entries = a.setdefault("upcoming", [])
-    entry = next((e for e in entries if e["on"][:10] == on[:10] and not e.get("debriefed")), None)
+    entry = next((e for e in entries if e["on"][:10] == on[:10] and not e.get("debriefed") and not e.get("cancelled")), None)
     if entry is None:
         entry = {"on": on, "kind": "", "with": "", "minutes": 30, "stage": stage, "calendar": "", "debriefed": ""}
         entries.append(entry)
@@ -178,12 +178,42 @@ def debriefed(root, clock, ident, on=""):
     if a is None:
         raise NotFound(f"no application {ident}")
     today = clock.today()
-    held = [e for e in a.get("upcoming", []) if (e["on"][:10] == on[:10] if on else e["on"][:10] <= today)]
+    held = [e for e in a.get("upcoming", []) if not e.get("cancelled")
+            and (e["on"][:10] == on[:10] if on else e["on"][:10] <= today)]
     if not held:
         raise Refused("there's no interview to debrief on that application" + (f" on {on}" if on else " yet"))
+    # What they said is written down before it counts as gone through: one "## Debrief" section in the
+    # prep sheet for every interview debriefed on this application.
+    prep = os.path.join(root, *folder_for(a).split("/"), "prep.md")
+    written = 0
+    if os.path.exists(prep):
+        with open(prep, encoding="utf-8-sig") as f:
+            # a "## Debrief" heading with some words under it before the next heading
+            written = len(re.findall(r"^## Debrief\b.*\n+(?!#)\S", f.read(), re.M))
+    done = sum(1 for e in a.get("upcoming", []) if e.get("debriefed"))
+    if written <= done:
+        raise Refused(f"write the debrief first: add '## Debrief, {today}' with what they told you, in their words, to "
+                      f"{folder_for(a)}/prep.md (make the file if there's no prep sheet), then run this again")
     entry = held[-1]
     entry["debriefed"] = today
     a["history"].append(track._event(clock, today, event="interview_debriefed", value=entry["on"]))
+    track.save(root, applications)
+    return {"application": a["id"], **entry}
+
+
+def cancel(root, clock, ident, on):
+    """An interview that was moved or called off: kept, marked cancelled, and no longer listed. Its
+    calendar file stays in the folder (the engine never deletes), so the user removes it from their
+    calendar. A moved one is then recorded again on its new day."""
+    applications = track.load(root)
+    a = track.find(applications, ident)
+    if a is None:
+        raise NotFound(f"no application {ident}")
+    entry = next((e for e in a.get("upcoming", []) if e["on"][:10] == (on or "")[:10] and not e.get("cancelled")), None)
+    if entry is None:
+        raise Refused(f"there's no interview on {on} on that application")
+    entry["cancelled"] = clock.today()
+    a["history"].append(track._event(clock, clock.today(), event="interview_cancelled", value=entry["on"]))
     track.save(root, applications)
     return {"application": a["id"], **entry}
 
@@ -201,7 +231,7 @@ def listing(root, clock):
     out = []
     for a in track.load(root):
         for e in a.get("upcoming", []):
-            if e.get("debriefed"):
+            if e.get("debriefed") or e.get("cancelled"):
                 continue
             when = _when(e, tz)
             prep = f"{folder_for(a)}/prep.md"

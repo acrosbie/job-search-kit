@@ -9,7 +9,7 @@ The interview skill writes these in the user's folder, under `interviews/`:
 | `interviews/stories.md` | The story bank |
 | `interviews/quick-reference.md` | One page to have open during a call |
 
-The interview itself is kept on its application (`run.py track <id> screen --on …`). `run.py interview list` lists every interview not yet gone through. `due` says which are soon (`interviews_soon`) and which are waiting for a debrief (`debrief_due`).
+The interview itself is kept on its application (`run.py track <id> screen --on …`). One that moved: `run.py interview cancel <id> --on <old date>`, then record it again on its new day; one called off: just the cancel. Its old calendar file stays in the folder, so tell the user to delete it from their calendar. `run.py interview list` lists every interview not yet gone through. `due` says which are soon (`interviews_soon`) and which are waiting for a debrief (`debrief_due`).
 
 ## The format
 
