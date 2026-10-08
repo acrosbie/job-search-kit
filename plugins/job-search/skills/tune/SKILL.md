@@ -54,7 +54,7 @@ For a phrase rule, use `--phrase-reject <name> --phrases "<pattern>"` instead of
 
 Put the replay in plain words, by number and name:
 
-> Replayed over 22 saved jobs. It would let 2 through that Rule 4 turned away: #58 Workiva, Senior Accounting Manager, and #61 Grafana Labs, Accounting Manager (both ones you overturned). It wouldn't turn away anything you applied to or wanted.
+> I tried it on your 22 saved jobs. It would let through 2 that the "owns nothing" rule turned away: #58 Workiva, Senior Accounting Manager, and #61 Grafana Labs, Accounting Manager (both ones you overturned). It wouldn't turn away anything you applied to or wanted.
 
 - **If it would turn away a job they applied to or wanted** (the replay's `wanted`), say so first, by name, and ask whether that's all right. That needs its own explicit yes.
 - If the replay changes nothing at all, say so. A rule that would change nothing may not be worth changing.
@@ -66,7 +66,7 @@ Ask one question: "Save this change?" Offer **Yes, save it**, **Not now**, and *
 - **Only an explicit yes saves it.** "Maybe", "I guess", or no answer is not a yes.
 - **Not now:** record it, so the weekly review doesn't raise it again for four weeks:
   ```
-  run.py decline --what "rule <N>" --why "<their words>" --proposal "<the change, in plain words>"
+  run.py decline --what "rule <N>" --why "<their words>" --proposal "<the change, in plain words>" --folder "<folder>"
   ```
   For a setting, `--what` is `"setting <key>"`; for a phrase rule, `"phrase rule <name>"`.
 - **Change it first:** go back to step 1 with their wording, and replay again.

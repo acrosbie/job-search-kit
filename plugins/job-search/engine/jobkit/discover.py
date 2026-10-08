@@ -39,7 +39,11 @@ CHECKS = [
 
 def discover(slug, page=None):
     """{"boards": [{ats, token, jobs}], "embedded": [{ats, token}], "unsupported": [names], "page_error": str}"""
-    variants = list(dict.fromkeys([slug, slug.lower(), slug.capitalize(), slug.replace("-", "")]))
+    # A name as the user says it ("Acme Health") or a slug ("acme-health"): the spellings boards use.
+    low = slug.strip().lower()
+    variants = list(dict.fromkeys(v for v in [slug.strip(), low, slug.strip().capitalize(), low.replace("-", ""),
+                                              re.sub(r"[^a-z0-9]+", "", low), re.sub(r"[^a-z0-9]+", "-", low).strip("-")]
+                                  if v and " " not in v))
     found = {"boards": [], "embedded": [], "unsupported": [], "page_error": ""}
     for ats, count in CHECKS:
         for v in variants:

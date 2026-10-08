@@ -9,7 +9,7 @@ Fetch, then report. Judging fit is the triage skill's job, not this one's.
 
 ## Steps
 
-1. **Follow `${CLAUDE_PLUGIN_ROOT}/reference/running-the-engine.md`** to find the user's folder, pick where to run, and install or refresh the engine. Then catch up (section 5a), steps 1 and 3, leaving out the scan itself: this scan is the catch-up, and it runs the day-21 close too.
+1. **Follow `${CLAUDE_PLUGIN_ROOT}/reference/running-the-engine.md`** to find the user's folder, pick where to run, and install or refresh the engine. Then catch up (section 5a), step 1 only: the scan below runs the day-21 close, and its summary carries everything else catching up needs.
 2. **Run the scan:** `python3 "<folder>/.kit/engine/run.py" scan --folder "<folder>"`. It reads every board in `profile/companies.toml`; hundreds of boards take a few minutes. It prints a JSON summary.
 3. **Report**, in plain words, no more than about fifteen lines:
    - **What's new:** the count from `new`, then each new posting from `new_postings` as `Company: Title (place)`. If there are more than about fifteen, group them by company.
@@ -20,7 +20,8 @@ Fetch, then report. Judging fit is the triage skill's job, not this one's.
      - `silent`: no jobs listed for 30 days. Mention it once; the company may have moved its jobs elsewhere.
      - `at_cap`: some of the board's jobs weren't read, because it's so large. Mention it once.
    - **Check by hand:** if `check_by_hand` isn't empty, mention once that some companies can't be read automatically, and offer the list.
-   - **Applications:** if `closed_day_21` lists any, one line: "No reply from Acme in three weeks, so I've marked it closed." If `follow_ups_due` has any `send` or `find_person`, one line: "Two follow-ups are due; ask me what's due."
+   - **Applications:** if `closed_day_21` lists any, one line: "No reply from Acme in three weeks, so I've moved it to no reply." If `follow_ups_due` has any `send` or `find_person`, one line: "Two follow-ups are due; ask me what's due."
+   - **The rest of catching up** (section 5a, steps 3 to 6), from the summary's `due`: a weekly review ready, an interview soon or waiting for a debrief, a resume that no longer matches. One line each, offered, never started.
 4. **Keep the jobs page current** (`${CLAUDE_PLUGIN_ROOT}/reference/jobs-page.md`, "Keeping it current"). In a scheduled check, skip anything it can't do, without comment.
 5. **End by offering the next step:** "Want me to go through the new ones?" If nothing is new, say so and stop.
 

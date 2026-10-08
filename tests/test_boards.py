@@ -73,6 +73,15 @@ class ReaderTest(unittest.TestCase):
         self.assertEqual(recs[0]["posted"], "Today")
         self.assertEqual(recs[0]["key"], "workday-acme-R0")
 
+    def test_discover_takes_a_name_as_the_user_says_it(self):
+        # Found in an audit: setup ran discover with a name; "Acme Health" built a broken address and,
+        # its errors swallowed, found nothing.
+        from jobkit.discover import discover
+        fake = self.use({"https://boards-api.greenhouse.io/v1/boards/acmehealth/jobs": {"jobs": [{"id": 1}, {"id": 2}]}})
+        found = discover("Acme Health")
+        self.assertEqual(found["boards"], [{"ats": "greenhouse", "token": "acmehealth", "jobs": 2}])
+        self.assertFalse(any(" " in str(url) for url in fake.asked))
+
     def test_smartrecruiters_pages_through(self):
         base = "https://api.smartrecruiters.com/v1/companies/acme/postings"
         item = lambda i, country: {"id": str(i), "name": f"Job {i}", "releasedDate": "2026-09-02",

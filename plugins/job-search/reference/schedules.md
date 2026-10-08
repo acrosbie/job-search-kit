@@ -27,4 +27,4 @@ Setup offers both (its step 7). Use this page whenever the user asks for one lat
 
 ## Stopping one
 
-Walk them through **Scheduled** → the task → pause or delete it, or use your scheduling tool. Then clear the setting, so a missed check isn't caught up any more: `run.py settings set schedule.scan ""` (or `schedule.review`).
+Walk them through **Scheduled** → the task → pause or delete it, or use your scheduling tool. Then clear the setting, so a missed check isn't caught up any more: `run.py settings set schedule.scan "" --folder "<folder>"` (or `schedule.review`).

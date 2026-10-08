@@ -29,7 +29,7 @@ Then keep the jobs page current (`${CLAUDE_PLUGIN_ROOT}/reference/jobs-page.md`)
 
 ## Going through it
 
-Use `data/review.json` if it was prepared today or yesterday and not yet gone through (catching up says so). Otherwise run `run.py review` for fresh facts.
+Use `data/review.json` if it was prepared today or yesterday and not yet gone through (catching up says so). Otherwise run `run.py review --folder "<folder>"` for fresh facts.
 
 **Open with three lines at most.** For example: "Your weekly review: one rule you've overturned twice, 10 jobs the scan turned away to spot-check, and 2 follow-ups due. It takes about 10 minutes; we can stop whenever you like." Then take the parts below in order, one at a time. Skip any that are empty, without mentioning them. Keep each part short.
 
@@ -48,13 +48,13 @@ Show the `spot_check` jobs as one numbered list: title, company, place, and the 
 
 For each one they say was wrong, record their verdict:
 ```
-run.py mark <key> worth_applying --by user --note "<their words>"
+run.py mark <key> worth_applying --by user --note "<their words>" --folder "<folder>"
 ```
 Their words feed next week's disagreements. If two or more share a reason, offer a change through the tune skill now.
 
 ### 3. Titles the filter nearly kept
 
-Show `missed_titles` as one numbered list. Ask which they'd want to see. For any yes, test the title change with `run.py try-titles` (setup step 6 shows how), and save it through the tune skill.
+Show `missed_titles` as one numbered list. Ask which they'd want to see. For any yes, test the title change with `run.py try-titles --folder "<folder>"` (setup step 6 shows how), and save it through the tune skill.
 
 ### 4. How the rules are working
 

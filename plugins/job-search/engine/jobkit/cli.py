@@ -53,6 +53,7 @@ def cmd_scan(a):
     due = track.due(a.folder, clock)  # every scan also runs the day-21 close
     summary["closed_day_21"] = due["closed_now"]
     summary["follow_ups_due"] = {k: len(due[k]) for k in ("send", "find_person", "closing")}
+    summary["due"] = due  # everything catching up needs (running-the-engine.md, 5a), so the scan skill needn't run due
     _out(summary)
     return 0
 
@@ -559,11 +560,13 @@ def parser():
     s.set_defaults(func=cmd_try_titles)
 
     s = sub.add_parser("discover", help="which public job board a company uses")
-    s.add_argument("slug")
+    s.add_argument("slug", help="the company's name as the user says it, or its board slug")
     s.add_argument("--page", help="the company's careers page, to look for an embedded board")
+    s.add_argument("--folder", help="accepted, like every command; not needed")
     s.set_defaults(func=cmd_discover)
 
     s = sub.add_parser("version")
+    s.add_argument("--folder", help="accepted, like every command; not needed")
     s.set_defaults(func=cmd_version)
 
     s = sub.add_parser("changed", help="files in the folder written since a time, to copy back from a working copy")

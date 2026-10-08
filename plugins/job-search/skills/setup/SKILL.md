@@ -9,7 +9,7 @@ One conversation takes someone who has never used a terminal to a working job se
 
 ## How to talk
 
-- **One question at a time.** Offer choices where you can (use multiple-choice questions if your tools allow), and always accept "not sure". Never stack several questions in one message.
+- **One question at a time.** Offer choices where you can (use multiple-choice questions if your tools allow), and always accept "not sure". Never stack different questions in one message; one question may cover a short list of the same kind of thing (a few titles, a few applications), each answered by its own choice.
 - **Plain words only.** Say "your job boards", not "companies.toml"; say "the titles we look for", not "regex". Never show a file path, code, or an error message.
 - **Their words, saved as they said them.** When an answer goes into a file, quote it.
 - **Never ask about age, family, health, or anything about them that isn't about the job.**
@@ -113,7 +113,7 @@ Short, plain questions, one at a time, each with choices and "not sure". Save ev
 **Show them the result as one plain list:** "Here's what I'll screen out, and what I'll only point out to you." Ask what's wrong, and fix it before going on.
 
 **Job boards.** They start with 589 public company job boards, mostly technology companies. Say so plainly: "They suit office jobs at tech companies best. If there are companies you'd especially like, tell me and I'll add them." For each company they name:
-1. Run `run.py discover <name>`. Add `--page <their careers page>` if the plain check finds nothing.
+1. Run `run.py discover "<company name>"` (the engine tries the usual spellings of it). Add `--page <their careers page>` if the plain check finds nothing.
 2. Check four of the board's titles really belong to that company. The same name can belong to a different company.
 3. Add it with `run.py companies add --folder "<folder>" --name ... --slug ... --ats ... --token ...`.
 

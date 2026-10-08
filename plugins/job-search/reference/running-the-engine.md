@@ -70,8 +70,8 @@ Full details are in `${CLAUDE_PLUGIN_ROOT}/engine/README.md`.
 After installing or refreshing the engine, every skill catches up before doing anything else:
 
 1. **The jobs page:** read and record any clicks the user made on it, as `${CLAUDE_PLUGIN_ROOT}/reference/jobs-page.md` says under "Reading the user's clicks".
-2. **Day 21:** run `due`. If `closed_now` lists anything, say so in one line: "No reply from Acme in three weeks, so I've marked it closed. Tell me if you hear from them." (The scan skill can skip this step: every scan runs it.)
-3. **Missed checks**, from the same `due` output. Scheduled checks run only while the computer is on and Claude is open, so one can be missed.
+2. **Day 21:** if the user's message brings news of an application ("Acme replied", "I have a screen with Acme"), record that first (the track or interview skill), so the day-21 close can't close it just before. Then run `due`. If `closed_now` lists anything, say so in one line: "No reply from Acme in three weeks, so I've moved it to no reply. Tell me if you hear from them." (In the scan skill, the scan runs `due` itself and its summary carries the output as `due`.)
+3. **Missed checks**, from the same `due` output (in the scan skill, the summary's `due`). Scheduled checks run only while the computer is on and Claude is open, so one can be missed.
    - **`scan_overdue`:** in the scan and triage skills, run a scan first (the scan skill's steps), saying so in one line: "Your morning check didn't run, so I'm checking now; it takes a few minutes." In any other skill, offer it in one line ("Your last check was 3 days ago; want me to check now?") and carry on with what they asked.
    - **`review_ready`, or `review_due`:** offer it in one line: "Your weekly review is ready; want to go through it?" Start it only if they say yes (the review skill).
 4. **The jobs page:** if `due` says `page_behind`, the page in their Claude account doesn't show what the folder holds. A skipped update, or a scheduled check that couldn't reach it, leaves it like this. Bring it up to date quietly, as `jobs-page.md` says under "Keeping it current".

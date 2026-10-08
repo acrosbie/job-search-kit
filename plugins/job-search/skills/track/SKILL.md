@@ -56,8 +56,8 @@ python3 "<folder>/.kit/engine/run.py" track <id> <status> [--date YYYY-MM-DD] [-
 | The user says | Status |
 |---|---|
 | "They emailed me back", "a recruiter got in touch about it" | `replied` |
-| "I have a phone screen", "a recruiter call is booked" | `screen` |
-| "I have an interview", "second round" | `interview` |
+| "I have a phone screen", "a recruiter call is booked" | `screen`, with its day: the interview skill's step 1 (`--on`), or `--time-unknown` if they don't know it yet |
+| "I have an interview", "second round" | `interview`, the same way |
 | "They made me an offer" | `offer` |
 | "They turned me down", a rejection email | `rejected` |
 | "I pulled out", "I withdrew" | `withdrawn` |
@@ -72,7 +72,7 @@ python3 "<folder>/.kit/engine/run.py" track <id> <status> [--date YYYY-MM-DD] [-
 
 Run `due`, then say, briefly:
 
-- **`closed_now`:** one line. "No reply from Acme in three weeks, so I've marked it closed. Tell me if you hear back."
+- **`closed_now`:** one line. "No reply from Acme in three weeks, so I've moved it to no reply. Tell me if you hear back."
 - **`send`:** "Follow up with Dana Smith at Acme (day 8). Want me to draft a short note?" A draft is three or four plain sentences. It uses only what's confirmed in `profile/about-me.md`, and it's theirs to send. When they say they've sent it, record `followed_up`.
 - **`find_person`:** "Acme, Senior Accountant is a top pick, and nobody's on record to follow up with. Look on LinkedIn or Acme's site for the person who would lead the team this job is in. Tell me their name, and I'll add them."
 - **`closing`:** one line for all of them. "Three more have nobody to send to; they close on their own at day 21 (the next is Globex, on 22 Oct)."
@@ -92,4 +92,4 @@ Keep the jobs page current (`jobs-page.md`, "Keeping it current").
 - Don't send, email or message anyone. You draft; they send.
 - Don't guess, search for or invent a contact's name.
 - Don't predict replies, odds, or how long anything will take.
-- Don't use technical words with the user: no "status", "ID", "track" or "route". Say "your applications", "what's due", "closed after three weeks with no reply".
+- Don't use technical words with the user: no "status", "ID", "track" or "route". Say "your applications", "what's due", "no reply after three weeks".

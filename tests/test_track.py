@@ -242,6 +242,9 @@ class ScanClosesTest(TrackBase):
         summary = json.loads(out)
         self.assertEqual([a["id"] for a in summary["closed_day_21"]], ["greenhouse-acme-1"])
         self.assertEqual(summary["follow_ups_due"], {"send": 1, "find_person": 0, "closing": 0})
+        # Everything else catching up needs comes with it, so "any new jobs?" hears of interviews too.
+        for fact in ("review_ready", "interviews_soon", "debrief_due", "resume_stale", "page_behind"):
+            self.assertIn(fact, summary["due"])
 
 
 class LegacyTest(TrackBase):
