@@ -1,7 +1,4 @@
 <title>__PAGE_TITLE__</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Mono:wght@500&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
 <style>
 /* Layout: one column, urgent first. A header and a sticky bar of counts; then the user's own choices
    (only when there are some), what's due, the jobs worth a look as full cards, the applications with
@@ -25,9 +22,10 @@
   --bad: #a23b31;
   --bad-soft: #f8e3e0;
   --shadow: 0 1px 2px rgb(21 32 43 / 0.06), 0 2px 8px rgb(21 32 43 / 0.04);
-  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
-  --body: "Public Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
-  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+  /* The system's own fonts: the page asks nothing of any other site. */
+  --display: "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif;
+  --body: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -279,8 +277,10 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
   function day(iso) {
     if (!iso) return "";
     var d = new Date(String(iso).slice(0, 10) + "T12:00:00");
-    return isNaN(d) ? iso : d.toLocaleDateString(undefined, { day: "numeric", month: "short" });
+    return isNaN(d) ? esc(iso) : d.toLocaleDateString(undefined, { day: "numeric", month: "short" });
   }
+  // A link from a posting is only ever a web address: never javascript: or anything else.
+  function href(url) { return /^https?:\/\//i.test(String(url || "")) ? esc(url) : ""; }
   function stamp(pair) { return '<span class="stamp ' + pair[1] + '">' + esc(pair[0]) + "</span>"; }
   function newId() { return "c-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7); }
   function plural(n, one, many) { return n + " " + (n === 1 ? one : many); }
@@ -454,8 +454,9 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
         : "Nothing to send without a contact.";
     return '<article class="card todo"><div class="card-top"><span class="num">' + (t.num ? "#" + esc(t.num) : "") + "</span>" + stamp(ROUTE[t.route]) + "</div>" +
       "<h3>" + esc(t.company) + ", " + esc(t.role) + "</h3><p>" + what + "</p>" + clockBar(daysSince(t.applied_date, t.days), t.closes_on) + saidLines(t.id) +
-      '<div class="actions">' + button("followed_up", "app", t.id, "primary") +
-      (t.route !== "send" ? button("contact", "app", t.id, "quiet") : "") + "</div>" +
+      '<div class="actions">' + (t.route === "send"
+        ? button("followed_up", "app", t.id, "primary")
+        : button("contact", "app", t.id, "primary") + button("followed_up", "app", t.id, "quiet")) + "</div>" +
       (opened("s-todo") ? panel("app", t.id, "followed_up") + panel("app", t.id, "contact") : "") + "</article>";
   }
 
@@ -467,7 +468,7 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
     return '<article class="card">' +
       '<div class="card-top"><span class="num">#' + esc(j.num) + "</span>" + stamp(verdict) +
       (j.salary ? '<span class="pay">' + esc(j.salary) + "</span>" : "") + "</div>" +
-      "<h3>" + (j.url ? '<a href="' + esc(j.url) + '" target="_blank" rel="noopener">' + esc(t.title) + "</a>" : esc(t.title)) + "</h3>" +
+      "<h3>" + (href(j.url) ? '<a href="' + href(j.url) + '" target="_blank" rel="noopener">' + esc(t.title) + "</a>" : esc(t.title)) + "</h3>" +
       '<p class="where"><b>' + esc(j.company) + "</b> · " + esc(t.place || "place not stated") + (j.salary ? "" : " · pay not stated") + "</p>" +
       why(j) +
       (j.flag ? '<p class="flag">' + esc(j.flag) + "</p>" : "") +
@@ -483,7 +484,7 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
     var search = (t.title + " " + j.company + " " + t.place).toLowerCase();
     return '<li class="row" data-search="' + esc(search) + '"><span class="num">#' + esc(j.num) + "</span>" +
       '<div class="row-main">' +
-      (j.url ? '<a class="row-title" href="' + esc(j.url) + '" target="_blank" rel="noopener">' + esc(t.title) + "</a>" : '<span class="row-title">' + esc(t.title) + "</span>") +
+      (href(j.url) ? '<a class="row-title" href="' + href(j.url) + '" target="_blank" rel="noopener">' + esc(t.title) + "</a>" : '<span class="row-title">' + esc(t.title) + "</span>") +
       '<span class="row-meta">' + esc(j.company) + " · " + esc(t.place || "place not stated") +
       (j.salary ? ' · <span class="pay">' + esc(j.salary) + "</span>" : "") + "</span>" +
       ((j.claude_said != null ? j.claude_said : j.note) ? '<span class="row-note">' + esc(j.claude_said != null ? j.claude_said : j.note) + "</span>" : "") +
@@ -520,7 +521,7 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
         }).join("") + '<button type="button" class="mini quiet" data-cancel>Cancel</button></div></div>' : "";
     return '<li class="app"><span class="num">' + (a.num ? "#" + esc(a.num) : "") + "</span>" +
       '<div class="app-main"><span class="app-name"><b>' + esc(a.company) + "</b>, " +
-      (a.url ? '<a href="' + esc(a.url) + '" target="_blank" rel="noopener">' + esc(a.role) + "</a>" : esc(a.role)) + "</span>" +
+      (href(a.url) ? '<a href="' + href(a.url) + '" target="_blank" rel="noopener">' + esc(a.role) + "</a>" : esc(a.role)) + "</span>" +
       '<span class="app-meta">' + meta + "</span>" +
       (a.status === "applied" ? clockBar(daysSince(a.applied_date, a.days), a.closes_on) : "") + "</div>" +
       '<div class="app-side">' + stamp(st) + (live && !mine ? button("menu", "app", a.id, "mini", "Update", a.num) : "") + "</div>" +
@@ -672,12 +673,14 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
     // Every copy of this page saved under its own name before 0.6.0; gather those too, so clicks a
     // rebuilt page hid are found again. Then forget the ones Claude has dealt with.
     choices = {};
+    var old = [];
     try {
       for (var i = 0; i < localStorage.length; i++) {
         var k = localStorage.key(i);
         if (k && k.indexOf(PREFIX) === 0) {
           var saved = JSON.parse(localStorage.getItem(k) || "{}") || {};
           Object.keys(saved).forEach(function (id) { if (!choices[id]) choices[id] = saved[id]; });
+          if (k !== LOCAL) old.push(k);
         }
       }
     } catch (e) { choices = choices || {}; }
@@ -686,6 +689,7 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
       if (h && h !== "unknown") delete choices[id];
     });
     saveLocal();
+    try { old.forEach(function (k) { localStorage.removeItem(k); }); } catch (e) { /* kept: harmless */ }
   }
 
   function remove(id) {
