@@ -203,7 +203,7 @@ def parse_file(text):
 
 def add_file(root, path, clock, text_from="", anyway=False):
     folder = store.Folder(root)
-    with open(path, encoding="utf-8") as f:
+    with open(path, encoding="utf-8-sig") as f:
         text = f.read()
     title, fields, body = parse_file(text)
     company = fields.get("Company", "").strip()

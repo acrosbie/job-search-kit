@@ -8,7 +8,7 @@ refused change leaves the file exactly as it was.
 import os
 import re
 
-from . import changes, settings, tomlwrite
+from . import changes, settings, store, tomlwrite
 from .boards import READERS
 from .clock import Clock
 from .errors import Refused
@@ -48,13 +48,12 @@ def _paths(folder):
 
 
 def _read(path):
-    with open(path, encoding="utf-8") as f:
+    with open(path, encoding="utf-8-sig") as f:
         return f.read()
 
 
 def _write(path, text):
-    with open(path, "w", encoding="utf-8", newline="\n") as f:
-        f.write(text)
+    store.write_keeping_backup(path, text)
 
 
 def check_pattern(p):

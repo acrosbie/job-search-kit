@@ -20,11 +20,16 @@ from .discover import discover
 from .errors import BadFile, NotFound, Refused
 
 
-def _out(obj):
+def _utf8_out():
+    """Windows pipes default to the ANSI code page, which can't print "→" or a name like "Zoë"."""
     try:
         sys.stdout.reconfigure(encoding="utf-8")
     except Exception:
         pass
+
+
+def _out(obj):
+    _utf8_out()
     print(json.dumps(obj, indent=1, ensure_ascii=False))
 
 
@@ -61,6 +66,7 @@ def cmd_show(a):
     if text is None:
         print(f"no saved posting for {a.key}", file=sys.stderr)
         return 1
+    _utf8_out()
     sys.stdout.write(text)
     return 0
 
@@ -558,7 +564,12 @@ def main(argv):
             _refresh_page(a.folder, a.command == "page" and not getattr(a, "pushed", False))
         return code
     except FileNotFoundError as e:
-        print(f"missing file: {e.filename}", file=sys.stderr)
+        why = f" ({e.strerror})" if e.strerror and "No such file" not in e.strerror else ""
+        print(f"missing file: {e.filename or e}{why}", file=sys.stderr)
+        return 1
+    except json.JSONDecodeError as e:  # a file broken by hand, with no good backup to read instead
+        print(f"a file in the folder isn't readable as JSON ({e.msg}, line {e.lineno}); its .backup.json copy "
+              "may hold the last good version", file=sys.stderr)
         return 1
     except (NotFound, BadFile) as e:
         print(str(e), file=sys.stderr)

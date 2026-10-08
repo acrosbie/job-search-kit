@@ -187,14 +187,14 @@ def profile_refresh(root):
     out = {"unconfirmed": [], "answers": 0, "oldest_answer": ""}
     about = os.path.join(root, "profile", "about-me.md")
     if os.path.exists(about):
-        with open(about, encoding="utf-8") as f:
+        with open(about, encoding="utf-8-sig") as f:
             text = f.read()
         m = re.search(r"^## Not confirmed yet.*?$(.*?)(?=^## |\Z)", text, re.M | re.S)
         if m:
             out["unconfirmed"] = [x.strip()[2:] for x in m.group(1).splitlines() if x.strip().startswith("- ")][:20]
     want = os.path.join(root, "profile", "what-i-want.md")
     if os.path.exists(want):
-        with open(want, encoding="utf-8") as f:
+        with open(want, encoding="utf-8-sig") as f:
             rows = [x for x in f.read().splitlines() if x.startswith("|") and not set(x) <= set("|- :")]
         rows = rows[1:]  # the header row
         dates = sorted(d for r in rows for d in re.findall(r"\d{4}-\d{2}-\d{2}", r))

@@ -35,6 +35,11 @@ class ConfigureTest(unittest.TestCase):
         self.assertEqual(s.hybrid_ok.pattern, "denver|aurora|lakewood")  # everything else intact
         self.assertTrue(read(self.settings_path).startswith("# Written by setup.\n# Claude changes this file.\n"))
 
+    def test_the_previous_settings_are_kept(self):
+        before = read(self.settings_path)
+        configure.set_value(self.root, "titles.level", r"\bmanager\b|\bhead\b")
+        self.assertEqual(read(os.path.join(self.root, "profile", "settings.backup.toml")), before)
+
     def test_refusals_leave_the_file_alone(self):
         before = read(self.settings_path)
         for key, value in (("titles.function", "support(("), ("pay.reject_if_top_below", "lots"),

@@ -98,6 +98,26 @@ class ChoicesTest(ScanBase):
         out = choices.record(self.root, CLOCK, [click("c-1", "skip", key="no-such-job"), click("c-2", "dance", key="x")])
         self.assertEqual([c["id"] for c in out["unknown"]], ["c-1", "c-2"])
 
+    def test_a_click_with_no_time_or_no_name(self):
+        # Found in a bug hunt: no time read as 1 January 1970 (and day 21 closed it at once); an
+        # empty contact erased the one on record.
+        track.apply(self.root, CLOCK, key="greenhouse-acme-1", channel="linkedin")
+        track.track(self.root, CLOCK, "greenhouse-acme-1", contact="Dana Example")
+        out = choices.record(self.root, CLOCK, [click("c-1", "applied", at="", key="greenhouse-acme-3"),
+                                                click("c-2", "contact", app="greenhouse-acme-1", contact=" ")])
+        self.assertEqual([(c["id"], c["why"][:12]) for c in out["unknown"]],
+                         [("c-1", "the click ca"), ("c-2", "no name was ")])
+        self.assertEqual(track.find(track.load(self.root), "greenhouse-acme-1")["contact"], "Dana Example")
+        self.assertIsNone(track.find(track.load(self.root), "greenhouse-acme-3"))
+
+    def test_a_file_saved_with_a_byte_order_mark(self):
+        # Windows PowerShell's "-Encoding utf8" starts the file with one.
+        path = os.path.join(tempfile.mkdtemp(), "page-choices.json")
+        with open(path, "w", encoding="utf-8-sig") as f:
+            f.write('[{"id": "c-9", "at": "2026-09-24T17:00:00Z", "action": "skip", "key": "greenhouse-acme-1"}]')
+        out = choices.record_file(self.root, CLOCK, path)
+        self.assertEqual([c["id"] for c in out["recorded"]], ["c-9"])
+
     def test_the_pasted_text(self):
         text = ('My job choices:\n- #1 Acme, a job: Skip\n[choices: [{"id": "c-9", "at": "2026-09-24T17:00:00Z", '
                 '"action": "skip", "key": "greenhouse-acme-1", "note": "too far"}]]\n')

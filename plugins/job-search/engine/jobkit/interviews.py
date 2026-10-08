@@ -263,7 +263,7 @@ def parse(text_):
 
 def check(root, path):
     """Every claim in a prep sheet, story bank or quick reference, traced to about-me.md."""
-    with open(path, encoding="utf-8") as f:
+    with open(path, encoding="utf-8-sig") as f:
         items = resume.check_items(parse(f.read()), resume.read_about(root))
     claims = [it for it in items if it["kind"] == "para"]
     kinds = {}

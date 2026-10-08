@@ -50,6 +50,24 @@ class PayTest(unittest.TestCase):
             self.assertEqual(text.salary_range(text.salary_from(s)), text.salary_range(s), s)
 
 
+class WindowsPipeTest(unittest.TestCase):
+    def test_show_prints_any_letter_through_a_pipe(self):
+        # Found in a bug hunt: piped on Windows, stdout is the ANSI code page, which can't print "→".
+        import os
+        import subprocess
+        import sys
+        import tempfile
+        root = tempfile.mkdtemp()
+        os.makedirs(os.path.join(root, "data", "postings"))
+        with open(os.path.join(root, "data", "postings", "greenhouse-acme-1.md"), "w", encoding="utf-8") as f:
+            f.write("# Support Lead\n\n---\nTickets → answers, for Zoë.\n")
+        run = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "plugins", "job-search", "engine", "run.py")
+        got = subprocess.run([sys.executable, "-B", run, "show", "greenhouse-acme-1", "--folder", root], capture_output=True,
+                             env={**os.environ, "PYTHONIOENCODING": "cp1252"})
+        self.assertEqual(got.returncode, 0, got.stderr)
+        self.assertIn("Tickets → answers, for Zoë.", got.stdout.decode("utf-8"))
+
+
 class HtmlTest(unittest.TestCase):
     def test_html_to_text(self):
         self.assertEqual(text.html_to_text("<p>Hello&nbsp;there</p><ul><li>One</li><li>Two &amp; three</li></ul>"),

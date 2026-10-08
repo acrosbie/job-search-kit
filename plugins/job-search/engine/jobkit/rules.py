@@ -30,13 +30,12 @@ def path(root):
 
 
 def read(root):
-    with open(path(root), encoding="utf-8") as f:
+    with open(path(root), encoding="utf-8-sig") as f:
         return f.read()
 
 
 def write(root, text):
-    with open(path(root), "w", encoding="utf-8", newline="\n") as f:
-        f.write(text)
+    store.write_keeping_backup(path(root), text)
 
 
 def sections(lines):
@@ -116,7 +115,7 @@ def _replay(root, replay_file):
     """Claude's replay of a rule change: {"checked": [keys], "flips": [{"key", "after", "quote"}]},
     where "after" is not_a_fit, your_call or passes. Returns it with the engine's own reading of
     which flips need the user's acceptance."""
-    with open(replay_file, encoding="utf-8") as f:
+    with open(replay_file, encoding="utf-8-sig") as f:
         rep = json.load(f)
     folder = store.Folder(root)
     postings = folder.load_postings()["postings"]
@@ -177,7 +176,7 @@ def change(root, clock, n=None, text_file=None, why="", replay_file=None, accept
     found = sections(lines)
     body = []
     if text_file:
-        with open(text_file, encoding="utf-8") as f:
+        with open(text_file, encoding="utf-8-sig") as f:
             body = _clean(f.read())
 
     if new_name:
@@ -207,7 +206,7 @@ def change(root, clock, n=None, text_file=None, why="", replay_file=None, accept
         what = f"rule {n}"
 
     if retire and flag_file:
-        with open(flag_file, encoding="utf-8") as f:
+        with open(flag_file, encoding="utf-8-sig") as f:
             flag = [line.rstrip() for line in f.read().strip().splitlines()]
         if not flag or not flag[0].startswith("### "):
             raise Refused("a flag starts with its own '### <plain name>' line")

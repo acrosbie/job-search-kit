@@ -98,7 +98,7 @@ class Folder:
 
     @staticmethod
     def _read(path):
-        with open(path, encoding="utf-8") as f:
+        with open(path, encoding="utf-8-sig") as f:
             return f.read()
 
     def _write(self, path, text):
@@ -270,6 +270,26 @@ class Folder:
                           None if read is None else {"applications": read},
                           None if base is None else {"applications": base},
                           {"applications": applications})
+
+
+def backup_path(path):
+    """settings.toml -> settings.backup.toml: the copy kept of a file's previous version."""
+    stem, ext = os.path.splitext(path)
+    return f"{stem}.backup{ext}"
+
+
+def write_keeping_backup(path, text):
+    """Write a file the user's profile depends on (settings.toml, companies.toml, rules.md), keeping its
+    previous version beside it, so one bad save never loses it."""
+    if os.path.exists(path):
+        with open(path, encoding="utf-8-sig") as f:
+            old = f.read()
+        if old == text:
+            return
+        with open(backup_path(path), "w", encoding="utf-8", newline="\n") as f:
+            f.write(old)
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
+        f.write(text)
 
 
 def _norm_title(s):

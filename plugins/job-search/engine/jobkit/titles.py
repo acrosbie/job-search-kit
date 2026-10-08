@@ -16,9 +16,9 @@ from . import screen, settings
 def read_titles(folder):
     path = os.path.join(folder, "data", "titles-latest.tsv")
     if not os.path.exists(path):
-        raise FileNotFoundError(path)
+        raise FileNotFoundError(2, "no scan has saved its titles yet: run a scan first", path)
     rows = []
-    with open(path, encoding="utf-8") as f:
+    with open(path, encoding="utf-8-sig") as f:
         next(f, None)
         for line in f:
             parts = line.rstrip("\n").split("\t")

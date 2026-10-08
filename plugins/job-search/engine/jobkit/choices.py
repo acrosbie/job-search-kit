@@ -92,6 +92,12 @@ def record(root, clock, choices):
         if not cid or (action not in POSTING_ACTIONS and action not in APP_ACTIONS):
             out["unknown"].append({**brief, "why": "not a choice the page makes"})
             continue
+        if _when(c.get("at")) == _EPOCH:  # never "applied on 1 January 1970"
+            out["unknown"].append({**brief, "why": "the click carries no time, so its day can't be known; say it in chat"})
+            continue
+        if action == "contact" and not (c.get("contact") or "").strip():  # an empty name would erase the one on record
+            out["unknown"].append({**brief, "why": "no name was given for the contact"})
+            continue
         if cid in done:
             out["already"].append(brief)
             continue
@@ -145,7 +151,7 @@ def handled(root, clock, days=30):
 def record_file(root, clock, path):
     """The same, from a file: a JSON list of choices, or {"choices": [...]}, or the text the page's
     "Copy my choices" button makes, with its [choices: ...] block."""
-    with open(path, encoding="utf-8") as f:
+    with open(path, encoding="utf-8-sig") as f:
         text = f.read()
     start = text.find("[choices:")
     if start >= 0:

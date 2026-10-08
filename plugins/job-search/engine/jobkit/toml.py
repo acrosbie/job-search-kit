@@ -11,5 +11,5 @@ TOMLDecodeError = _toml.TOMLDecodeError
 
 
 def load_file(path):
-    with open(path, encoding="utf-8") as f:
+    with open(path, encoding="utf-8-sig") as f:
         return loads(f.read())

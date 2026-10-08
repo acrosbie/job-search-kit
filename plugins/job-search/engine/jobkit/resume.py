@@ -144,7 +144,7 @@ def parse_about(text):
 
 
 def read_about(root):
-    with open(os.path.join(root, ABOUT), encoding="utf-8") as f:
+    with open(os.path.join(root, ABOUT), encoding="utf-8-sig") as f:
         return parse_about(f.read())
 
 
@@ -307,7 +307,7 @@ def check_text(text, entries):
 
 
 def _read(path):
-    with open(path, encoding="utf-8") as f:
+    with open(path, encoding="utf-8-sig") as f:
         return f.read()
 
 
