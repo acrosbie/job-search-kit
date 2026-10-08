@@ -50,7 +50,7 @@ def cmd_scan(a):
     if a.as_of:  # replays compare dates, so they pin the clock
         clock = Clock(settings.load(a.folder).timezone, fixed=dt.datetime.fromisoformat(a.as_of))
     summary = scan.run(a.folder, only=a.only, clock=clock)
-    due = track.due(a.folder, clock)  # every scan also runs the day-21 close
+    due = _due(a.folder, clock)  # every scan also runs the day-21 close
     summary["closed_day_21"] = due["closed_now"]
     summary["follow_ups_due"] = {k: len(due[k]) for k in ("send", "find_person", "closing")}
     summary["due"] = due  # everything catching up needs (running-the-engine.md, 5a), so the scan skill needn't run due
@@ -141,15 +141,19 @@ def cmd_applications(a):
     return 0
 
 
+def _due(folder, clock):
+    """due, with everything catching up needs (running-the-engine.md, 5a)."""
+    out = track.due(folder, clock)
+    _refresh_page(folder, False)  # so the page is compared after anything due just closed
+    out["page_behind"] = schedule.page_behind(folder, settings.load(folder))
+    out["resume_stale"] = resume.stale(folder)
+    out["interviews_soon"] = interviews.soon(folder, clock)
+    out["debrief_due"] = interviews.debrief_due(folder, clock)
+    return out
+
+
 def cmd_due(a):
-    clock = _clock(a.folder)
-    out = track.due(a.folder, clock)
-    _refresh_page(a.folder, False)  # so the page is compared after anything due just closed
-    out["page_behind"] = schedule.page_behind(a.folder, settings.load(a.folder))
-    out["resume_stale"] = resume.stale(a.folder)
-    out["interviews_soon"] = interviews.soon(a.folder, clock)
-    out["debrief_due"] = interviews.debrief_due(a.folder, clock)
-    _out(out)
+    _out(_due(a.folder, _clock(a.folder)))
     return 0
 
 
