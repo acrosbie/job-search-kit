@@ -40,19 +40,28 @@ def recent_applications(company, applications, postings, today, days):
     return found
 
 
-def queue(root, clock):
+def _newest(kv):
+    """Newest first: by the date the board says it was posted, or the day the scan first saw it."""
+    v = kv[1]
+    d = _date(v.get("posted")) or _date(v.get("first_seen")) or dt.date.min
+    return (-d.toordinal(), v.get("company", "").casefold(), v.get("title", ""))
+
+
+def queue(root, clock, limit=0):
+    """The postings waiting for a verdict, newest first. With `limit`, only that many: a first scan
+    can save hundreds, and each is read in full, so they're gone through in batches (`more` says how
+    many wait after these)."""
     s = settings.load(root)
     folder = store.Folder(root)
     postings = folder.load_postings()["postings"]
     applications = folder.load_applications()
     today = dt.date.fromisoformat(clock.today())
-    waiting = sorted(((k, v) for k, v in postings.items() if v.get("status") == "new"),
-                     key=lambda kv: (kv[1].get("company", "").casefold(), kv[1].get("title", "")))
+    waiting = sorted(((k, v) for k, v in postings.items() if v.get("status") == "new"), key=_newest)
     by_company = {}
     for k, v in waiting:
         by_company.setdefault(v.get("company", "").casefold(), []).append(k)
     out = []
-    for k, v in waiting:
+    for k, v in (waiting[:limit] if limit else waiting):
         out.append({
             "key": k,
             "num": v.get("num"),
@@ -62,11 +71,14 @@ def queue(root, clock):
             "flag": v.get("flag", ""),
             "salary": v.get("salary", ""),
             "url": v.get("url", ""),
+            "posted": v.get("posted", ""),
             "first_seen": v.get("first_seen", ""),
             "gone": v.get("gone", ""),
+            "unread": bool(v.get("unread")),
             "description_file": f"data/postings/{v.get('file') or k + '.md'}",
             "applied_recently_at_company": recent_applications(v.get("company", ""), applications, postings,
                                                                today, s.cooldown_days),
             "same_company_in_queue": [x for x in by_company[v.get("company", "").casefold()] if x != k],
         })
-    return {"count": len(out), "cooldown_days": s.cooldown_days, "today": today.isoformat(), "postings": out}
+    return {"count": len(waiting), "shown": len(out), "more": len(waiting) - len(out), "cooldown_days": s.cooldown_days,
+            "today": today.isoformat(), "postings": out}

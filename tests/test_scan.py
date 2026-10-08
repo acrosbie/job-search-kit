@@ -236,3 +236,18 @@ class QueueTest(ScanBase):
         self.assertEqual([r["role"] for r in recent], ["Head of Support Operations Manager", "LinkedIn one"])
         self.assertFalse(recent[1]["date_known"])
         self.assertEqual(len(first["same_company_in_queue"]), 2)
+
+    def test_newest_first_in_batches(self):
+        # Found in an audit: the first scan's backlog came sorted by company with no date, so the
+        # day-2 "go through the new ones" got all of it at once.
+        from jobkit import queue as triage_queue
+        self.scan()
+        state = self.folder.load_postings()
+        waiting = sorted(k for k, v in state["postings"].items() if v["status"] == "new")
+        for i, k in enumerate(waiting):
+            state["postings"][k]["posted"] = f"2026-09-1{i}"
+        self.folder.save_postings(state)
+        q = triage_queue.queue(self.root, Clock("", fixed=FIXED), limit=2)
+        self.assertEqual((q["count"], q["shown"], q["more"]), (len(waiting), 2, len(waiting) - 2))
+        self.assertEqual([p["key"] for p in q["postings"]], list(reversed(waiting))[:2])
+        self.assertEqual(q["postings"][0]["posted"], f"2026-09-1{len(waiting) - 1}")

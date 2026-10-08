@@ -57,7 +57,7 @@ def cmd_scan(a):
 
 
 def cmd_queue(a):
-    _out(triage_queue.queue(a.folder, _clock(a.folder)))
+    _out(triage_queue.queue(a.folder, _clock(a.folder), limit=a.limit or 0))
     return 0
 
 
@@ -306,8 +306,9 @@ def parser():
     s.add_argument("--as-of", metavar="TIME", help="pretend it is this time (ISO, with offset); for replays")
     s.set_defaults(func=cmd_scan)
 
-    s = sub.add_parser("queue", help="the postings waiting for triage, with cooldown facts")
+    s = sub.add_parser("queue", help="the postings waiting for triage, newest first, with cooldown facts")
     s.add_argument("--folder", required=True)
+    s.add_argument("--limit", type=int, help="only the newest N; `more` says how many wait after them")
     s.set_defaults(func=cmd_queue)
 
     s = sub.add_parser("show", help="print a saved posting")

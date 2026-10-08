@@ -14,7 +14,7 @@ Read each waiting posting the way a careful friend would: in full, against the u
    - `profile/rules.md`: the rules and flags you will apply;
    - `profile/about-me.md`: what they have and haven't done, and how to present them;
    - `profile/what-i-want.md`: their preferences, in their words.
-3. **Get the queue:** `python3 "<folder>/.kit/engine/run.py" queue --folder "<folder>"`. If it's empty, say there's nothing waiting and offer to check for new jobs.
+3. **Get the queue, newest first, 15 at a time:** `python3 "<folder>/.kit/engine/run.py" queue --limit 15 --folder "<folder>"`. If it's empty, say there's nothing waiting and offer to check for new jobs. If `more` isn't 0, go through these 15, then say how many older ones are waiting and offer the next 15. Skip any marked `unread` (its description couldn't be fetched yet; the next scan reads it).
 
 ## For each posting in the queue
 

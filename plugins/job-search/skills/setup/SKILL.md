@@ -138,7 +138,7 @@ run.py try-titles --folder "<folder>" --level "<new pattern>"
 ```
 Tell them in one line what it changes ("That adds 43 Senior Accountant jobs and loses none"). Save it with `settings set ... --setup` when they agree. Do at most three rounds. Then say what's left: what the filter keeps and what it skips.
 
-**Then go through the first batch together**, using the triage skill. Pick 5 to 10 of the newest postings if there are many. When they disagree with a verdict, ask why. If their reason is a rule ("too far", "no agency jobs"), make the change with the tune skill, which shows what it would change on their saved jobs and saves it only when they say yes.
+**Then go through the first batch together**, using the triage skill. Take the newest 10 (`queue --limit 10`); the rest wait, newest first, for their next "go through the new ones". When they disagree with a verdict, ask why. If their reason is a rule ("too far", "no agency jobs"), make the change with the tune skill, which shows what it would change on their saved jobs and saves it only when they say yes.
 
 ## Step 7: scheduled checks
 
