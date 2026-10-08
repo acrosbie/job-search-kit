@@ -16,7 +16,7 @@ Never mention artifacts, storage, JSON or routes to the user. It's "your jobs pa
 
 ## If they want the file only
 
-Some people would rather not have a page in their Claude account. If `[page] route` is `file`, their jobs page is **My jobs.html** in their folder, and that's all:
+Some people would rather not have a page in their Claude account: offer this only when they ask ("can I keep it all in my folder?"). If `[page] route` is `file`, their jobs page is **My jobs.html** in their folder, and that's all:
 - never make or publish a page, and skip "Keeping it current" and "Reading the user's clicks": the engine rewrites My jobs.html after every change;
 - "show me my jobs page" means: tell them to open **My jobs.html** in their Job Search folder;
 - their choices come as text they paste ("The backup" below), or by number in chat.
@@ -25,7 +25,7 @@ If they ask for the file only, run `run.py settings set page.route file --folder
 
 ## Making the page
 
-Do this in setup's last step, or the first time any skill finds `[page] url` empty, unless `[page] route` is `file`. Setup asks first: "Would you like your jobs page in your Claude account, where your clicks save by themselves, or just as a file in this folder?"
+Do this in setup's last step, or the first time any skill finds `[page] url` empty, unless `[page] route` is `file`. Don't ask first: the page in their Claude account is the default, because clicks there save by themselves. Only if they ask to keep everything in their folder does the file-only route apply (below).
 
 1. If `[you] name` is empty, set it to the user's first name (`run.py settings set you.name "<first name>" --folder "<folder>"`), taking it from `START HERE.md` or asking. Then run `run.py page` so the page carries it.
 2. Publish `<folder>/data/jobs-page.html` as an artifact, with:
