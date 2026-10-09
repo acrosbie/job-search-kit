@@ -6,6 +6,6 @@
 if git diff --cached --name-only | grep -q '^plugins/job-search/engine/'; then
   PY=python3
   python3 -c 'import sys' >/dev/null 2>&1 || PY=python  # on Windows, python3 can be a shortcut that runs nothing
-  "$PY" tools/update_fingerprint.py >/dev/null || exit 1
+  "$PY" -B tools/update_fingerprint.py >/dev/null || exit 1
   git add plugins/job-search/engine/jobkit/__init__.py
 fi

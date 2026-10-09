@@ -10,6 +10,9 @@ import re
 import sys
 
 ENGINE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "plugins", "job-search", "engine")
+# No compiled copy of jobkit/__init__.py: rewritten below with the same size, often in the same second,
+# a cached one would still be read afterwards with the old fingerprint.
+sys.dont_write_bytecode = True
 sys.path.insert(0, ENGINE)
 
 from jobkit import fingerprint  # noqa: E402
