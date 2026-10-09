@@ -120,6 +120,17 @@ class ScheduleTest(InterviewBase):
         self.assertEqual(interviews.debrief_due(self.root, CLOCK), [])
         self.assertEqual([x["on"] for x in page.build(self.root, CLOCK)["coming_up"]], ["2026-09-26T10:00"])
 
+    def test_cancelling_one_writes_its_event_cancelled(self):
+        out = interviews.schedule(self.root, CLOCK, self.app, "2026-09-26T10:00", status="interview")
+        booked = self.read(out["calendar"])
+        interviews.cancel(self.root, CLOCK, self.app, "2026-09-26")
+        gone = self.read(out["calendar"])
+        uid = lambda text: [line for line in text.split("\r\n") if line.startswith("UID:")]
+        self.assertEqual(uid(booked), uid(gone))
+        for line in ("METHOD:CANCEL", "STATUS:CANCELLED", "SEQUENCE:1"):
+            self.assertIn(line + "\r\n", gone)
+        self.assertNotIn("VALARM", gone)
+
     def test_a_moved_interview(self):
         interviews.schedule(self.root, CLOCK, self.app, "2026-09-26T10:00", status="interview")
         interviews.cancel(self.root, CLOCK, self.app, "2026-09-26")

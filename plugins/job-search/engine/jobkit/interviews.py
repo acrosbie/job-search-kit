@@ -102,13 +102,14 @@ def _ics_text(s):
     return (s or "").replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,").replace("\n", "\\n")
 
 
-def calendar(a, entry, tz, stamp):
+def calendar(a, entry, tz, stamp, cancel=False):
     """An .ics file's text for one interview: double-clicked, it opens in the user's calendar.
 
     Its UID is the application and the day, so the file written again when the time is known (or
     anything else changes) updates the same event rather than adding a second; SEQUENCE says which
     is newer. A day with no time yet is a tentative all-day event with no reminder: one 30 minutes
-    before an all-day event would go off the evening before."""
+    before an all-day event would go off the evening before. `cancel` writes the same event cancelled:
+    opened, it takes the interview off the calendar."""
     who = f" with {entry['with']}" if entry.get("with") else ""
     stage = {"screen": "screen", "interview": "interview"}.get(entry.get("stage"), "interview")
     summary = f"{a.get('company', '')}: {entry.get('kind') + ' ' if entry.get('kind') else ''}{stage}{who}"
@@ -118,7 +119,7 @@ def calendar(a, entry, tz, stamp):
     uid = f"{re.sub(r'[^a-z0-9-]+', '-', a['id'].lower())}-{entry['on'][:10]}@job-search-kit"
     start = _start(entry, tz)
     lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//job-search-kit//interview//EN", "CALSCALE:GREGORIAN",
-             "METHOD:PUBLISH", "BEGIN:VEVENT", f"UID:{uid}", f"SEQUENCE:{entry.get('sequence', 0)}",
+             f"METHOD:{'CANCEL' if cancel else 'PUBLISH'}", "BEGIN:VEVENT", f"UID:{uid}", f"SEQUENCE:{entry.get('sequence', 0)}",
              f"DTSTAMP:{stamp}"]
     if start is None:  # a date with no time: tentative, all day, and the day isn't shown as busy
         day = dt.date.fromisoformat(entry["on"])
@@ -129,12 +130,15 @@ def calendar(a, entry, tz, stamp):
         utc = start.astimezone(dt.timezone.utc)
         end = utc + dt.timedelta(minutes=entry.get("minutes") or 30)
         lines += [f"DTSTART:{utc:%Y%m%dT%H%M%SZ}", f"DTEND:{end:%Y%m%dT%H%M%SZ}", "STATUS:CONFIRMED"]
+    if cancel:
+        lines = [x for x in lines if not x.startswith("STATUS:")] + ["STATUS:CANCELLED"]
+        summary = f"Cancelled: {summary.replace('Time to confirm: ', '')}"
     lines += [f"SUMMARY:{_ics_text(summary)}", f"DESCRIPTION:{_ics_text(desc)}"]
     if entry.get("link"):
         lines += [f"LOCATION:{_ics_text(entry['link'])}", f"URL:{entry['link']}"]
     elif entry.get("kind"):
         lines.append(f"LOCATION:{_ics_text({'phone': 'Phone', 'video': 'Video call', 'onsite': 'On site'}[entry['kind']])}")
-    if start is not None:
+    if start is not None and not cancel:
         lines += ["BEGIN:VALARM", "ACTION:DISPLAY", "TRIGGER:-PT30M", f"DESCRIPTION:{_ics_text(summary)}", "END:VALARM"]
     lines += ["END:VEVENT", "END:VCALENDAR"]
     return "\r\n".join(_fold(x) for x in lines) + "\r\n"
@@ -224,8 +228,8 @@ def debriefed(root, clock, ident, on=""):
 
 def cancel(root, clock, ident, on):
     """An interview that was moved or called off: kept, marked cancelled, and no longer listed. Its
-    calendar file stays in the folder (the engine never deletes), so the user removes it from their
-    calendar. A moved one is then recorded again on its new day."""
+    calendar file is written again as the same event cancelled, so opening it takes the interview off
+    the user's calendar. A moved one is then recorded again on its new day."""
     applications = track.load(root)
     a = track.find(applications, ident)
     if a is None:
@@ -235,6 +239,11 @@ def cancel(root, clock, ident, on):
         raise Refused(f"there's no interview on {on} on that application")
     entry["cancelled"] = clock.today()
     a["history"].append(track._event(clock, clock.today(), event="interview_cancelled", value=entry["on"]))
+    if entry.get("calendar"):
+        entry["sequence"] = entry.get("sequence", 0) + 1
+        with open(os.path.join(root, *entry["calendar"].split("/")), "w", encoding="utf-8", newline="") as f:
+            f.write(calendar(a, entry, clock.tz, clock.now().astimezone(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ"),
+                             cancel=True))
     track.save(root, applications)
     return {"application": a["id"], **entry}
 

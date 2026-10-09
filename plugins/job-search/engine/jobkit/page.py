@@ -20,7 +20,7 @@ import json
 import os
 import re
 
-from . import __version__, choices, interviews, schedule, settings, store, track
+from . import __version__, choices, export, interviews, schedule, settings, store, track
 
 TEMPLATE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "page", "jobs-page.html")
 DATA_SLOT = "__JOBS_DATA__"
@@ -60,7 +60,9 @@ def build(root, clock):
     waiting = [(k, v) for k, v in postings.items() if v.get("status") in WAITING]
     screened = sorted(((k, v) for k, v in postings.items()
                        if v.get("status") == "not_a_fit" and (v.get("triaged") or v.get("first_seen", "")) >= since),
-                      key=lambda kv: (kv[1].get("triaged") or kv[1].get("first_seen", ""), kv[0]), reverse=True)[:SCREENED_MAX]
+                      key=lambda kv: (kv[1].get("triaged") or kv[1].get("first_seen", ""), kv[0]), reverse=True)
+    screened_total = len(screened)  # the page shows the latest SCREENED_MAX, and says how many there were
+    screened = screened[:SCREENED_MAX]
     linked = [(a["key"], postings[a["key"]]) for a in applications if a.get("key") in postings]
 
     # New numbers, oldest first, so the order reads naturally.
@@ -108,7 +110,7 @@ def build(root, clock):
         p = postings.get(a.get("key") or "", {})
         last = a["history"][-1] if a.get("history") else {}
         item = {"num": p.get("num") or a.get("num"), "id": a["id"], "key": a.get("key", ""),
-                "company": a.get("company", ""), "role": a.get("role", ""),
+                "company": a.get("company", ""), "role": export.position(a.get("role", "")),
                 "url": (a.get("urls") or [""])[0] or p.get("url", ""), "applied_date": a.get("applied_date", ""),
                 "estimated": bool(a.get("applied_date_estimated")), "days": st["days"], "status": a["status"],
                 "contact": a.get("contact", ""), "top_pick": a.get("top_pick"), "channel": a.get("channel", ""),
@@ -149,6 +151,7 @@ def build(root, clock):
         "todo": todo,
         "applications": apps_out,
         "screened": [{**job(k, v), "date": v.get("triaged") or v.get("first_seen", "")} for k, v in screened],
+        "screened_total": screened_total,
         "more_waiting": 0,
     })
 
@@ -174,9 +177,9 @@ FOCUS_MAX = 3
 
 
 def focus(coming, todo, waiting):
-    """What to do today, most urgent first: the next interview, then up to three actions (prep for an
-    interview in the next few days, its time, a debrief, a follow-up to send, top picks with nobody to
-    follow up with, a job worth applying to), and the newest top picks."""
+    """What to do today, most urgent first: the next interview, then up to three actions (an interview's
+    time, prep for one in the next few days, a debrief, a follow-up to send, top picks with nobody to
+    follow up with), and the jobs worth applying to, the ones the user wants first."""
     upcoming = [x for x in coming if not x["past"]]
     actions = []
     for x in upcoming:
@@ -194,14 +197,14 @@ def focus(coming, todo, waiting):
     finds = [t for t in todo if t["route"] == "find_person"]
     if finds:
         actions.append({"kind": "find_person", "count": len(finds)})
+    # Jobs worth applying to are listed once, as top picks, rather than also as "apply" actions.
     picks = [j for j in waiting if j["status"] == "worth_applying"]
     picks.sort(key=lambda j: (j["by"] != "user", -(j["num"] or 0)))  # the ones they want first
-    for j in picks:
-        actions.append({"kind": "apply", "num": j["num"], "key": j["key"], "company": j["company"], "title": j["title"]})
     return {"next_interview": upcoming[0] if upcoming else None, "actions": actions[:FOCUS_MAX],
             "more_actions": max(0, len(actions) - FOCUS_MAX),
             "top_picks": [{"num": j["num"], "key": j["key"], "company": j["company"], "title": j["title"],
-                           "headline": (j.get("summary") or {}).get("headline", "")} for j in picks[:FOCUS_MAX]]}
+                           "headline": (j.get("summary") or {}).get("headline", "")} for j in picks[:FOCUS_MAX]],
+            "more_picks": max(0, len(picks) - FOCUS_MAX)}
 
 
 REACHED = {"screen": ("screen", "interview", "offer"), "interview": ("interview", "offer"), "offer": ("offer",)}

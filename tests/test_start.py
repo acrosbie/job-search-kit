@@ -66,6 +66,21 @@ class StartTest(TrackBase):
         step = next(n for n in start.start(self.root, on(24))["next"] if n["do"] == "tell_about_records")
         self.assertEqual(step["problems"][0]["what"], "open applications with no company name")
 
+    def test_whats_new_is_said_once(self):
+        from jobkit import __version__, news
+        self.folder.log_run({"at": "2026-09-20T09:00:00-06:00", "boards": 3})
+        step = next(n for n in start.start(self.root, on(24))["next"] if n["do"] == "say_whats_new")
+        minor = tuple(int(x) for x in __version__.split("."))[:2]
+        self.assertEqual(step["lines"], [news.NEWS[v] for v in sorted(news.NEWS, key=news._v) if news._v(v)[:2] == minor])
+        self.assertNotIn("say_whats_new", dos(start.start(self.root, on(24))))
+        self.folder.write_json(os.path.join(self.folder.data, "kit.json"), {"seen_version": "0.9.0"})
+        lines = next(n for n in start.start(self.root, on(24))["next"] if n["do"] == "say_whats_new")["lines"]
+        self.assertEqual(lines[0], news.NEWS["0.10.0"])
+
+    def test_a_folder_being_set_up_hears_no_news(self):
+        open(self.folder.runs_log, "w").close()  # no scan yet (TrackBase's own scan taken away)
+        self.assertNotIn("say_whats_new", dos(start.start(self.root, on(24))))
+
     def test_from_the_command_line_and_doctor(self):
         with contextlib.redirect_stdout(io.StringIO()) as out:
             self.assertEqual(cli.main(["start", "--folder", self.root, "--expect", __fingerprint__]), 0)

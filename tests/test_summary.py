@@ -51,6 +51,13 @@ class SummaryTest(ScanBase):
         self.assertIn("everyday words", self.refused(headline="Squarely in lane for you."))
         self.assertIn("isn't in the posting", self.refused(fits=['You\'d "own the global support budget" there.']))
 
+    def test_someone_named_in_the_sentence_can_be_she_or_he(self):
+        out = summary.check({**GOOD, "ask": "Ask Hannah about her team, on the first call."}, "worth_applying",
+                            self.folder.read_description(KEY))
+        self.assertEqual(out["ask"], "Ask Hannah about her team, on the first call.")
+        self.assertIn('"his"', self.refused(watch=["Hands-on Snowflake is not his."]))  # about the user: still refused
+        self.assertIn('"the user"', self.refused(ask="Ask Hannah whether the user fits."))
+
     def test_what_each_verdict_needs(self):
         self.assertIn("ask:", self.refused("your_call", ask=""))
         self.assertIn("tailor:", self.refused("worth_applying", tailor=[]))

@@ -48,6 +48,7 @@ Quote every path. The answer's `next` lists what only you can do now, in order. 
 | `offer_prep`, `offer_debrief` | "Your Acme screen is tomorrow at 10:00. Want to go through your prep?" / "How did your Acme screen go? Two minutes now, while it's fresh, helps the next one." Only on a yes (the interview skill) |
 | `ask_channels` | "How did you apply to Acme?" for each listed (on their site, through LinkedIn, through someone they know, some other way), as the track skill asks. Record each with `track <id> --channel ...`. Once per conversation; `more` waits for next time |
 | `offer_resume_update` | Once, in one line: `profile_changed`, "Your resume still says 'Lead a team of 6', which you corrected. Want me to update it?"; `changed_since_made`, "Your resume's Word and PDF files are older than its latest changes. Want me to make them again?" Only on a yes (the resume skill) |
+| `say_whats_new` | Once, in one line, after what they asked: "New since you last used the kit: ..." from its `lines`. Don't list every line if there are several; give the one that matters to them |
 | `offer_setup` | Step 1's not-set-up case |
 
 ## Commands

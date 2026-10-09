@@ -164,8 +164,11 @@ class TodayTest(ScanBase):
         f = d["focus"]
         self.assertEqual((f["next_interview"]["company"], f["next_interview"]["time_unknown"]), ("Acme", True))
         self.assertEqual([a["kind"] for a in f["actions"]], ["time", "prep", "find_person"])
-        self.assertEqual(f["more_actions"], 1)  # applying to #1 waits below
-        self.assertEqual([p["key"] for p in f["top_picks"]], ["greenhouse-acme-1"])
+        self.assertEqual(f["more_actions"], 0)
+        self.assertEqual([p["key"] for p in f["top_picks"]], ["greenhouse-acme-1"])  # listed once, not also an action
+        self.assertNotIn("apply", [a["kind"] for a in f["actions"]])
+        role = next(a["role"] for a in d["applications"] if a["company"] == "Globex")
+        self.assertEqual(role, "Senior Manager, Customer Experience")  # without the "(remote US)" the tracker added
         search = next(t["search"] for t in d["todo"] if t["route"] == "find_person")
         self.assertEqual(search, 'Globex "Customer Experience" (director OR head OR VP)')
         configure.set_value(self.root, "page.contact_search", "head OR VP")
@@ -181,6 +184,13 @@ class TodayTest(ScanBase):
         self.assertEqual(len(d["activity"]), 8)
         self.assertEqual(d["activity"][-2:], [{"week": "2026-08-31", "applied": 2}, {"week": "2026-09-07", "applied": 0}])
         self.assertEqual(d["last_scan"]["status"], "partial")  # test_scan's Broken board failed
+
+    def test_screened_out_says_how_many_there_were(self):
+        old = page.SCREENED_MAX
+        page.SCREENED_MAX = 2
+        self.addCleanup(setattr, page, "SCREENED_MAX", old)
+        d = page.build(self.root, on(24))
+        self.assertEqual((len(d["screened"]), d["screened_total"]), (2, 3))
 
     def test_an_application_turned_down_after_an_interview_still_counts_as_one(self):
         from jobkit import interviews

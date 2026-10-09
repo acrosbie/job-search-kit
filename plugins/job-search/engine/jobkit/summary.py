@@ -29,6 +29,20 @@ COUNTS = {"fits": (1, 3), "watch": (0, 4), "tailor": (0, 3), "mirror": (0, 8)}
 
 _RULE = re.compile(r"\brules?\s*#?\d+", re.I)
 _THIRD_PERSON = re.compile(r"\b(?:he|his|him|she|her|hers|the user|the candidate|the applicant|the job ?seeker)\b", re.I)
+# A pronoun about someone the sentence introduces by name ("Ask Hannah about her team") is about them,
+# not the user; "the user" or "the candidate" never is.
+_ABOUT_SOMEONE = re.compile(r"\b(?i:ask|asking|tell|email|message|thank|meet|meeting|with)\s+[A-Z][a-z]+\b[^.!?]*$")
+
+
+def _third_person(text):
+    for m in _THIRD_PERSON.finditer(text):
+        word = m.group(0)
+        if word.lower().startswith("the "):
+            return word
+        sentence = text[max(text.rfind(c, 0, m.start()) for c in ".!?") + 1:m.start()]
+        if not _ABOUT_SOMEONE.search(sentence):
+            return word
+    return ""
 _LABEL = re.compile(r"^(?:tailor|question|tilt|your call|not a fit|worth applying|mirror|note)\s*[:(]", re.I)
 _JARGON = re.compile(r"\b(?:in[- ]lane|off[- ]lane|on[- ]lane)\b", re.I)
 _QUOTED = re.compile(r"[\"“]([^\"“”]{3,}?)[\"”]")
@@ -49,8 +63,8 @@ def _problems(field, text, posting_text, quote_found):
     out = []
     if _RULE.search(text):
         out.append("names a rule by number; that stays behind the call")
-    if _THIRD_PERSON.search(text):
-        out.append(f"says \"{_THIRD_PERSON.search(text).group(0)}\"; write to the user as \"you\"")
+    if _third_person(text):
+        out.append(f"says \"{_third_person(text)}\"; write to the user as \"you\"")
     if _LABEL.search(text):
         out.append("starts with a label; the page adds its own")
     if _JARGON.search(text):

@@ -1,7 +1,8 @@
 """Write the engine's fingerprint into plugins/job-search/engine/jobkit/__init__.py.
 
 Run after changing any file under plugins/job-search/engine/ (tests/test_guards.py fails until you
-do): python tools/update_fingerprint.py
+do): python tools/update_fingerprint.py. The pre-commit hook in .githooks runs it for you once it's
+turned on: git config core.hooksPath .githooks
 """
 
 import os

@@ -54,6 +54,19 @@ class SnapshotTest(TrackBase):
         self.assertEqual(code, 1)
         self.assertIn("holds no", err)
 
+    def test_kept_gzipped_and_older_ones_still_read(self):
+        self.apply("Globex", "Support Lead")
+        snap = self.folder.list_snapshots()[0]
+        slot = os.path.join(self.folder.snapshots, f"{snap['slot']:02d}")
+        self.assertTrue(os.path.exists(os.path.join(slot, "data", "applications.json.gz")))
+        self.assertFalse(os.path.exists(os.path.join(slot, "data", "applications.json")))
+        # A slot written before 0.11.1 holds the files as they were.
+        with open(os.path.join(slot, "data", "applications.json"), "wb") as f:
+            f.write(b'{"applications": []}')
+        meta = self.folder.read_json(os.path.join(slot, "meta.json"))
+        self.folder.write_json(os.path.join(slot, "meta.json"), {k: v for k, v in meta.items() if k != "gzip"})
+        self.assertEqual(self.folder.snapshot_file(snap["slot"], "data/applications.json"), b'{"applications": []}')
+
     def test_working_on_a_copy_doesnt_carry_snapshots_back(self):
         self.apply("Globex", "Support Lead")
         code, out, _ = self.run_cli("changed", "--since", "2000-01-01T00:00:00+00:00")

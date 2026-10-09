@@ -18,7 +18,7 @@ import json
 import os
 import sys
 
-from . import __fingerprint__, __version__, fingerprint, interviews, page, resume, schedule, settings, store, track
+from . import __fingerprint__, __version__, fingerprint, interviews, news, page, resume, schedule, settings, store, track
 
 PROFILE = ("profile/settings.toml", "profile/companies.toml", "profile/rules.md", "profile/about-me.md",
            "profile/what-i-want.md")
@@ -190,6 +190,9 @@ def start(root, clock, expect=""):
                     "more": max(0, len(open_no_channel) - ASK_CHANNELS)})
     if stale:
         nxt.append({"do": "offer_resume_update", "why": "a resume no longer matches", "resumes": stale})
+    lines = news.unseen(root, has_history=bool(runs))
+    if lines:
+        nxt.append({"do": "say_whats_new", "why": "the kit was updated since this folder last used it", "lines": lines})
     out["next"] = nxt
     return out
 

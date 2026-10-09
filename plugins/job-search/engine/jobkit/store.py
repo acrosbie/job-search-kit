@@ -37,6 +37,7 @@ The oldest slot is written over: nothing is ever deleted.
 """
 
 import copy
+import gzip
 import hashlib
 import json
 import os
@@ -301,16 +302,16 @@ class Folder:
         if not 1 <= slot <= SNAPSHOT_SLOTS:
             slot = 1
         folder = os.path.join(self.snapshots, f"{slot:02d}")
-        for rel, body in bodies.items():
-            path = os.path.join(folder, *rel.split("/"))
+        for rel, body in bodies.items():  # gzipped: 600 KB of records keep in about 90 KB
+            path = os.path.join(folder, *rel.split("/")) + ".gz"
             os.makedirs(os.path.dirname(path), exist_ok=True)
             with open(path, "wb") as f:
-                f.write(body)
+                f.write(gzip.compress(body, mtime=0))
         # Written last: a slot's meta names only the files this snapshot holds, so a file left there by
         # an older use of the slot is never taken for part of it.
         n = int(index.get("taken") or 0) + 1  # orders snapshots taken within the same second
         meta = {"slot": slot, "n": n, "at": stamp, "before": command, "engine": engine, "files": sorted(bodies),
-                "digest": digest}
+                "digest": digest, "gzip": True}
         self.write_json(os.path.join(folder, "meta.json"), meta)
         self.write_json(self.snapshots_index, {"next": slot % SNAPSHOT_SLOTS + 1, "digest": digest, "taken": n})
         return meta
@@ -329,7 +330,11 @@ class Folder:
         meta = self.read_json(os.path.join(self.snapshots, f"{int(slot):02d}", "meta.json")) or {}
         if rel not in meta.get("files", []):
             return None
-        with open(os.path.join(self.snapshots, f"{int(slot):02d}", *rel.split("/")), "rb") as f:
+        path = os.path.join(self.snapshots, f"{int(slot):02d}", *rel.split("/"))
+        if meta.get("gzip"):
+            with open(path + ".gz", "rb") as f:
+                return gzip.decompress(f.read())
+        with open(path, "rb") as f:  # taken before 0.11.1
             return f.read()
 
     def put_back(self, rel, body):
