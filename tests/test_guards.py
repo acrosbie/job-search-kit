@@ -111,6 +111,22 @@ class SkillFrontmatterTest(unittest.TestCase):
                 self.assertNotIn(": ", value, name)
 
 
+class TriggerTest(unittest.TestCase):
+    def test_each_phrase_has_one_skill(self):
+        # A phrase listed by two skills makes it a coin toss which one answers ("I have an interview
+        # with ..." was in both track and interview).
+        skills = os.path.join(REPO, "plugins", "job-search", "skills")
+        owner = {}
+        for name in sorted(os.listdir(skills)):
+            head = read(os.path.join(skills, name, "SKILL.md")).split("\n---", 1)[0]
+            desc = next(line for line in head.splitlines() if line.startswith("description: "))
+            self.assertLessEqual(len(desc) - len("description: "), 330, f"{name}: keep the description short")
+            for phrase in re.findall(r'"([^"]+)"', desc):
+                key = re.sub(r"[^a-z' ]+", "", phrase.lower()).strip()
+                self.assertNotIn(key, owner, f'"{phrase}" is in both {owner.get(key)} and {name}')
+                owner[key] = name
+
+
 class PrivacyTest(unittest.TestCase):
     # The reference system's own file names may appear only where the reference format is the subject:
     # the tools that read it, the tests of those tools, this file, and the docs that explain them.

@@ -1,6 +1,6 @@
 ---
 name: track
-description: Record what happens with the user's job applications - "I applied to X", replies, phone screens, interviews, offers, rejections, withdrawals, follow-ups and contacts - and say which follow-ups are due. Also opens their jobs page. Use when the user says "I applied to ...", "X replied", "I have an interview with ...", "X turned me down", "I withdrew from ...", "the recruiter at X is ...", "I followed up with ...", "what's due?", "any follow-ups?", "where do things stand?", "show me my jobs page", "open my jobs page" or "my work search log". Needs the user's Job Search folder connected.
+description: Record what happens with applications and say what's due. Use for "I applied to ...", "X replied", "X turned me down", "I withdrew from ...", "the recruiter at X is ...", "I followed up with ...", "what's due?", "where do things stand?", "open my jobs page" or "my work search log". Needs their Job Search folder.
 ---
 
 # Track: applications, and what happens next
@@ -89,9 +89,13 @@ Many unemployment programs ask for a weekly record of job-search contacts. Every
 
 Never fill in a contact, a method or a result they didn't give.
 
-## "Show me my jobs page"
+## "Show me my jobs page", "open it"
 
-Follow `${CLAUDE_PLUGIN_ROOT}/reference/jobs-page.md`. Make the page if there isn't one; otherwise bring it up to date. Then give them the link. If they'd rather have a file, point them to **My jobs.html** in their Job Search folder.
+Their jobs page is the page in their Claude account. "Open my jobs page", "show me my jobs", and "open it" or "can I see it?" right after a scan or triage all mean that page:
+1. Follow `${CLAUDE_PLUGIN_ROOT}/reference/jobs-page.md`: make the page if there isn't one; otherwise bring it up to date.
+2. Open it for them if your tools can (the Artifact tool's `open`), and give them its link either way.
+
+Never hand over **My jobs.html** or a copy of it instead: its clicks have to be copied by hand. Only if their `[page] route` is `file` (they asked for the folder only), point them to **My jobs.html** in their Job Search folder.
 
 ## Then
 

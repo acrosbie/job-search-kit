@@ -1,6 +1,6 @@
 ---
 name: add-job
-description: Save and screen a job the user found themselves - a link they paste from LinkedIn, Indeed, a company's careers site or anywhere else, or the text of a job posting. Use when the user pastes a job link or a job description, or says "what about this one", "add this job", "screen this one", or "is this worth applying to" with a link. Needs the user's Job Search folder connected.
+description: Save and screen a job the user found - a pasted link (LinkedIn, Indeed, a careers site) or job description. Use when they paste one, or say "add this job", "screen this one", "what about this one" or "is this worth applying to". Needs their Job Search folder.
 ---
 
 # Add a job: a link or a posting the user found

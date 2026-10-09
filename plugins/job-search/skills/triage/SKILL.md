@@ -1,6 +1,6 @@
 ---
 name: triage
-description: Go through new job postings and sort each into Worth applying, Your call, or Not a fit, quoting the posting and using the user's own rules and background. Use when the user says "go through the new ones", "go through them", "triage", "is this one worth applying to", or gives their own verdicts ("skip the third one, it's too far"). Needs the user's Job Search folder connected.
+description: Go through new postings and sort each into Worth applying, Your call or Not a fit, quoting the posting, by the user's own rules. Use for "go through the new ones", "go through them", "triage", or their own verdicts ("skip the third one, it's too far"). Needs their Job Search folder.
 ---
 
 # Triage: go through the new ones

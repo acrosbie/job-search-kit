@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Set up a new job search in the user's connected folder, through one guided conversation - background from their resume and LinkedIn, their field, what they want, their screening rules, the job boards to read, a first scan and calibration, and a daily check. Use when the user says "set me up", "get started", "set up my job search", or connects an empty Job Search folder. Resumes where it left off.
+description: Set up a new job search in one guided conversation - background, field, wishes, screening rules, job boards, a first scan and a daily check. Use for "set me up", "get started", "set up my job search", or an empty Job Search folder. Resumes where it left off.
 ---
 
 # Setup: from "set me up" to a first screened list

@@ -1,6 +1,6 @@
 ---
 name: review
-description: The weekly review of the user's job search - where they overturned a rule, a spot-check of what the scan turned away, titles it nearly kept, which rules fire, follow-ups due, and once a month what happened to their applications and whether their profile is still right. Use when the user says "go through my review", "weekly review", "review my rules", "how's my search going", or when a scheduled check says "prepare my weekly review". Also sets up or stops the weekly review ("set up a weekly review"). Needs the user's Job Search folder connected.
+description: The weekly review of the user's search - overturned rules, a spot-check of what the scan turned away, near-miss titles, follow-ups, monthly outcomes. Use for "go through my review", "weekly review", "how's my search going", "prepare my weekly review" or "set up a weekly review". Needs their Job Search folder.
 ---
 
 # Weekly review

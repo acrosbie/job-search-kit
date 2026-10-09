@@ -1,6 +1,6 @@
 ---
 name: interview
-description: Help the user prepare for and learn from job interviews, from their own confirmed background - record an interview (with a calendar file), write a prep sheet for it, run a mock interview, go through how it went afterwards, and keep a story bank and a one-page quick reference. Use when the user says "I have an interview with ...", "I have a screen with ... tomorrow", "prep me for my ... interview", "help me prepare", "mock interview", "practice", "what should I ask them", "how did my interview go", "debrief", "story bank" or "cheat sheet". Needs the user's Job Search folder connected.
+description: Interviews, from the user's confirmed background - record one with a calendar file, a prep sheet, a mock, a debrief, a story bank. Use for "I have an interview with ...", "I have a screen with ...", "prep me", "mock interview", "how did my interview go", "debrief" or "cheat sheet". Needs their Job Search folder.
 ---
 
 # Interview: prepare from what's true, and learn from each one

@@ -1,6 +1,6 @@
 ---
 name: scan
-description: Check the user's job boards for new postings and say what's new. Use when the user says "any new jobs?", "check for new jobs", "scan", "run a scan", or when a scheduled check runs. Also sets up or stops the daily check ("check my job boards every morning", "stop the daily check"). Needs the user's Job Search folder connected.
+description: Check the user's job boards and say what's new. Use for "any new jobs?", "check for new jobs", "scan", a scheduled check, or to set up or stop the daily check ("check my job boards every morning", "stop the daily check"). Needs their Job Search folder.
 ---
 
 # Scan: any new jobs?

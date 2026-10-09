@@ -1,6 +1,6 @@
 ---
 name: tune
-description: Change one of the user's screening rules the careful way - state the change and its evidence, replay it over their saved jobs, name anything it would flip, and save it with its history only after their yes. Use when the user says "stop showing me ...", "change my rules", "that rule is wrong", "I'd take jobs in ...", "add ... to my rules", or when the weekly review or triage proposes a change. Needs the user's Job Search folder connected.
+description: Change one of the user's screening rules the careful way - replay it over their saved jobs, name what it flips, save only after their yes. Use for "stop showing me ...", "change my rules", "that rule is wrong", "I'd take jobs in ..." or when the review or triage proposes one. Needs their Job Search folder.
 ---
 
 # Tune: change one rule, carefully
