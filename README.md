@@ -179,7 +179,13 @@ Claude: 38 of your saved postings state a range. The middle of their tops
 <details>
 <summary><b>The jobs page</b></summary>
 
-What's waiting on you, what's due and every application, with the 21-day clock on each. Mark jobs as you read them: your clicks save in your own Claude account, and Claude records them in your folder the next time you talk. A copy, **My jobs.html**, sits in your folder and is always up to date.
+It opens with Today: your next interview, the three things to do now, your top picks, and how the search is going in plain numbers. Then what's due, the jobs worth a look, written to you (why it fits, what you'd enjoy, what to watch out for, the one question to ask), and every application, with the 21-day clock on each. Mark jobs as you read them: your clicks save in your own Claude account, and Claude records them in your folder the next time you talk. A copy, **My jobs.html**, sits in your folder and is always up to date.
+</details>
+
+<details>
+<summary><b>Your work-search log</b></summary>
+
+Many unemployment programs ask for a weekly record of job-search contacts. Ask for "my work search log" and Claude writes one week's applications, follow-ups and interviews to a spreadsheet in your folder, ready to copy into your state's form. It holds only what you told Claude.
 </details>
 
 <details>

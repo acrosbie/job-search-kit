@@ -20,3 +20,4 @@
 | [5. The weekly review](phase-5/results.md) | A rule overturned twice was rewritten, tried on saved jobs, and saved only after a yes |
 | [5b. Resume help](phase-5b/results.md) | Every planted inflated claim flagged; the resumes made trace line by line |
 | [6. A real search](phase-6/results.md) | The search the kit was built from now runs on it; what its data showed is fixed |
+| [Quality pass](quality-pass/results.md) | 0.9 to 0.11: trustworthy records, honest scans, one start command, and a jobs page that says what to do today |
