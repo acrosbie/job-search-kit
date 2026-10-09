@@ -6,7 +6,7 @@ order, so a recorded set of board answers gives the same result in both.
 import concurrent.futures as cf
 import re
 
-from . import health, screen, settings, store
+from . import health, net, screen, settings, store
 from .boards import READERS, Context, watched_names
 from .clock import Clock
 from .text import salary_from, salary_range
@@ -71,26 +71,56 @@ def run(root, only=None, clock=None, workers=WORKERS):
         try:
             if ats not in READERS:
                 raise ValueError(f"unknown ats '{ats}'")
-            return name, ats, c, READERS[ats](c, ctx), None
+            return name, ats, c, READERS[ats](c, ctx), None, ""
         except Exception as e:  # one dead board must not stop the scan
-            return name, ats, c, None, f"{type(e).__name__}: {e}"
+            return name, ats, c, None, f"{type(e).__name__}: {e}", net.failure_kind(e)
 
-    answered, failures = [], []
+    # A few boards on different systems first. If none can be reached because this computer (or
+    # Claude's sandbox) can't get out to the internet, stop there: the other hundreds would fail the
+    # same way, and nothing about the boards themselves has changed.
+    probe = probe_boards(queue)
     with cf.ThreadPoolExecutor(max_workers=workers) as pool:
-        for name, ats, c, recs, err in pool.map(guarded, queue):
-            before = boards.get(name, {})
-            # For scan health: when the board was first read, and the last day it listed any job.
-            first = before.get("first_read") or today
-            if err is None:
-                answered.append((name, recs))
-                boards[name] = {"ats": ats, "last_ok": stamp, "jobs": len(recs), "error": "", "fails": 0,
-                                "first_read": first, "last_listed": today if recs else before.get("last_listed", "")}
-            else:
-                failures.append({"board": c.get("name", name), "slug": name, "error": err})
-                # A failed board must not keep showing last run's numbers as if they were current.
-                b = boards.setdefault(name, {"ats": ats, "last_ok": "", "jobs": 0})
-                b.update({"error": err, "jobs": "", "matched": "", "stale": True, "fails": before.get("fails", 0) + 1,
-                          "first_read": first})
+        tried = list(pool.map(guarded, probe))
+        blocked = bool(tried) and all(err and net.is_network_block(kind) for *_, err, kind in tried)
+        if not blocked:
+            tried += list(pool.map(guarded, [j for j in queue if j not in probe]))
+    order = {job[0]: i for i, job in enumerate(queue)}
+    tried.sort(key=lambda r: order[r[0]])
+    failures = [{"board": c.get("name", name), "slug": name, "error": err, "kind": kind}
+                for name, ats, c, recs, err, kind in tried if err]
+    by_kind = {}
+    for f in failures:
+        by_kind[f["kind"]] = by_kind.get(f["kind"], 0) + 1
+    status = "blocked" if blocked else ("failed" if queue and len(failures) == len(tried) else
+                                        ("partial" if failures else "ok"))
+    if status in ("blocked", "failed"):
+        # Nothing was read, so nothing is changed: not the boards' health, not the saved jobs, not the
+        # titles kept for testing title changes. The run is logged, so the next check knows it failed.
+        row = {"at": stamp, "status": status, "watched": len(queue), "boards": 0, "failed": len(failures),
+               "failures_by_kind": by_kind, "read": 0, "dropped_title": 0, "dropped_location": 0, "matched": 0,
+               "new": 0, "rejected_by_rule": {}, "total_seen": len(postings)}
+        if only:
+            row["only"] = only
+        folder.log_run(row)
+        return {**row, "new_postings": [], "rejected_postings": [], "failures": failures,
+                "check_by_hand": [{"name": c["name"], "careers_url": c.get("careers_url", "")} for c in manual],
+                "health": health.boards(boards, companies, s, today)}
+
+    answered = []
+    for name, ats, c, recs, err, kind in tried:
+        before = boards.get(name, {})
+        # For scan health: when the board was first read, and the last day it listed any job.
+        first = before.get("first_read") or today
+        if err is None:
+            answered.append((name, recs))
+            boards[name] = {"ats": ats, "last_ok": stamp, "jobs": len(recs), "error": "", "fails": 0,
+                            "first_read": first, "last_listed": today if recs else before.get("last_listed", "")}
+        else:
+            # A failed board must not keep showing last run's numbers as if they were current. A board
+            # this computer couldn't reach at all (a proxy, no connection) did nothing wrong: not counted.
+            fails = before.get("fails", 0) + (0 if net.is_network_block(kind) else 1)
+            b = boards.setdefault(name, {"ats": ats, "last_ok": "", "jobs": 0})
+            b.update({"error": err, "jobs": "", "matched": "", "stale": True, "fails": fails, "first_read": first})
 
     applications = folder.load_applications()
     new, rejected, matched = [], [], 0
@@ -207,7 +237,8 @@ def run(root, only=None, clock=None, workers=WORKERS):
     by_rule = {}
     for x in rejected:
         by_rule[x["rule"]] = by_rule.get(x["rule"], 0) + 1
-    row = {"at": stamp, "boards": len(answered), "failed": len(failures), "read": read,
+    row = {"at": stamp, "status": status, "watched": len(queue), "boards": len(answered), "failed": len(failures),
+           "failures_by_kind": by_kind, "read": read,
            "dropped_title": dropped_title, "dropped_location": dropped_loc, "matched": matched,
            "new": len(new), "rejected_by_rule": by_rule, "total_seen": len(postings)}
     if only:
@@ -221,6 +252,48 @@ def run(root, only=None, clock=None, workers=WORKERS):
         "check_by_hand": [{"name": c["name"], "careers_url": c.get("careers_url", "")} for c in manual],
         "health": health.boards(boards, companies, s, today),
     }
+
+
+PROBE = 3
+
+
+def probe_boards(queue, n=PROBE):
+    """The first few boards to read, each on a different job-board system where there are enough
+    (so one system being down isn't taken for no internet), else the first few."""
+    picked, systems = [], set()
+    for job in queue:
+        if job[1] not in systems:
+            picked.append(job)
+            systems.add(job[1])
+        if len(picked) == n:
+            return picked
+    return picked + [j for j in queue if j not in picked][:n - len(picked)]
+
+
+def probe(root, workers=PROBE):
+    """Can job boards be reached from here? Reads a few of the user's boards, one per system where it
+    can, and saves nothing. `network`: ok (all answered), some, or blocked (none could be reached at
+    all, from a proxy or no connection)."""
+    companies = settings.load_companies(root)
+    s = settings.load(root)
+    ctx = Context(workday=s.workday, watched=watched_names(companies))
+    queue = [(c["slug"], c.get("ats", "manual"), c) for c in companies if c.get("ats", "manual") not in ("manual",)]
+
+    def one(job):
+        name, ats, c = job
+        try:
+            READERS[ats](c, ctx)
+            return {"board": c.get("name", name), "system": ats, "ok": True, "kind": "", "error": ""}
+        except Exception as e:
+            return {"board": c.get("name", name), "system": ats, "ok": False, "kind": net.failure_kind(e),
+                    "error": f"{type(e).__name__}: {e}"[:200]}
+
+    with cf.ThreadPoolExecutor(max_workers=workers) as pool:
+        rows = list(pool.map(one, probe_boards(queue)))
+    reached = sum(r["ok"] for r in rows)
+    blocked = bool(rows) and all(not r["ok"] and net.is_network_block(r["kind"]) for r in rows)
+    return {"tried": len(rows), "reached": reached, "watched": len(queue),
+            "network": "blocked" if blocked else ("ok" if reached == len(rows) else "some"), "boards": rows}
 
 
 def read_description(r):

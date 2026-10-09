@@ -74,6 +74,32 @@ class Cassette:
             return json.load(f)
 
 
+# How a fetch failed, in a word. "proxy" and "offline" mean this computer or sandbox can't reach the
+# internet (or that site) at all: nothing to do with the board, so they never count against it.
+_PROXY = ("tunnel connection failed", "proxy", " 407")
+_OFFLINE = ("connection refused", "network is unreachable", "getaddrinfo failed", "name or service not known",
+            "nodename nor servname", "temporary failure in name resolution", "no address associated",
+            "no route to host", "errno 11001", "winerror 10061", "winerror 10051", "winerror 10065")
+
+
+def failure_kind(exc):
+    """proxy, offline, timeout, http (the board answered with an error) or other."""
+    text = f"{type(exc).__name__}: {exc}".lower()
+    if isinstance(exc, urllib.error.HTTPError):
+        return "proxy" if exc.code == 407 else "http"
+    if any(w in text for w in _PROXY):
+        return "proxy"
+    if isinstance(exc, (ConnectionRefusedError,)) or any(w in text for w in _OFFLINE):
+        return "offline"
+    if isinstance(exc, TimeoutError) or "timed out" in text:
+        return "timeout"
+    return "other"
+
+
+def is_network_block(kind):
+    return kind in ("proxy", "offline")
+
+
 def error_record(exc):
     """What went wrong, in a form a replay can raise again."""
     if isinstance(exc, urllib.error.HTTPError):

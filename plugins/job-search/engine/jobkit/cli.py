@@ -58,6 +58,11 @@ def cmd_scan(a):
     return 0
 
 
+def cmd_probe(a):
+    _out(scan.probe(a.folder))
+    return 0
+
+
 def cmd_queue(a):
     _out(triage_queue.queue(a.folder, _clock(a.folder), limit=a.limit or 0))
     return 0
@@ -331,6 +336,10 @@ def parser():
     g.add_argument("--replay", metavar="DIR", help="read board answers from this cassette folder, not the network")
     s.add_argument("--as-of", metavar="TIME", help="pretend it is this time (ISO, with offset); for replays")
     s.set_defaults(func=cmd_scan)
+
+    s = sub.add_parser("probe", help="can job boards be reached from here? reads three of the user's boards, saves nothing")
+    s.add_argument("--folder", required=True)
+    s.set_defaults(func=cmd_probe)
 
     s = sub.add_parser("queue", help="the postings waiting for triage, newest first, with cooldown facts")
     s.add_argument("--folder", required=True)

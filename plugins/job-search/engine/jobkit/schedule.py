@@ -27,13 +27,35 @@ def _local_day(stamp, clock):
     return t.astimezone(clock.now().tzinfo).date() if t else None
 
 
+def good(run):
+    """A scan that read at least one board. One that reached none (a proxy, no connection) checked
+    nothing, so it isn't the last scan, however recent."""
+    return (run.get("boards") or 0) > 0 and run.get("status") not in ("blocked", "failed")
+
+
+def last_scans(runs):
+    """(the last full scan that read boards, the last full scan tried, whatever happened): run rows or {}.
+    A one-board check (`only`) isn't the scan the schedule asks for."""
+    full = [r for r in runs if not r.get("only")]
+    ok = [r for r in full if good(r)]
+    return (ok[-1] if ok else {}), (full[-1] if full else {})
+
+
+def status_of(run):
+    if not run:
+        return ""
+    if run.get("status"):
+        return run["status"]
+    return "failed" if not good(run) else ("partial" if run.get("failed") else "ok")  # rows from before 0.9.0
+
+
 def scan_overdue(s, runs, clock):
-    """True when the schedule says a scan should have run since the last one."""
+    """True when the schedule says a scan should have run since the last one that read boards."""
     every = s.schedule.get("scan", "")
     if every not in SCAN_DAYS:
         return False
-    full = [r for r in runs if not r.get("only")]  # a one-board check isn't the scan the schedule asks for
-    last = _local_day(full[-1].get("at") if full else "", clock)
+    last_ok, _ = last_scans(runs)
+    last = _local_day(last_ok.get("at", ""), clock)
     if last is None:
         return True
     today = clock.now().date()
@@ -77,5 +99,8 @@ def page_behind(root, s):
 def facts(root, s, clock):
     folder = store.Folder(root)
     ready, due = review_state(root, s, clock)
-    return {"scan_overdue": scan_overdue(s, folder.read_runs(limit=1), clock), "review_ready": ready,
-            "review_due": due}
+    runs = folder.read_runs()
+    last_ok, last_try = last_scans(runs)
+    return {"scan_overdue": scan_overdue(s, runs, clock), "last_scan_at": last_ok.get("at", ""),
+            "last_attempt_at": last_try.get("at", ""), "last_scan_status": status_of(last_try),
+            "review_ready": ready, "review_due": due}

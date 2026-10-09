@@ -8,6 +8,7 @@ import os
 import shutil
 import tempfile
 import unittest
+import urllib.error
 
 from jobkit import cli, net, scan, store
 from jobkit.clock import Clock
@@ -209,6 +210,70 @@ class MarkTest(ScanBase):
         code, err = self.mark("greenhouse-acme-1", "applied", "--by", "user")
         self.assertEqual(code, 3)
         self.assertIn("apply KEY --channel", err)
+
+
+class BlockedScanTest(ScanBase):
+    """Found in real use (2026-10-08): Claude's sandbox reached no job board through its proxy, and the
+    scan logged 0 boards read as if it were a scan. A blocked scan now changes nothing but the log."""
+
+    def blocked(self, url, data=None, headers=None):
+        raise urllib.error.URLError("Tunnel connection failed: 403 Forbidden")
+
+    def test_a_blocked_network_changes_nothing(self):
+        self.scan()
+        titles = read_file(self.folder.titles_tsv)
+        boards = self.folder.load_postings()["boards"]
+        fake = Fake({})
+        fake.request = self.blocked
+        self.addCleanup(net.use, net.use(fake))
+        out = scan.run(self.root, clock=Clock("", fixed=FIXED + dt.timedelta(days=1)), workers=2)
+        self.assertEqual((out["status"], out["boards"], out["watched"], out["failures_by_kind"]),
+                         ("blocked", 0, 3, {"proxy": 3}))
+        self.assertEqual(read_file(self.folder.titles_tsv), titles)
+        self.assertEqual(self.folder.load_postings()["boards"], boards)
+        self.assertEqual(self.folder.read_runs()[-1]["status"], "blocked")
+
+    def test_some_boards_unreachable_is_partial_and_not_held_against_them(self):
+        a = answers()
+        a[f"{GH}/globex/jobs"] = urllib.error.URLError("Tunnel connection failed: 403 Forbidden")
+        self.addCleanup(net.use, net.use(Fake(a)))
+        out = scan.run(self.root, clock=Clock("", fixed=FIXED), workers=2)
+        self.assertEqual((out["status"], out["boards"], out["failures_by_kind"]), ("partial", 1, {"proxy": 1, "other": 1}))
+        boards = self.folder.load_postings()["boards"]
+        self.assertEqual((boards["globex"]["fails"], boards["broken"]["fails"]), (0, 1))
+
+    def test_every_board_failing_for_its_own_reasons_saves_nothing(self):
+        self.scan()
+        before = read_file(self.folder.postings_json)
+        a = {f"{GH}/acme/jobs": RuntimeError("down"), f"{GH}/globex/jobs": RuntimeError("down"),
+             f"{GH}/broken/jobs": RuntimeError("down")}
+        self.addCleanup(net.use, net.use(Fake(a)))
+        out = scan.run(self.root, clock=Clock("", fixed=FIXED + dt.timedelta(days=1)), workers=2)
+        self.assertEqual(out["status"], "failed")
+        self.assertEqual(read_file(self.folder.postings_json), before)
+
+    def test_probe_reads_three_boards_and_saves_nothing(self):
+        fake = Fake({})
+        fake.request = self.blocked
+        self.addCleanup(net.use, net.use(fake))
+        out = scan.probe(self.root)
+        self.assertEqual((out["network"], out["tried"], out["reached"], out["watched"]), ("blocked", 3, 0, 3))
+        self.assertFalse(os.path.exists(self.folder.runs_log))
+        self.addCleanup(net.use, net.use(Fake(answers())))
+        self.assertEqual(scan.probe(self.root)["network"], "some")  # Broken is down; the others answer
+
+    def test_how_a_fetch_failed(self):
+        self.assertEqual(net.failure_kind(urllib.error.URLError("Tunnel connection failed: 403 Forbidden")), "proxy")
+        self.assertEqual(net.failure_kind(urllib.error.URLError(ConnectionRefusedError(111, "Connection refused"))), "offline")
+        self.assertEqual(net.failure_kind(urllib.error.URLError("[Errno 11001] getaddrinfo failed")), "offline")
+        self.assertEqual(net.failure_kind(TimeoutError("timed out")), "timeout")
+        self.assertEqual(net.failure_kind(urllib.error.HTTPError("u", 404, "Not Found", None, None)), "http")
+        self.assertEqual(net.failure_kind(RuntimeError("board down")), "other")
+
+
+def read_file(path):
+    with open(path, encoding="utf-8") as f:
+        return f.read()
 
 
 if __name__ == "__main__":

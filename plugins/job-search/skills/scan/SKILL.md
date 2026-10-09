@@ -12,6 +12,8 @@ Fetch, then report. Judging fit is the triage skill's job, not this one's.
 1. **Follow `${CLAUDE_PLUGIN_ROOT}/reference/running-the-engine.md`** to find the user's folder, pick where to run, and install or refresh the engine. Then catch up (section 5a), step 1 only: the scan below runs the day-21 close, and its summary carries everything else catching up needs.
 2. **Run the scan:** `python3 "<folder>/.kit/engine/run.py" scan --folder "<folder>"`. It reads every board in `profile/companies.toml`; hundreds of boards take a few minutes. It prints a JSON summary.
 3. **Report**, in plain words, no more than about fifteen lines:
+   - **If `status` is `blocked` or `failed`, that is the whole headline:** nothing was checked. "I couldn't reach any of your 592 job boards from here, so nothing was checked; your saved jobs are as they were." Then the cause and the one fix, as the reference's section 8 says. Never call it a scan, and don't report counts.
+   - **If `status` is `partial`,** say how many of `watched` were read ("I read 589 of your 592 boards").
    - **What's new:** the count from `new`, then each new posting from `new_postings` as `Company: Title (place)`. If there are more than about fifteen, group them by company.
    - **What was screened out automatically:** the count from `rejected_postings`, with the reasons grouped ("3 are outside where you'd commute, 1 pays below your line"). Don't list them unless asked.
    - **Boards that failed:** each by company name, in plain words, as in the reference's section 8. Say their saved jobs are still there.

@@ -444,7 +444,7 @@ def due(root, clock):
             out["closing" if st["route"] == "close" else st["route"]].append({**brief(a), **st})
     for route in ("send", "find_person", "closing"):
         out[route].sort(key=lambda r: -(r["days"] or 0))
-    runs = store.Folder(root).read_runs(limit=1)
-    out["last_scan_at"] = runs[-1].get("at", "") if runs else ""
-    out.update(schedule.facts(root, s, clock))  # what catching up needs: an overdue scan, a review
+    # What catching up needs: the last scan that read boards (and the last one tried, if that failed),
+    # an overdue scan, a review.
+    out.update(schedule.facts(root, s, clock))
     return out

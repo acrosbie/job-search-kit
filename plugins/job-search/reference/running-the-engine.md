@@ -14,7 +14,17 @@ The user connects a folder, usually called `Job Search`. It is theirs if it cont
 You may have two shells: one on Anthropic's servers, and one on the user's own computer. The one on their computer usually sees connected folders under `~/mnt/<folder name>`. **Run the engine in a shell that can see the user's folder.**
 
 - If that shell says it is still setting up or downloading, wait about a minute and try once more. If it still isn't ready, use the fallback in section 6.
-- If your shell is the user's own Windows or macOS system rather than Linux, you are in the desktop app's Code mode. Follow section 7.
+- If your shell is the user's own Windows or macOS system rather than Linux, you are in the desktop app's Code mode (or Remote Control). Follow section 7.
+
+Reading job boards needs the internet as well as the folder, and each place differs:
+
+| Where you're running | Sees the folder | Reaches job boards |
+|---|---|---|
+| Cowork, the workspace on the user's computer (`~/mnt/...`) | Yes | Only with network access on; a proxy can still refuse |
+| Cowork, the workspace on Anthropic's servers | No: the copy route, section 6 | Only with network access on |
+| Code mode or Remote Control, on the user's own computer | Yes, by its normal path | Yes, like any program on that computer |
+
+Before a scan, if you're unsure, run `probe` (it reads three of the user's boards and saves nothing). `network: blocked` means no board can be reached from here: try the next place in the table that you have, and say in one line where you ran and why ("Your boards can't be reached from Claude's workspace, so I checked them from your computer").
 
 ## 3. Python
 
@@ -39,7 +49,8 @@ Quote every path: folder names often contain spaces.
 
 | Command | Use |
 |---|---|
-| `scan` | Read every board in `profile/companies.toml` and save what's new. Prints a JSON summary |
+| `scan` | Read every board in `profile/companies.toml` and save what's new. Prints a JSON summary; its `status` is `ok`, `partial`, `failed` or `blocked` |
+| `probe` | Can job boards be reached from here? Reads three boards, saves nothing |
 | `queue` | The postings waiting for triage, each with its cooldown facts |
 | `show KEY` | One saved posting, as text |
 | `mark KEY STATUS --by claude\|user --note "..."` | Record a verdict: `worth_applying`, `your_call`, `not_a_fit` or `skipped`. Claude's Not a fit adds `--rule N --quote "..."`, and Your call `--quote "..."`: the posting's words, which the engine checks are in it |
@@ -100,6 +111,9 @@ In Code mode the engine runs directly on the user's computer. If Python 3.10 or 
 Never show a raw error. Say what happened and what it means for them, in one or two sentences.
 
 - **One board failed** (the scan summary's `failures`): "Acme's job board didn't answer today; your saved jobs from it are still here." If the same board has failed three scans in a row (its entry in `data/postings.json` → `boards` keeps the error, and `data/runs.log` has the history), offer to look for the company's board again with `discover`.
-- **Every board failed with a proxy or "Tunnel connection failed: 403" error:** Claude's network access is off. "I can't reach job boards yet. In Claude, open Settings, then Capabilities, and turn on network access (Allow network egress). Then ask me again."
+- **A scan with `status` `blocked` or `failed`:** nothing was checked, and nothing in the folder changed. Lead with that, then the cause from `failures_by_kind`, then one fix:
+  - `proxy`: Claude's network access is off, or doesn't allow job boards. "I can't reach your job boards from here, so nothing was checked. In Claude, open Settings, then Capabilities, and turn on network access (Allow network egress). Then ask me again." If another place in section 2's table is open to you, try it first.
+  - `offline`: "This computer doesn't seem to be online right now, so nothing was checked."
+  - anything else: "None of your job boards answered just now, so nothing was checked. I'll try again next time."
 - **A missing file** (exit code 1): name it in their terms ("your settings file"), not as a path.
 - **Never delete anything** in the user's folder, even to tidy up.

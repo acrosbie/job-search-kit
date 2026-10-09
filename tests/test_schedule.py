@@ -40,7 +40,7 @@ class HealthTest(ScanBase):
 class ScheduleTest(ScanBase):
     def setUp(self):
         super().setUp()
-        self.folder.log_run({"at": "2026-09-25T09:00:00-06:00"})  # a Friday
+        self.folder.log_run({"at": "2026-09-25T09:00:00-06:00", "boards": 3})  # a Friday
 
     def overdue(self, every, when):
         configure.set_value(self.root, "schedule.scan", every)
@@ -55,6 +55,19 @@ class ScheduleTest(ScanBase):
         self.assertFalse(self.overdue("weekly", "2026-10-01T20:00:00-06:00"))
         self.assertTrue(self.overdue("weekly", "2026-10-02T20:00:00-06:00"))
         self.assertFalse(self.overdue("", "2026-12-25T20:00:00-06:00"))  # nothing scheduled, nothing overdue
+
+    def test_a_scan_that_reached_no_board_isnt_the_last_scan(self):
+        # Found in real use (2026-10-08): a scan where all 592 boards failed behind a proxy still set
+        # the time of the last scan, so a missed morning check would have gone unnoticed.
+        configure.set_value(self.root, "schedule.scan", "daily")
+        self.folder.log_run({"at": "2026-09-26T09:00:00-06:00", "boards": 0, "failed": 592})  # before 0.9.0
+        self.folder.log_run({"at": "2026-09-26T10:00:00-06:00", "status": "blocked", "boards": 0, "failed": 3})
+        clock = Clock("America/Denver", fixed=dt.datetime.fromisoformat("2026-09-26T20:00:00-06:00"))
+        s = settings.load(self.root)
+        self.assertTrue(schedule.scan_overdue(s, self.folder.read_runs(), clock))
+        facts = schedule.facts(self.root, s, clock)
+        self.assertEqual((facts["last_scan_at"], facts["last_attempt_at"], facts["last_scan_status"]),
+                         ("2026-09-25T09:00:00-06:00", "2026-09-26T10:00:00-06:00", "blocked"))
 
     def test_a_choice_of_words_is_checked(self):
         with self.assertRaises(configure.Refused):
