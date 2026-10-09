@@ -15,6 +15,7 @@
     data/replay-latest.json   the last replay of a proposed rule change, which saving it must match
     data/page.json            what the jobs page shows (see page.py)
     data/jobs-page.html       the jobs page with its data built in, for Claude to publish
+    data/snapshots/NN/        the records as they were before a command changed them: 30 slots, in turn
     My jobs.html              the jobs page as a file, at the top of the folder
 
 Nothing here deletes a file. Cowork's workspace on the user's computer isn't allowed to, and
@@ -29,14 +30,23 @@ file can't be used: the engine couldn't delete it afterwards.)
 
 A file left half-written by a crash is read from its backup instead, and never copied over the
 backup.
+
+Before each command, the records and the profile are copied into the next of 30 snapshot slots
+(unless nothing changed since the last), so a bad change, by a command or by hand, can be put right.
+The oldest slot is written over: nothing is ever deleted.
 """
 
 import copy
+import hashlib
 import json
 import os
 import re
 
 STATUSES = ("new", "worth_applying", "your_call", "not_a_fit", "skipped", "applied")
+
+SNAPSHOT_SLOTS = 30
+SNAPSHOT_FILES = ("data/applications.json", "data/postings.json", "profile/settings.toml", "profile/companies.toml",
+                  "profile/rules.md", "profile/about-me.md", "profile/what-i-want.md")
 
 
 class Loaded(dict):
@@ -105,6 +115,8 @@ class Folder:
         self.decisions_log = os.path.join(self.data, "decisions.log")
         self.runs_log = os.path.join(self.data, "runs.log")
         self.titles_tsv = os.path.join(self.data, "titles-latest.tsv")
+        self.snapshots = os.path.join(self.data, "snapshots")
+        self.snapshots_index = os.path.join(self.snapshots, "index.json")
 
     # ------------------------------------------------------------ plumbing
 
@@ -262,6 +274,69 @@ class Folder:
 
     def read_json(self, path):
         return json.loads(self._read(path)) if os.path.exists(path) else None
+
+    # ------------------------------------------------------------ snapshots
+
+    def _at(self, rel):
+        return os.path.join(self.root, *rel.split("/"))
+
+    def snapshot(self, command, stamp, engine=""):
+        """Copy the records and profile into the next snapshot slot, unless they are as the last snapshot
+        has them. Returns the slot's meta, or None when nothing was copied."""
+        bodies = {}
+        for rel in SNAPSHOT_FILES:
+            if os.path.exists(self._at(rel)):
+                with open(self._at(rel), "rb") as f:
+                    bodies[rel] = f.read()
+        if not bodies:
+            return None
+        h = hashlib.sha1()
+        for rel, body in bodies.items():
+            h.update(rel.encode("utf-8") + b"\0" + body + b"\0")
+        digest = h.hexdigest()[:16]
+        index = self.read_json(self.snapshots_index) or {}
+        if index.get("digest") == digest:
+            return None
+        slot = int(index.get("next") or 1)
+        if not 1 <= slot <= SNAPSHOT_SLOTS:
+            slot = 1
+        folder = os.path.join(self.snapshots, f"{slot:02d}")
+        for rel, body in bodies.items():
+            path = os.path.join(folder, *rel.split("/"))
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "wb") as f:
+                f.write(body)
+        # Written last: a slot's meta names only the files this snapshot holds, so a file left there by
+        # an older use of the slot is never taken for part of it.
+        n = int(index.get("taken") or 0) + 1  # orders snapshots taken within the same second
+        meta = {"slot": slot, "n": n, "at": stamp, "before": command, "engine": engine, "files": sorted(bodies),
+                "digest": digest}
+        self.write_json(os.path.join(folder, "meta.json"), meta)
+        self.write_json(self.snapshots_index, {"next": slot % SNAPSHOT_SLOTS + 1, "digest": digest, "taken": n})
+        return meta
+
+    def list_snapshots(self):
+        """Every snapshot kept, newest first."""
+        out = []
+        for slot in range(1, SNAPSHOT_SLOTS + 1):
+            meta = self.read_json(os.path.join(self.snapshots, f"{slot:02d}", "meta.json"))
+            if meta:
+                out.append(meta)
+        return sorted(out, key=lambda m: m.get("n", 0), reverse=True)
+
+    def snapshot_file(self, slot, rel):
+        """The bytes of one file as a snapshot holds it, or None."""
+        meta = self.read_json(os.path.join(self.snapshots, f"{int(slot):02d}", "meta.json")) or {}
+        if rel not in meta.get("files", []):
+            return None
+        with open(os.path.join(self.snapshots, f"{int(slot):02d}", *rel.split("/")), "rb") as f:
+            return f.read()
+
+    def put_back(self, rel, body):
+        """Write a file back as a snapshot held it, in place."""
+        os.makedirs(os.path.dirname(self._at(rel)), exist_ok=True)
+        with open(self._at(rel), "wb") as f:
+            f.write(body)
 
     def write_titles(self, rows):
         """rows: (board, title, location) for every posting read this scan."""

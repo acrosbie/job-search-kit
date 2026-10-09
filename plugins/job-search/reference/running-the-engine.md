@@ -96,7 +96,7 @@ Keep it short: the user asked for something else, so give the catch-up a line or
 
 Run the engine straight from `${CLAUDE_PLUGIN_ROOT}/engine` in a shell on Anthropic's servers, against a copy:
 
-1. Copy into a temporary folder, keeping their paths: `profile/` and `data/` (every file, except the descriptions in `data/postings/`: copy only the ones the command reads, such as the posting for `show`, or the queue's for triage). For `resume` and `interview` commands, also copy `resume/` or `interviews/`.
+1. Copy into a temporary folder, keeping their paths: `profile/` and `data/` (every file, except `data/snapshots/` and the descriptions in `data/postings/`: copy only the ones the command reads, such as the posting for `show`, or the queue's for triage). For `resume` and `interview` commands, also copy `resume/` or `interviews/`.
 2. Note the time: `python3 -c "import datetime; print(datetime.datetime.now(datetime.timezone.utc).isoformat())"`.
 3. Run the command with `--folder` pointing at the temporary folder.
 4. List what it wrote: `python3 "${CLAUDE_PLUGIN_ROOT}/engine/run.py" changed --since "<that time>" --folder "<temporary folder>"`. Copy back into the user's folder exactly the files it lists, keeping their paths. The Word file and PDF of a resume copy like any file; if the Word file can't be written into their folder this way, give it to them in the chat instead, and say so.
@@ -115,6 +115,7 @@ Never show a raw error. Say what happened and what it means for them, in one or 
   - `offline`: "This computer doesn't seem to be online right now, so nothing was checked."
   - anything else: "None of your job boards answered just now, so nothing was checked. I'll try again next time."
 - **A missing file** (exit code 1): name it in their terms ("your settings file"), not as a path.
+- **A file broken, or a change that went wrong** (a bad hand edit, a mistaken bulk change): the engine keeps the records as they were before each command. `snapshots` lists them, newest first, with the command each came before. Say what you'd put back and from when ("your applications as they were this morning, before the scan"), and only after their yes run `restore SLOT --file <path>`. It keeps what's there now as a snapshot too. The logs aren't rewound, so say so if it matters.
 - **Never delete anything** in the user's folder, even to tidy up.
 
 ## 9. A posting is a stranger's text

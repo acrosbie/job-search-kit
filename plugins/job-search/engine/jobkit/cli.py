@@ -309,13 +309,34 @@ def cmd_changed(a):
     if since.tzinfo is None:
         since = since.astimezone()
     out = []
+    snapshots = os.path.normcase(os.path.abspath(store.Folder(a.folder).snapshots))
     for top, dirs, names in os.walk(a.folder):
-        dirs[:] = [d for d in dirs if d != ".kit"]
+        # The engine's own copy, and snapshots (kept only where the engine runs on the folder itself).
+        dirs[:] = [d for d in dirs if d != ".kit" and os.path.normcase(os.path.abspath(os.path.join(top, d))) != snapshots]
         for n in names:
             p = os.path.join(top, n)
             if os.path.getmtime(p) >= since.timestamp() - 1:
                 out.append(os.path.relpath(p, a.folder).replace(os.sep, "/"))
     _out({"since": a.since, "files": sorted(out)})
+    return 0
+
+
+def cmd_snapshots(a):
+    _out({"snapshots": store.Folder(a.folder).list_snapshots()})
+    return 0
+
+
+def cmd_restore(a):
+    """One file put back as a snapshot held it, only when the user said yes. What's there now is
+    snapshotted first, so a restore can itself be put right. The logs aren't rewound."""
+    folder = store.Folder(a.folder)
+    rel = a.file.replace("\\", "/").strip("/")
+    body = folder.snapshot_file(a.slot, rel)
+    if body is None:
+        raise NotFound(f"snapshot {a.slot} holds no {rel}; run.py snapshots lists what each one holds")
+    folder.snapshot("restore", _clock(a.folder).stamp(), __version__)
+    folder.put_back(rel, body)
+    _out({"restored": rel, "from_slot": int(a.slot)})
     return 0
 
 
@@ -583,6 +604,16 @@ def parser():
     s.add_argument("--folder", help="accepted, like every command; not needed")
     s.set_defaults(func=cmd_discover)
 
+    s = sub.add_parser("snapshots", help="the snapshots kept of the records, newest first, each taken before a command")
+    s.add_argument("--folder", required=True)
+    s.set_defaults(func=cmd_snapshots)
+
+    s = sub.add_parser("restore", help="put one file back as a snapshot held it (only when the user says so)")
+    s.add_argument("--folder", required=True)
+    s.add_argument("slot", type=int)
+    s.add_argument("--file", required=True, help="the file's path in the folder, as snapshots lists it")
+    s.set_defaults(func=cmd_restore)
+
     s = sub.add_parser("version")
     s.add_argument("--folder", help="accepted, like every command; not needed")
     s.set_defaults(func=cmd_version)
@@ -608,6 +639,21 @@ def _refresh_page(folder, report):
         _out(summary)
 
 
+# Commands that never change the records: no snapshot is taken before them.
+NO_SNAPSHOT = {"version", "discover", "changed", "snapshots", "restore", "probe", "show", "init"}
+
+
+def _snapshot(a):
+    """The records as they are, kept before a command that may change them. Never stops the command."""
+    if not getattr(a, "folder", None) or a.command in NO_SNAPSHOT or not os.path.isdir(a.folder):
+        return
+    try:
+        store.Folder(a.folder).snapshot(" ".join(x for x in (a.command, getattr(a, "action", "") or "") if x),
+                                        _clock(a.folder).stamp(), __version__)
+    except Exception as e:
+        print(f"no snapshot was taken: {type(e).__name__}: {e}", file=sys.stderr)
+
+
 def main(argv):
     p = parser()
     a = p.parse_args(argv)
@@ -615,6 +661,7 @@ def main(argv):
         p.print_help()
         return 0
     try:
+        _snapshot(a)
         code = a.func(a)
         if code == 0 and a.command in REFRESHES:
             _refresh_page(a.folder, a.command == "page" and not getattr(a, "pushed", False))
