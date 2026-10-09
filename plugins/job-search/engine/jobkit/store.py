@@ -73,6 +73,18 @@ def _merge_records(base, mine, theirs):
 _MISSING = object()
 
 
+def _by_id(rows):
+    """Records keyed by id, in order. A row with no id, or an id seen before, keeps a key of its own
+    (by position or by how many times the id came before), so merging never folds two rows into one."""
+    out, count = {}, {}
+    for i, a in enumerate(rows):
+        k = a.get("id") or f"#{i}"
+        n = count.get(k, 0)
+        count[k] = n + 1
+        out[k if n == 0 else f"{k}#{n}"] = a
+    return out
+
+
 class Folder:
     def __init__(self, root):
         self.root = root
@@ -143,14 +155,15 @@ class Folder:
                 return json.loads(self._read(backup)), True
             raise
 
-    def _save_merged(self, path, backup, read, base, new_content):
+    def _save_merged(self, path, backup, read, base, new_content, prepare=None):
         """Write `new_content`, keeping the previous good file as the backup. When the file no longer
         holds `read` (what this command read from it), another command wrote it meanwhile: then only
         what changed between `base` (the same records as this command first held them) and
-        `new_content` is laid onto the file as it is now."""
+        `new_content` is laid onto the file as it is now. `prepare` brings the file's applications to
+        the shape `base` has, so the two are matched record by record."""
         current, from_backup = self._read_json_or_backup(path, backup)
         if read is not None and base is not None and current is not None and current != read:
-            new_content = self._merge(base, new_content, current)
+            new_content = self._merge(base, new_content, current, prepare)
         if current is not None and not from_backup:
             self._write(backup, self._read(path))
         self._write(path, json.dumps(new_content, indent=1, ensure_ascii=False))
@@ -166,13 +179,15 @@ class Folder:
         return state
 
     @staticmethod
-    def _merge(base, mine, theirs):
+    def _merge(base, mine, theirs, prepare=None):
         if "applications" in mine:
-            key = lambda rows: {a.get("id") or f"#{i}": a for i, a in enumerate(rows)}
-            merged = _merge_records(key(base.get("applications", [])), key(mine["applications"]),
-                                    key(theirs.get("applications", [])))
-            order = [a.get("id") or f"#{i}" for i, a in enumerate(theirs.get("applications", []))]
-            order += [k for k in key(mine["applications"]) if k not in order]
+            ours = theirs.get("applications", [])
+            if prepare:
+                ours = prepare(ours)
+            merged = _merge_records(_by_id(base.get("applications", [])), _by_id(mine["applications"]),
+                                    _by_id(ours))
+            order = list(_by_id(ours))
+            order += [k for k in _by_id(mine["applications"]) if k not in order]
             return {**theirs, "applications": [merged[k] for k in order if k in merged]}
         out = dict(theirs)
         for part in ("postings", "boards"):
@@ -262,14 +277,14 @@ class Folder:
         data, _ = self._read_json_or_backup(self.applications_json, self.applications_backup_json)
         return (data or {}).get("applications", [])
 
-    def save_applications(self, applications, read=None, base=None):
+    def save_applications(self, applications, read=None, base=None, prepare=None):
         """`read`: the records as this command read them from the file; `base`: the same, as it first
-        held them (track.load brings older shapes up to date). With both, a save merges with anything
-        written since."""
+        held them (track.load brings older shapes up to date, with `prepare`). With both, a save
+        merges with anything written since."""
         self._save_merged(self.applications_json, self.applications_backup_json,
                           None if read is None else {"applications": read},
                           None if base is None else {"applications": base},
-                          {"applications": applications})
+                          {"applications": applications}, prepare)
 
 
 def backup_path(path):

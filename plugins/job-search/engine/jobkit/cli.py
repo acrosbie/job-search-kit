@@ -98,7 +98,8 @@ def cmd_apply(a):
     _out(track.apply(a.folder, _clock(a.folder), key=a.key or "", company=a.company or "", role=a.role or "",
                      url=a.url or "", date=a.date or "", estimated=a.estimated,
                      channel="" if a.channel == "not_sure" else a.channel,
-                     top_pick=_yes_no(a.top_pick), contact=a.contact or "", note=a.note or "", choice=a.choice or ""))
+                     top_pick=_yes_no(a.top_pick), contact=a.contact or "", note=a.note or "", choice=a.choice or "",
+                     again=a.again, same=a.same))
     return 0
 
 
@@ -368,6 +369,9 @@ def parser():
     s.add_argument("--contact")
     s.add_argument("--note")
     s.add_argument("--choice", help="the id of the jobs-page click this came from")
+    g = s.add_mutually_exclusive_group()
+    g.add_argument("--again", action="store_true", help="a new application to a title already applied to (the user said so)")
+    g.add_argument("--same", action="store_true", help="the application already recorded, with a corrected date or link")
     s.set_defaults(func=cmd_apply)
 
     s = sub.add_parser("track", help="record what happened to an application")

@@ -63,6 +63,39 @@ def _legacy_app_id(company, role):
     return f"app-{_slug(company, 30)}-{_slug(role)}"  # before 0.8.0: long roles were cut off
 
 
+def unique_id(base, taken, date=""):
+    """`base`, or when another application has it, `base` with the day it was sent, then -2, -3."""
+    if base not in taken:
+        return base
+    if date and f"{base}-{date}" not in taken:
+        return f"{base}-{date}"
+    n = 2
+    while f"{base}-{n}" in taken:
+        n += 1
+    return f"{base}-{n}"
+
+
+def _unique_ids(rows, stamp):
+    """Give every application its own id. Two applications to the same title (sent weeks apart, or
+    imported with the same name) once shared one, so a change to either could land on the other. The
+    first in the file keeps the id; each later one gets the day it was sent added, keeps the id it had
+    as id_was, and says so in its history. The same rows always come out the same way."""
+    taken = {a["id"] for a in rows}
+    seen, repaired = set(), []
+    for a in rows:
+        if a["id"] not in seen:
+            seen.add(a["id"])
+            continue
+        old = a["id"]
+        a["id"] = unique_id(old, taken | seen, a.get("applied_date", ""))
+        a["id_was"] = old
+        a["history"].append({"date": stamp[:10], "at": stamp, "event": "id_repaired", "value": old, "by": "engine"})
+        taken.add(a["id"])
+        seen.add(a["id"])
+        repaired.append(a)
+    return repaired
+
+
 # How recent an application recorded by name must be for a newly saved posting to join it on its own.
 JOIN_WITHIN_DAYS = 60
 
@@ -128,27 +161,56 @@ class Records(list):
     base = None
 
 
+def prepare(raw):
+    """The file's records in their current shape, every one with its own id (see _unique_ids)."""
+    rows = [normalize(a) for a in raw]
+    _unique_ids(rows, _stamp())
+    return rows
+
+
+def _stamp():
+    return dt.datetime.now(dt.timezone.utc).astimezone().isoformat(timespec="seconds")
+
+
 def load(root):
     raw = store.Folder(root).load_applications()
-    out = Records(normalize(a) for a in raw)
-    out.read, out.base = raw, copy.deepcopy(list(out))
+    rows = [normalize(a) for a in raw]
+    repaired = _unique_ids(rows, _stamp())
+    out = Records(rows)
+    out.read, out.base = raw, copy.deepcopy(rows)
+    if repaired:
+        # Written at once, so the repair (and the time it was made) is the same for every command after.
+        save(root, out)
+        out.read, out.base = copy.deepcopy(rows), copy.deepcopy(rows)
     return out
 
 
 def save(root, applications):
     store.Folder(root).save_applications(list(applications), read=getattr(applications, "read", None),
-                                         base=getattr(applications, "base", None))
+                                         base=getattr(applications, "base", None), prepare=prepare)
 
 
 def find(applications, ident):
-    """By id, then by posting key."""
-    for a in applications:
-        if a["id"] == ident:
-            return a
-    for a in applications:
-        if ident and a.get("key") == ident:
-            return a
+    """By id, then by posting key. Two matches is never guessed between."""
+    if not ident:
+        return None
+    for field in ("id", "key"):
+        hits = [a for a in applications if a.get(field) == ident]
+        if len(hits) > 1:
+            raise Refused(f"{len(hits)} applications match {ident}: " + ", ".join(
+                f"{a['id']} (sent {a.get('applied_date') or 'on an unknown day'})" for a in hits) + "; give one of those ids")
+        if hits:
+            return hits[0]
     return None
+
+
+def shared_before(applications, ident):
+    """When `ident` was once shared by two applications, the time that was put right (an id the page
+    showed before then could mean either); otherwise "". """
+    for a in applications:
+        if a.get("id_was") == ident:
+            return next((h.get("at", "") for h in a.get("history", []) if h.get("event") == "id_repaired"), "")
+    return ""
 
 
 def unlinked(applications, posting, today=None):
@@ -158,14 +220,18 @@ def unlinked(applications, posting, today=None):
     months later is likely a new opening, for the user to say."""
     loose = [a for a in applications if not a.get("key")]
     p = {"company": posting.get("company", ""), "title": posting.get("title", ""), "url": posting.get("url", "")}
-    a = store.application_for(p, loose)
-    if a is None or today is None:
-        return a
+    # Every application this posting could be, not just the first: the same title may have been applied
+    # to twice, months apart, and the newer one is the one a posting saved now belongs to.
+    same = [a for a in loose if store.application_for(p, [a]) is a]
     url = (p["url"] or "").rstrip("/")
-    if url and url in {u.rstrip("/") for u in a.get("urls", [])}:
-        return a
-    d = _date(a.get("applied_date"))
-    return a if d and (dt.date.fromisoformat(today) - d).days <= JOIN_WITHIN_DAYS else None
+    by_link = [a for a in same if url and url in {u.rstrip("/") for u in a.get("urls", [])}]
+    if by_link:
+        return by_link[0]
+    same.sort(key=lambda a: a.get("applied_date") or "", reverse=True)
+    if not same or today is None:
+        return same[0] if same else None
+    d = _date(same[0].get("applied_date"))
+    return same[0] if d and (dt.date.fromisoformat(today) - d).days <= JOIN_WITHIN_DAYS else None
 
 
 def link(root, clock, key):
@@ -204,10 +270,14 @@ def _event(clock, when, note="", choice="", at="", **what):
 
 
 def apply(root, clock, key="", company="", role="", url="", date="", estimated=False, channel="", top_pick=None,
-          contact="", note="", choice="", at=""):
+          contact="", note="", choice="", at="", again=False, same=False):
     """Record that the user applied. With a posting's key, the posting is marked applied by the user
     as well. Saying so twice updates the one record rather than adding a second. `choice` and `at`
-    are the id and time of a click on the jobs page this came from."""
+    are the id and time of a click on the jobs page this came from.
+
+    By company and role, an application already recorded to the same title on another day, or from
+    another link, may be a second application (a role posted again) or a correction: the engine
+    won't guess. `again` records a new application; `same` updates the one there."""
     s = settings.load(root)
     folder = store.Folder(root)
     today = clock.today()
@@ -225,13 +295,26 @@ def apply(root, clock, key="", company="", role="", url="", date="", estimated=F
         raise Refused("give the posting's key, or the company and the role")
     when = _check_date(date, today) if date else today
 
+    if again and key:
+        raise Refused("--again is for an application recorded by company and role; a posting is applied to once")
+    if again and same:
+        raise Refused("give --again (a new application) or --same (the one already there), not both")
     applications = load(root)
     ident = key or app_id(company, role)
-    a = find(applications, ident)
-    if a is None and not key:
+    a = None if again else find(applications, ident)
+    if a is None and not key and not again:
         old = find(applications, _legacy_app_id(company, role))  # recorded before ids kept long roles whole
         if old is not None and store._norm_title(old.get("role")) == store._norm_title(role):
             a = old
+    if a is not None and not key and not same and not choice:
+        other_day = bool(date) and bool(a["applied_date"]) and when != a["applied_date"]
+        other_link = bool(url) and bool(a["urls"]) and url not in a["urls"]
+        if other_day or other_link:
+            raise Refused(f"there's already an application to {a['company']}, {a['role']} sent "
+                          f"{a['applied_date'] or 'on an unknown day'} ({a['id']}). Ask the user: is this a new "
+                          "application (add --again) or the same one (add --same)?")
+    if again:
+        ident = unique_id(ident, {x["id"] for x in applications}, when)
     if a is None and posting is not None:
         a = unlinked(applications, posting, today)  # recorded by name before the posting was saved
         if a is not None:

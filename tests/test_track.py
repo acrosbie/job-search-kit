@@ -7,6 +7,7 @@ import io
 import json
 
 from jobkit import cli, track
+from jobkit.errors import Refused
 from jobkit.clock import Clock
 from tests.test_scan import FIXED, ScanBase
 
@@ -122,8 +123,16 @@ class ApplyTest(TrackBase):
         self.folder.save_postings(state)
         self.assertIsNone(track.link(self.root, on(24), "greenhouse-acme-1"))  # same title, four months later
         self.assertEqual(self.folder.load_postings()["postings"]["greenhouse-acme-1"]["status"], "worth_applying")
-        track.apply(self.root, on(20), company="Acme", role="Customer Support Manager", date="2026-09-20")
-        self.assertIsNotNone(track.link(self.root, on(24), "greenhouse-acme-1"))  # four days later: the same one
+        # Applying to the same title months later is a second application, which the user confirms.
+        with self.assertRaises(Refused):
+            track.apply(self.root, on(20), company="Acme", role="Customer Support Manager", date="2026-09-20")
+        second = track.apply(self.root, on(20), company="Acme", role="Customer Support Manager", date="2026-09-20",
+                             again=True)
+        self.assertEqual(second["id"], "app-acme-customer-support-manager-2026-09-20")
+        joined = track.link(self.root, on(24), "greenhouse-acme-1")  # four days later: the new one
+        self.assertEqual(joined["id"], second["id"])
+        first = self.apps()["app-acme-customer-support-manager"]
+        self.assertEqual((first["applied_date"], first["key"]), ("2026-06-01", ""))  # the June one untouched
 
 
 class TrackStatusTest(TrackBase):

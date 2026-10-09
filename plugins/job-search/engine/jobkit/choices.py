@@ -104,6 +104,13 @@ def record(root, clock, choices):
         if cid in replaced:
             out["superseded"].append({**brief, "why": "changed on the page"})
             continue
+        if action in APP_ACTIONS:
+            fixed = track.shared_before(track.load(root), c.get("app", ""))
+            if fixed and _when(c.get("at")) < _when(fixed):
+                # Made when two applications shared this id: it could mean either, so it isn't guessed.
+                out["unknown"].append({**brief, "why": "two of your applications shared this one's name on the "
+                                       "page then; say in chat which one you meant, by number"})
+                continue
         # Recorded as of when the user clicked, in their own time zone: that is when they decided.
         clicked = min(_when(c.get("at")), clock.now()).astimezone(clock.now().tzinfo)
         at, day = clicked.isoformat(timespec="seconds"), clicked.date().isoformat()
