@@ -27,14 +27,16 @@ The method comes from the reference search:
    - when, as a day and a time;
    - phone, video or on site;
    - who it's with, in their words;
-   - how long, if they know.
+   - how long, if they know;
+   - the video call's link, if they have it.
 
-   Never guess a time.
+   Never guess a time or a length.
 3. **Record it:**
    ```
-   python3 "<folder>/.kit/engine/run.py" track <id> <screen|interview> --on <YYYY-MM-DDTHH:MM> [--kind phone|video|onsite] [--with "<who>"] [--minutes N] --folder "<folder>"
+   python3 "<folder>/.kit/engine/run.py" track <id> <screen|interview> --on <YYYY-MM-DDTHH:MM> [--kind phone|video|onsite] [--with "<who>"] [--minutes N] [--link "<url>"] --folder "<folder>"
    ```
    A recruiter or phone screen is `screen`; anything after that is `interview`. The output names the calendar file. Tell them: "Double-click `<calendar file>` in your Job Search folder to add it to your calendar."
+   - **Only the day is known:** give `--on YYYY-MM-DD`. The calendar file is a tentative all-day event titled "Time to confirm". When they learn the time, record it again with `--on YYYY-MM-DDTHH:MM`: the new file updates the same event in their calendar once they double-click it.
 4. **Offer the prep sheet:** "Want me to put a prep sheet together? It takes about ten minutes, with a few questions for you."
 
 ## 2. The prep sheet

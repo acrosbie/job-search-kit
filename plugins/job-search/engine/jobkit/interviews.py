@@ -7,9 +7,11 @@ An interview is kept on its application (applications.json), in `upcoming`:
     on         "YYYY-MM-DDTHH:MM" in the user's time zone, or a date alone
     kind       phone, video or onsite ("" if not said)
     with       who, in the user's words ("Dana, recruiter")
-    minutes    how long (30 if not said)
+    minutes    how long, or 0 if not said
+    link       the video call's link, if the user gave it
     stage      screen or interview, the application's status it belongs to
     calendar   the .ics file written for it, under interviews/
+    sequence   how many times that file has been written again (calendars take the highest as current)
     debriefed  the date the user went through how it went, or ""
 
 The prep sheet, the story bank and the quick reference are Claude's writing, in the user's folder
@@ -101,37 +103,53 @@ def _ics_text(s):
 
 
 def calendar(a, entry, tz, stamp):
-    """An .ics file's text for one interview: double-clicked, it opens in the user's calendar."""
+    """An .ics file's text for one interview: double-clicked, it opens in the user's calendar.
+
+    Its UID is the application and the day, so the file written again when the time is known (or
+    anything else changes) updates the same event rather than adding a second; SEQUENCE says which
+    is newer. A day with no time yet is a tentative all-day event with no reminder: one 30 minutes
+    before an all-day event would go off the evening before."""
     who = f" with {entry['with']}" if entry.get("with") else ""
     stage = {"screen": "screen", "interview": "interview"}.get(entry.get("stage"), "interview")
     summary = f"{a.get('company', '')}: {entry.get('kind') + ' ' if entry.get('kind') else ''}{stage}{who}"
     desc = f"{_clean(a.get('role', ''), 120)}. Prep: {folder_for(a)}/prep.md in your Job Search folder."
-    uid = f"{re.sub(r'[^a-z0-9-]+', '-', a['id'].lower())}-{entry['on'].replace(':', '')}@job-search-kit"
+    if entry.get("link"):
+        desc = f"Join: {entry['link']}\n{desc}"
+    uid = f"{re.sub(r'[^a-z0-9-]+', '-', a['id'].lower())}-{entry['on'][:10]}@job-search-kit"
     start = _start(entry, tz)
     lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//job-search-kit//interview//EN", "CALSCALE:GREGORIAN",
-             "BEGIN:VEVENT", f"UID:{uid}", f"DTSTAMP:{stamp}"]
-    if start is None:  # a date with no time: an all-day event
+             "METHOD:PUBLISH", "BEGIN:VEVENT", f"UID:{uid}", f"SEQUENCE:{entry.get('sequence', 0)}",
+             f"DTSTAMP:{stamp}"]
+    if start is None:  # a date with no time: tentative, all day, and the day isn't shown as busy
         day = dt.date.fromisoformat(entry["on"])
-        lines += [f"DTSTART;VALUE=DATE:{day:%Y%m%d}", f"DTEND;VALUE=DATE:{day + dt.timedelta(days=1):%Y%m%d}"]
+        lines += [f"DTSTART;VALUE=DATE:{day:%Y%m%d}", f"DTEND;VALUE=DATE:{day + dt.timedelta(days=1):%Y%m%d}",
+                  "STATUS:TENTATIVE", "TRANSP:TRANSPARENT"]
+        summary = f"Time to confirm: {summary}"
     else:
         utc = start.astimezone(dt.timezone.utc)
         end = utc + dt.timedelta(minutes=entry.get("minutes") or 30)
-        lines += [f"DTSTART:{utc:%Y%m%dT%H%M%SZ}", f"DTEND:{end:%Y%m%dT%H%M%SZ}"]
+        lines += [f"DTSTART:{utc:%Y%m%dT%H%M%SZ}", f"DTEND:{end:%Y%m%dT%H%M%SZ}", "STATUS:CONFIRMED"]
     lines += [f"SUMMARY:{_ics_text(summary)}", f"DESCRIPTION:{_ics_text(desc)}"]
-    if entry.get("kind"):
+    if entry.get("link"):
+        lines += [f"LOCATION:{_ics_text(entry['link'])}", f"URL:{entry['link']}"]
+    elif entry.get("kind"):
         lines.append(f"LOCATION:{_ics_text({'phone': 'Phone', 'video': 'Video call', 'onsite': 'On site'}[entry['kind']])}")
-    lines += ["BEGIN:VALARM", "ACTION:DISPLAY", "TRIGGER:-PT30M", f"DESCRIPTION:{_ics_text(summary)}", "END:VALARM",
-              "END:VEVENT", "END:VCALENDAR"]
+    if start is not None:
+        lines += ["BEGIN:VALARM", "ACTION:DISPLAY", "TRIGGER:-PT30M", f"DESCRIPTION:{_ics_text(summary)}", "END:VALARM"]
+    lines += ["END:VEVENT", "END:VCALENDAR"]
     return "\r\n".join(_fold(x) for x in lines) + "\r\n"
 
 
-def schedule(root, clock, ident, on, kind="", who="", minutes=0, status="", note=""):
+def schedule(root, clock, ident, on, kind="", who="", minutes=0, status="", note="", link=""):
     """Record an interview on its application, and write its calendar file. `status` (screen or
     interview) moves the application on, as `track` would. Saying it again for the same day updates
     that interview rather than adding a second."""
     on = parse_on(on)
     if kind and kind not in KINDS:
         raise Refused(f"the kind of interview is one of {', '.join(KINDS)}, not {kind!r}")
+    link = (link or "").strip()
+    if link and not re.match(r"^https?://\S+$", link):
+        raise Refused(f"the call's link is a web address starting https://, not {link!r}")
     if status and status not in ("screen", "interview"):
         raise Refused("an interview's stage is screen or interview")
     applications = track.load(root)
@@ -148,10 +166,13 @@ def schedule(root, clock, ident, on, kind="", who="", minutes=0, status="", note
     entries = a.setdefault("upcoming", [])
     entry = next((e for e in entries if e["on"][:10] == on[:10] and not e.get("debriefed") and not e.get("cancelled")), None)
     if entry is None:
-        entry = {"on": on, "kind": "", "with": "", "minutes": 30, "stage": stage, "calendar": "", "debriefed": ""}
+        entry = {"on": on, "kind": "", "with": "", "minutes": 0, "stage": stage, "calendar": "", "debriefed": "",
+                 "sequence": 0}
         entries.append(entry)
+    else:
+        entry["sequence"] = entry.get("sequence", 0) + 1  # the same event, written again
     entry.update({"on": on, "stage": stage})
-    for field, value in (("kind", kind), ("with", (who or "").strip())):
+    for field, value in (("kind", kind), ("with", (who or "").strip()), ("link", link)):
         if value:
             entry[field] = value
     if minutes:
@@ -225,9 +246,11 @@ def _when(entry, tz):
 
 
 def listing(root, clock):
-    """Every interview not yet gone through, soonest first, each with its application and files."""
+    """Every interview not yet gone through, soonest first, each with its application and files. Its
+    number is the job's on the page: an application joined to a saved posting has the posting's."""
     tz = clock.tz
     now = clock.now()
+    postings = store.Folder(root).load_postings()["postings"]
     out = []
     for a in track.load(root):
         for e in a.get("upcoming", []):
@@ -235,8 +258,10 @@ def listing(root, clock):
                 continue
             when = _when(e, tz)
             prep = f"{folder_for(a)}/prep.md"
-            out.append({"application": a["id"], "num": a.get("num"), "company": a.get("company", ""),
+            num = postings.get(a.get("key") or "", {}).get("num") or a.get("num")
+            out.append({"application": a["id"], "num": num, "company": a.get("company", ""),
                         "role": _clean(a.get("role", ""), 120), "status": a["status"], **e,
+                        "time_unknown": "T" not in e["on"],
                         "days": (when.date() - now.date()).days, "past": when < now,
                         "prep": prep if os.path.exists(os.path.join(root, *prep.split("/"))) else ""})
     return sorted(out, key=lambda x: x["on"])

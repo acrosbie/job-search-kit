@@ -429,7 +429,7 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
   function comingCard(e) {
     var t = new Date(e.on.length > 10 ? e.on : e.on + "T12:00:00");
     var when = isNaN(t) ? e.on : t.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }) +
-      (e.on.length > 10 ? ", " + t.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }) : "");
+      (e.on.length > 10 ? ", " + t.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }) : ", time not set");
     var rel = e.past ? "" : e.days === 0 ? "today" : e.days === 1 ? "tomorrow" : "in " + e.days + " days";
     var kind = { phone: "Phone", video: "Video call", onsite: "On site" }[e.kind] || "";
     var local = location.protocol === "file:";

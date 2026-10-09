@@ -32,7 +32,7 @@ class ScheduleTest(InterviewBase):
         out = interviews.schedule(self.root, CLOCK, self.app, "2026-09-26T10:00", kind="phone", who="Dana, recruiter",
                                   status="screen")
         self.assertEqual((out["on"], out["kind"], out["with"], out["minutes"], out["stage"]),
-                         ("2026-09-26T10:00", "phone", "Dana, recruiter", 30, "screen"))
+                         ("2026-09-26T10:00", "phone", "Dana, recruiter", 0, "screen"))  # how long: not said
         self.assertEqual(out["calendar"], "interviews/Acme - Customer Support Manager/2026-09-26 screen.ics")
         self.assertEqual(out["prep"], "interviews/Acme - Customer Support Manager/prep.md")
         a = track.find(track.load(self.root), self.app)
@@ -53,10 +53,42 @@ class ScheduleTest(InterviewBase):
         a = track.find(track.load(self.root), self.app)
         self.assertEqual([(e["on"], e["kind"], e["minutes"]) for e in a["upcoming"]], [("2026-09-26T11:30", "video", 45)])
 
-    def test_a_date_alone_is_an_all_day_event(self):
+    def test_a_date_alone_is_a_tentative_all_day_event_with_no_reminder(self):
+        # Found in real use (2026-10-08): the Head of CX round was written as an all-day event with a
+        # reminder 30 minutes before it, which goes off at 23:30 the evening before.
         out = interviews.schedule(self.root, CLOCK, self.app, "2026-09-29")
-        self.assertIn("DTSTART;VALUE=DATE:20260929\r\n", self.read(out["calendar"]))
+        ics = self.read(out["calendar"])
+        self.assertIn("DTSTART;VALUE=DATE:20260929\r\n", ics)
+        self.assertIn("STATUS:TENTATIVE\r\n", ics)
+        self.assertIn("SUMMARY:Time to confirm: Acme: interview\r\n", ics)
+        self.assertNotIn("VALARM", ics)
         self.assertEqual(out["stage"], "interview")
+        self.assertTrue(interviews.listing(self.root, CLOCK)[0]["time_unknown"])
+
+    def test_the_time_given_later_updates_the_same_calendar_event(self):
+        first = self.read(interviews.schedule(self.root, CLOCK, self.app, "2026-09-29")["calendar"])
+        out = interviews.schedule(self.root, CLOCK, self.app, "2026-09-29T10:00", kind="video",
+                                  link="https://meet.example.test/abc")
+        later = self.read(out["calendar"])
+        uid = [line for line in first.split("\r\n") if line.startswith("UID:")]
+        self.assertEqual(uid, [line for line in later.split("\r\n") if line.startswith("UID:")])
+        self.assertIn("SEQUENCE:0\r\n", first)
+        self.assertIn("SEQUENCE:1\r\n", later)
+        self.assertIn("STATUS:CONFIRMED\r\n", later)
+        self.assertIn("URL:https://meet.example.test/abc\r\n", later)
+        self.assertIn("TRIGGER:-PT30M", later)
+        self.assertFalse(interviews.listing(self.root, CLOCK)[0]["time_unknown"])
+        with self.assertRaises(Refused):
+            interviews.schedule(self.root, CLOCK, self.app, "2026-09-29T10:00", link="javascript:alert(1)")
+
+    def test_the_job_number_comes_from_its_posting(self):
+        # Found in real use: the Scentbird interview, #22 on the page, showed with no number.
+        page.build(self.root, CLOCK)  # gives the posting its number
+        interviews.schedule(self.root, CLOCK, self.app, "2026-09-29T10:00")
+        num = self.folder.load_postings()["postings"]["greenhouse-acme-1"]["num"]
+        self.assertTrue(num)
+        self.assertEqual(interviews.listing(self.root, CLOCK)[0]["num"], num)
+        self.assertEqual(page.build(self.root, CLOCK)["coming_up"][0]["num"], num)
 
     def test_what_isnt_a_time(self):
         for bad in ("tomorrow", "2026-09-31", "2026-09-26T25:00", "26/09/2026"):

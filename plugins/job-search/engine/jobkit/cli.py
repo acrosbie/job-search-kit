@@ -113,7 +113,7 @@ def cmd_track(a):
         if a.status not in (None, "screen", "interview"):
             raise Refused("--on goes with screen or interview")
         _out(interviews.schedule(a.folder, _clock(a.folder), a.id, a.on, kind=a.kind or "", who=a.who or "",
-                                 minutes=a.minutes or 0, status=a.status or "", note=a.note or ""))
+                                 minutes=a.minutes or 0, status=a.status or "", note=a.note or "", link=a.link or ""))
         return 0
     if a.status in ("screen", "interview") and not a.time_unknown:
         # Booked with its day and time, it gets a calendar file, a prep offer and a debrief.
@@ -397,7 +397,8 @@ def parser():
     s.add_argument("--time-unknown", action="store_true", help="a screen or interview whose day isn't known yet")
     s.add_argument("--kind", choices=interviews.KINDS, help="with --on: phone, video or onsite")
     s.add_argument("--with", dest="who", help="with --on: who it's with, in the user's words")
-    s.add_argument("--minutes", type=int, help="with --on: how long (30 if not said)")
+    s.add_argument("--minutes", type=int, help="with --on: how long, only if the user said")
+    s.add_argument("--link", help="with --on: the video call's link, if the user gave it")
     s.set_defaults(func=cmd_track)
 
     s = sub.add_parser("interview", help="interviews: list them, check a prep sheet, mark one gone through")
