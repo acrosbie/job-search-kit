@@ -32,8 +32,15 @@ def _day(text, what):
         raise Refused(f"give {what} as YYYY-MM-DD, not {text!r}") from None
 
 
-# A role as imported may end in its places, "(United States; Remote)": not part of the position's name.
-_PLACES = re.compile(r"\s*\((?:[^()]|\([^()]*\))*\b(?:remote|united states|usa|hybrid|on-?site|(?-i:[A-Z]{2}))\b"
+# A role as imported may end in its places, "(United States; Remote)" or "(Mountain View, California;
+# Plano, Texas)": not part of the position's name. "(East)" or "(Payments)" is, and stays.
+_STATES = ("alabama|alaska|arizona|arkansas|california|colorado|connecticut|delaware|florida|georgia|hawaii|idaho|"
+           "illinois|indiana|iowa|kansas|kentucky|louisiana|maine|maryland|massachusetts|michigan|minnesota|"
+           "mississippi|missouri|montana|nebraska|nevada|new hampshire|new jersey|new mexico|new york|"
+           "north carolina|north dakota|ohio|oklahoma|oregon|pennsylvania|rhode island|south carolina|south dakota|"
+           "tennessee|texas|utah|vermont|virginia|washington|west virginia|wisconsin|wyoming|canada")
+_PLACES = re.compile(r"\s*\((?:[^()]|\([^()]*\))*(?:;|\b(?:remote|united states|usa|hybrid|on-?site|" + _STATES +
+                     r"|(?-i:[A-Z]{2}))\b)"
                      r"(?:[^()]|\([^()]*\))*\)\s*$", re.I)
 
 

@@ -501,6 +501,7 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
     var m = said.match(/^Question:\s*([\s\S]*)$/);
     if (!m) return "";
     var q = m[1].replace(/\s*\((?:[^()]*\b)?rules?\s*\d+[^()]*\)/gi, "").trim();
+    q = q.charAt(0).toUpperCase() + q.slice(1);
     return q ? '<div class="parts"><div class="part ask"><span class="k">The one question</span><span>' + esc(q) + "</span></div></div>" : "";
   }
 

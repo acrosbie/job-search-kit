@@ -54,6 +54,9 @@ class WorklogTest(TrackBase):
                          "ServiceNow Admin")
         self.assertEqual(export.position("Customer Success Manager, Strategic Accounts (East)"),
                          "Customer Success Manager, Strategic Accounts (East)")
+        self.assertEqual(export.position("Senior Manager, Global Premier Support (Mountain View, California; Plano, Texas)"),
+                         "Senior Manager, Global Premier Support")
+        self.assertEqual(export.position("Support Lead (Payments, Risk)"), "Support Lead (Payments, Risk)")
 
     def test_dates_are_checked(self):
         with self.assertRaises(Refused):
