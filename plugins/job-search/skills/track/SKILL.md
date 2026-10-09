@@ -9,7 +9,7 @@ Record what the user tells you about their applications, in their words, and kee
 
 ## Before starting
 
-Follow `${CLAUDE_PLUGIN_ROOT}/reference/running-the-engine.md`, sections 1 to 5a: find the folder, run where it can see it, refresh the engine, and catch up.
+Start as `${CLAUDE_PLUGIN_ROOT}/reference/running-the-engine.md` says: find the folder, refresh the engine if needed, run `start`, and work down its `next`.
 
 **Record everything the user told you first, then run `due` once.** For example, an application from three weeks ago that has a reply is recorded with its reply before anything closes.
 

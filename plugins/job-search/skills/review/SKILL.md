@@ -13,7 +13,7 @@ Nothing in the review changes anything on its own. Every change goes through the
 
 ## Before starting
 
-Follow `${CLAUDE_PLUGIN_ROOT}/reference/running-the-engine.md`, sections 1 to 5a.
+Start as `${CLAUDE_PLUGIN_ROOT}/reference/running-the-engine.md` says: find the folder, refresh the engine if needed, run `start`, and work down its `next`.
 
 ## Setting up or stopping the weekly review
 

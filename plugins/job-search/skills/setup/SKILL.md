@@ -22,7 +22,7 @@ After each step, write `profile/setup-progress.md`: the steps done, and anything
 
 ## Step 0: the folder and the engine
 
-Follow `${CLAUDE_PLUGIN_ROOT}/reference/running-the-engine.md` sections 1 to 4. Ignore its "no `profile/settings.toml`" case, because that's the folder setup is about to fill. Install the engine into the folder first.
+Follow `${CLAUDE_PLUGIN_ROOT}/reference/running-the-engine.md` steps 1 to 3. Ignore its "no `profile/settings.toml`" case, because that's the folder setup is about to fill. Install the engine into the folder first. Run `start` only once setup is done.
 
 Then start the folder, using the user's time zone (ask which city they're in if you need it). Use the support field pack only if their work is customer support, support operations or CX; otherwise `custom`:
 ```
@@ -47,7 +47,7 @@ Prove it worked by reading one board:
 ```
 run.py scan --folder "<folder>" --only <the slug of any greenhouse company in profile/companies.toml>
 ```
-If it says the board couldn't be reached, follow `running-the-engine.md` section 8, and give them a minute to change the setting. If they can't or won't, say the kit can still screen job links they paste in, and carry on.
+If it says the board couldn't be reached, say so as `engine-troubleshooting.md` says, and give them a minute to change the setting. If they can't or won't, say the kit can still screen job links they paste in, and carry on.
 
 ## Step 2: their background, from their resume and LinkedIn
 

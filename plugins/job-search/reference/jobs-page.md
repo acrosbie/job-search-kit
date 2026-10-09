@@ -52,7 +52,7 @@ Do this at the end of any skill that changed something (scan, triage, add-job, t
 
 ## Reading the user's clicks
 
-Every skill does this first, as part of catching up (`running-the-engine.md`).
+Every skill does this first, when `start` lists `read_clicks` (`running-the-engine.md`).
 
 1. If `[page] url` is empty, there's nothing to read.
 2. With ArtifactData, `list` the collection `data/users/me/page/clicks` on the page's link. Keep the clicks whose `recorded` is empty. If there are none, you're done.

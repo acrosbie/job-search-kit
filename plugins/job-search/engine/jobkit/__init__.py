@@ -3,4 +3,4 @@ and keeps the records in the user's folder. Ported from a working personal job-s
 
 __version__ = "0.9.0"
 # Every other engine file, hashed (fingerprint.py). A user's copy is refreshed when this differs.
-__fingerprint__ = "92d896fcccbfba7f"
+__fingerprint__ = "ab557b2c71f47d37"

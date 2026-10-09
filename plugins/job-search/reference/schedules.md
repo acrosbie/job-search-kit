@@ -4,7 +4,7 @@ Two checks can run on a schedule (decision 3):
 - **A daily check of the job boards.** Its prompt is "any new jobs?".
 - **A weekly review, prepared for the user to go through later.** Its prompt is "prepare my weekly review".
 
-Each is a Cowork scheduled task with the user's Job Search folder attached, so it runs on their computer and can read and write the folder. It runs only while the computer is on and Claude is open. A missed one is caught up in the next conversation (`running-the-engine.md`, section 5a), which is why every schedule is also recorded in the user's settings.
+Each is a Cowork scheduled task with the user's Job Search folder attached, so it runs on their computer and can read and write the folder. It runs only while the computer is on and Claude is open. A missed one is caught up in the next conversation (`start` lists `offer_scan`), which is why every schedule is also recorded in the user's settings.
 
 Setup offers both (its step 7). Use this page whenever the user asks for one later: "check my job boards every morning", "set up a weekly review", "stop the daily check".
 

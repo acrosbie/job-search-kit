@@ -14,6 +14,7 @@ import sys
 
 from . import __fingerprint__, __version__, net, scan, settings, store
 from . import add, choices, configure, export, interviews, page, replay, resume, review, rules, schedule, titles, track, verdicts
+from . import start as starting
 from . import init as starter
 from . import queue as triage_queue
 from .clock import Clock
@@ -55,6 +56,16 @@ def cmd_scan(a):
     summary["follow_ups_due"] = {k: len(due[k]) for k in ("send", "find_person", "closing")}
     summary["due"] = due  # everything catching up needs (running-the-engine.md, 5a), so the scan skill needn't run due
     _out(summary)
+    return 0
+
+
+def cmd_start(a):
+    _out(starting.start(a.folder, _clock(a.folder), expect=a.expect or ""))
+    return 0
+
+
+def cmd_doctor(a):
+    _out(starting.doctor(a.folder, _clock(a.folder), probe=a.probe))
     return 0
 
 
@@ -362,6 +373,16 @@ def parser():
     g.add_argument("--replay", metavar="DIR", help="read board answers from this cassette folder, not the network")
     s.add_argument("--as-of", metavar="TIME", help="pretend it is this time (ISO, with offset); for replays")
     s.set_defaults(func=cmd_scan)
+
+    s = sub.add_parser("start", help="the start of every conversation: what's wrong, what's due, and what to do next")
+    s.add_argument("--folder", required=True)
+    s.add_argument("--expect", metavar="FINGERPRINT", help="the plugin's engine fingerprint, to say whether this copy is current")
+    s.set_defaults(func=cmd_start)
+
+    s = sub.add_parser("doctor", help="every check in full, for when something is wrong")
+    s.add_argument("--folder", required=True)
+    s.add_argument("--probe", action="store_true", help="also try to reach three job boards")
+    s.set_defaults(func=cmd_doctor)
 
     s = sub.add_parser("probe", help="can job boards be reached from here? reads three of the user's boards, saves nothing")
     s.add_argument("--folder", required=True)

@@ -16,7 +16,7 @@ The engine refuses a change that skipped the replay, or that would turn away a j
 
 ## Before starting
 
-Follow `${CLAUDE_PLUGIN_ROOT}/reference/running-the-engine.md`, sections 1 to 5a. Read `profile/rules.md`, and `profile/what-i-want.md` for the user's own words.
+Start as `${CLAUDE_PLUGIN_ROOT}/reference/running-the-engine.md` says: find the folder, refresh the engine if needed, run `start`, and work down its `next`. Read `profile/rules.md`, and `profile/what-i-want.md` for the user's own words.
 
 ## 1. Say the change, with its evidence
 
