@@ -13,7 +13,7 @@ import re
 import sys
 
 from . import __fingerprint__, __version__, net, scan, settings, store
-from . import add, choices, configure, interviews, page, replay, resume, review, rules, schedule, titles, track, verdicts
+from . import add, choices, configure, export, interviews, page, replay, resume, review, rules, schedule, titles, track, verdicts
 from . import init as starter
 from . import queue as triage_queue
 from .clock import Clock
@@ -321,6 +321,11 @@ def cmd_changed(a):
     return 0
 
 
+def cmd_export(a):
+    _out(export.worklog(a.folder, _clock(a.folder), a.start, a.end))
+    return 0
+
+
 def cmd_snapshots(a):
     _out({"snapshots": store.Folder(a.folder).list_snapshots()})
     return 0
@@ -603,6 +608,14 @@ def parser():
     s.add_argument("--page", help="the company's careers page, to look for an embedded board")
     s.add_argument("--folder", help="accepted, like every command; not needed")
     s.set_defaults(func=cmd_discover)
+
+    s = sub.add_parser("export", help="the weekly work-search log, as a spreadsheet in exports/")
+    acts = s.add_subparsers(dest="action", required=True)
+    x = acts.add_parser("worklog", help="every application, follow-up and interview in a range of dates")
+    x.add_argument("--folder", required=True)
+    x.add_argument("--from", dest="start", required=True, help="YYYY-MM-DD, the first day")
+    x.add_argument("--to", dest="end", required=True, help="YYYY-MM-DD, the last day")
+    s.set_defaults(func=cmd_export)
 
     s = sub.add_parser("snapshots", help="the snapshots kept of the records, newest first, each taken before a command")
     s.add_argument("--folder", required=True)

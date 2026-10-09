@@ -1,6 +1,6 @@
 ---
 name: track
-description: Record what happens with the user's job applications - "I applied to X", replies, phone screens, interviews, offers, rejections, withdrawals, follow-ups and contacts - and say which follow-ups are due. Also opens their jobs page. Use when the user says "I applied to ...", "X replied", "I have an interview with ...", "X turned me down", "I withdrew from ...", "the recruiter at X is ...", "I followed up with ...", "what's due?", "any follow-ups?", "where do things stand?", "show me my jobs page" or "open my jobs page". Needs the user's Job Search folder connected.
+description: Record what happens with the user's job applications - "I applied to X", replies, phone screens, interviews, offers, rejections, withdrawals, follow-ups and contacts - and say which follow-ups are due. Also opens their jobs page. Use when the user says "I applied to ...", "X replied", "I have an interview with ...", "X turned me down", "I withdrew from ...", "the recruiter at X is ...", "I followed up with ...", "what's due?", "any follow-ups?", "where do things stand?", "show me my jobs page", "open my jobs page" or "my work search log". Needs the user's Job Search folder connected.
 ---
 
 # Track: applications, and what happens next
@@ -77,6 +77,17 @@ Run `due`, then say, briefly:
 - **`find_person`:** "Acme, Senior Accountant is a top pick, and nobody's on record to follow up with. Look on LinkedIn or Acme's site for the person who would lead the team this job is in. Tell me their name, and I'll add them."
 - **`closing`:** one line for all of them. "Three more have nobody to send to; they close on their own at day 21 (the next is Globex, on 22 Oct)."
 - Nothing due: say so in one line.
+
+## "My work search log"
+
+Many unemployment programs ask for a weekly record of job-search contacts. Everything for it is already in their applications.
+
+1. Ask which week, as dates, if they haven't said ("the week of Sunday 4 October to Saturday 10 October?"). Programs count weeks differently, so use their dates.
+2. Run `run.py export worklog --from YYYY-MM-DD --to YYYY-MM-DD --folder "<folder>"`. It writes a spreadsheet to their folder's `exports/` and says how many contacts it holds.
+3. Tell them where it is, how many applications, follow-ups and interviews it has, and, from the output, how many say "Not recorded" for how they applied or have an approximate date: they may want to fill those in on the form. Offer to record how they applied for those now (the track steps above).
+4. Say once that their program's own rules decide what counts and what to send. The log holds only what they told you.
+
+Never fill in a contact, a method or a result they didn't give.
 
 ## "Show me my jobs page"
 
