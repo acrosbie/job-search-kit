@@ -13,7 +13,7 @@ The interview itself is kept on its application (`run.py track <id> screen --on 
 
 ## The format
 
-Markdown, with `##` sections. Under a claim section, each line or bullet is a claim about the user. It carries `from:` lines underneath, quoting `about-me.md` exactly, as a resume does (`resume-format.md`). Other sections are free text.
+Markdown, with `##` sections. A later round's sheet adds `## From your last round` after At a glance: free text, from the earlier `## Debrief` sections. Under a claim section, each line or bullet is a claim about the user. It carries `from:` lines underneath, quoting `about-me.md` exactly, as a resume does (`resume-format.md`). Other sections are free text.
 
 ```
 # Acme: recruiter screen, Thu 8 Oct, 10:00
