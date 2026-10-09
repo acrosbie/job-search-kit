@@ -127,6 +127,68 @@ def onsite_hit(description, s):
     return ""
 
 
+# A posting is a stranger's text, read by Claude. These find the few things in it that are warnings
+# rather than facts about the job: words aimed at an AI that reads it, and the marks of a fake job. They
+# only flag, never reject, and never change the text: a verdict quotes the posting word for word.
+_INSTRUCTIONS = re.compile(
+    r"\b(?:ignore|disregard|forget)\s+(?:all\s+|any\s+|the\s+|your\s+)?(?:previous|prior|above|earlier|other)\s+"
+    r"(?:instructions?|directions?|rules?|prompts?|guidance)"
+    r"|\bif\s+you\s+are\s+an?\s+(?:ai|a\.i\.|llm|large\s+language\s+model|language\s+model|assistant|bot|automated)"
+    r"|\b(?:ai|llm|assistant|chatbot|screening\s+tool|bot)s?\s+(?:reading|screening|reviewing|processing|evaluating)\s+this"
+    r"|\b(?:note|instructions?|message)\s+(?:to|for)\s+(?:the\s+|any\s+)?(?:ai|llm|assistant|language\s+model)\b"
+    r"|\bsystem\s+prompt\b"
+    r"|\b(?:mark|rate|score|label|classify)\s+(?:this|the)\s+(?:job|posting|role|position|candidate|application)\s+as\b",
+    re.I)
+_OFF_PLATFORM = re.compile(
+    r"\b(?:contact|text|message|reach|interview|apply|send|add|dm|chat\s+with)\b[^.\n]{0,50}\b(?:telegram|whatsapp|signal\s+app|"
+    r"wickr|google\s+hangouts|hangouts|kik)\b"
+    r"|\b(?:telegram|whatsapp|wickr|kik)\s*(?:at|:|number|no\.|id|handle|username)\b"
+    r"|\b[\w.+-]+@(?:gmail|yahoo|hotmail|outlook|aol|icloud|protonmail|proton|gmx|mail)\.(?:com|me|net)\b",
+    re.I)
+_PAY_TO_WORK = re.compile(
+    r"\b(?:you(?:'ll|\s+will)?\s+(?:need\s+to\s+|must\s+|be\s+required\s+to\s+|have\s+to\s+)|required\s+to\s+|must\s+)"
+    r"(?:purchase|buy|pay\s+for)\b"
+    r"|\b(?:deposit|cash)\w*\s+(?:a\s+|the\s+)?(?:check|cheque)s?\b|\b(?:check|cheque)s?\s+(?:for\s+you\s+)?to\s+(?:deposit|cash)\b"
+    r"|\b(?:training|registration|application|onboarding|background[\s-]check|processing|starter[\s-]kit|equipment)\s+fee\b"
+    r"|\bupfront\s+(?:fee|payment|cost)\b",
+    re.I)
+WARNINGS = (("instructions", _INSTRUCTIONS, "flag_instructions"), ("off_platform", _OFF_PLATFORM, "flag_off_platform"),
+            ("pay_to_work", _PAY_TO_WORK, "flag_pay_to_work"))
+
+
+# A sentence saying the employer will never do these ("we will never ask you to cash a check") is the
+# opposite of a warning: many real postings carry such a notice about fake recruiters.
+_NEGATED = re.compile(r"\b(?:never|not|won't|don't|doesn't|cannot|can't|no\s+legitimate|beware|scams?|fraud\w*)\b", re.I)
+
+
+def _sentence_before(body, i):
+    start = max(body.rfind(c, 0, i) for c in ".!?\n")
+    return body[start + 1:i]
+
+
+def _words_around(body, start, end, pad=30):
+    """The match with a few words either side, cut at whole words."""
+    lo, hi = max(0, start - pad), min(len(body), end + pad)
+    while lo > 0 and lo < start and not body[lo - 1].isspace():
+        lo += 1
+    while hi < len(body) and hi > end and not body[hi].isspace():
+        hi -= 1
+    return re.sub(r"\s+", " ", body[lo:hi]).strip()
+
+
+def warning_flags(body, s):
+    """(code, text) for each warning sign in a posting, quoting its words, in the order above."""
+    body = body or ""
+    out = []
+    for code, rx, label in WARNINGS:
+        for m in rx.finditer(body):
+            if _NEGATED.search(_sentence_before(body, m.start())):
+                continue
+            out.append((code, s.label(label, quote=_words_around(body, m.start(), m.end())[:120])))
+            break
+    return out
+
+
 def location_flag(code, s):
     return {IN_COUNTRY: s.label("flag_in_country"), REMOTE_ONLY: s.label("flag_remote_only"),
             COUNTRY_WIDE: s.label("flag_country_wide"), UNKNOWN: s.label("flag_unknown")}.get(code, "")
@@ -165,4 +227,5 @@ def assess(location, location_code, body, s):
     ons = onsite_hit(body, s)
     if ons:
         flags.append(("onsite", s.label("flag_onsite", quote=ons[:90])))
+    flags += warning_flags(body, s)
     return status, rule, reason, flags
