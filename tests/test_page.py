@@ -144,3 +144,75 @@ class PageTest(ScanBase):
 if __name__ == "__main__":
     import unittest
     unittest.main()
+
+class TodayTest(ScanBase):
+    """The top of the page answers "what should I do today?", and how the search is going, in facts."""
+
+    def setUp(self):
+        super().setUp()
+        self.scan()
+        self.folder.save_applications([])
+
+    def test_the_next_interview_and_what_to_do_first(self):
+        from jobkit import interviews, verdicts
+        track.apply(self.root, on(1), key="greenhouse-acme-4", date="2026-09-01", channel="company_site", top_pick=True)
+        track.apply(self.root, on(2), company="Globex", role="Senior Manager, Customer Experience (remote US)",
+                    date="2026-09-02", channel="linkedin", top_pick=True)
+        interviews.schedule(self.root, on(10), "greenhouse-acme-4", "2026-09-12", status="screen")
+        verdicts.mark(self.root, "greenhouse-acme-1", "worth_applying", "claude", note="Tailor: x", clock=on(10))
+        d = page.build(self.root, on(10))
+        f = d["focus"]
+        self.assertEqual((f["next_interview"]["company"], f["next_interview"]["time_unknown"]), ("Acme", True))
+        self.assertEqual([a["kind"] for a in f["actions"]], ["time", "prep", "find_person"])
+        self.assertEqual(f["more_actions"], 1)  # applying to #1 waits below
+        self.assertEqual([p["key"] for p in f["top_picks"]], ["greenhouse-acme-1"])
+        search = next(t["search"] for t in d["todo"] if t["route"] == "find_person")
+        self.assertEqual(search, 'Globex "Customer Experience" (director OR head OR VP)')
+        configure.set_value(self.root, "page.contact_search", "head OR VP")
+        self.assertIn("(head OR VP)", next(t["search"] for t in page.build(self.root, on(10))["todo"]))
+
+    def test_the_search_in_facts(self):
+        track.apply(self.root, on(1), company="Globex", role="Lead", date="2026-09-01")
+        track.apply(self.root, on(3), company="Initech", role="Lead", date="2026-09-02")
+        track.track(self.root, on(6), "app-initech-lead", "rejected", date="2026-09-06")
+        d = page.build(self.root, on(10))
+        self.assertEqual(d["funnel"], {"saved": len(self.folder.load_postings()["postings"]), "applied": 2,
+                                       "screens": 0, "interviews": 0, "offers": 0})
+        self.assertEqual(len(d["activity"]), 8)
+        self.assertEqual(d["activity"][-2:], [{"week": "2026-08-31", "applied": 2}, {"week": "2026-09-07", "applied": 0}])
+        self.assertEqual(d["last_scan"]["status"], "partial")  # test_scan's Broken board failed
+
+    def test_an_application_turned_down_after_an_interview_still_counts_as_one(self):
+        from jobkit import interviews
+        track.apply(self.root, on(1), key="greenhouse-acme-4", date="2026-09-01", channel="company_site", top_pick=True)
+        interviews.schedule(self.root, on(3), "greenhouse-acme-4", "2026-09-04T10:00", status="interview")
+        track.track(self.root, on(8), "greenhouse-acme-4", "rejected", date="2026-09-08")
+        f = page.build(self.root, on(10))["funnel"]
+        self.assertEqual((f["screens"], f["interviews"], f["offers"]), (1, 1, 0))
+
+    def test_nothing_on_the_page_names_a_rule_by_number_or_the_user_in_the_third_person(self):
+        # Claude's working notes are folded away as "Behind the call" (claude_said, quote, rule); what the
+        # user reads first (summaries, Today, the engine's own words) must be written to them.
+        from jobkit import verdicts
+        summary = {"headline": "A close match, near home.", "fits": ["You'd lead the Denver team."],
+                   "tailor": ["Lead with the team you grew."]}
+        verdicts.mark(self.root, "greenhouse-acme-1", "worth_applying", "claude", note="Rule 3 (scope): his kind of job",
+                      clock=on(10), summary=summary)
+        d = page.build(self.root, on(10))
+        behind = {"claude_said", "quote", "rule", "note"}
+
+        def strings(x, key=""):
+            if key in behind:
+                return
+            if isinstance(x, str):
+                yield key, x
+            elif isinstance(x, dict):
+                for k, v in x.items():
+                    yield from strings(v, k)
+            elif isinstance(x, list):
+                for v in x:
+                    yield from strings(v, key)
+        for part in ("waiting", "focus", "todo", "coming_up"):
+            for key, text in strings(d[part]):
+                self.assertNotRegex(text, r"(?i)\brule\s*\d", (part, key))
+                self.assertNotRegex(text, r"(?i)\b(his|her|the user)\b", (part, key))

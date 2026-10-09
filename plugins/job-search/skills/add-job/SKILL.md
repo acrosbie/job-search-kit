@@ -51,7 +51,7 @@ For a link to a job board the engine reads (Greenhouse, Lever, Ashby, SmartRecru
    ```
    Use `link` when you read it from the link, `pasted` when the user pasted it.
 
-**If the output names an `application`,** the user had already told you they applied to this job. It's now joined to that application, so say so in one line ("I've added the posting to your Acme application"). Still judge it (step 2), and record your verdict without changing anything, so the monthly review can compare it with what happened: `mark <key> <verdict> --by claude --record-only --note "<note>"`, with `--rule` and `--quote` as triage gives them.
+**If the output names an `application`,** the user had already told you they applied to this job. It's now joined to that application, so say so in one line ("I've added the posting to your Acme application"). Still judge it (step 2), and record your verdict without changing anything, so the monthly review can compare it with what happened: `mark <key> <verdict> --by claude --record-only --note "<note>"`, with `--rule`, `--quote` and `--summary` as triage gives them.
 
 **Exit code 3, "already saved as …":** the job is already on their list. Say where it stands in one line, by its number ("That's #12, Acme, Senior Accountant. I marked it worth applying on 2 Oct."), and don't save it again. If they say it's a different job with the same title, run `add` again with `--anyway`.
 
@@ -62,7 +62,7 @@ The output gives the posting's `key`, its `status`, and any flags.
 - **`not_a_fit` already:** one of their automatic rules rejected it. Tell them the reason (`note`), and that they can overturn it.
 - **`new`:** judge it with the triage skill's "For each posting in the queue" steps, for this one posting (its description is `data/postings/<key>.md`). A flag saying it's not one of the titles their search looks for is worth a sentence, but it's never a reason on its own: they chose this job.
 
-Report the verdict the triage way, with the job's number from `data/page.json`: "#31 Initech, Support Operations Manager: worth applying. Two changes to make to your resume: …"
+Report the verdict the triage way, with the job's number from `data/page.json` and its summary's headline first: "#31 Initech, Support Operations Manager: worth applying. Your kind of job, and it pays your ask. …"
 
 If the user already said they applied to it, record that next with the track skill.
 

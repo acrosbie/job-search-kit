@@ -9,6 +9,7 @@ import re
 
 from . import store
 from .clock import Clock
+from . import summary as summary_mod
 from .errors import NotFound, Refused
 
 # A verdict that contradicts an earlier one, for spotting when the user overturns Claude or a rule.
@@ -80,8 +81,31 @@ def last_user_decision(decisions, key):
     return mine[-1] if mine else None
 
 
+def _summary(folder, key, status, by, summary, day):
+    """Claude's summary of a posting, checked against it (summary.py), dated; or None."""
+    if summary is None:
+        return None
+    if by != "claude":
+        raise Refused("a summary is Claude's account of the posting; the user's own words go in the note")
+    checked = summary_mod.check(summary, status, folder.read_description(key))
+    return {**checked, "date": day}
+
+
+def summarize(root, key, summary, clock=None):
+    """Write Claude's summary of a posting again without a new verdict: for a job already decided, or
+    one judged before summaries. Nothing else about it changes, and no verdict is logged."""
+    folder = store.Folder(root)
+    state = folder.load_postings()
+    entry = state["postings"].get(key)
+    if not entry:
+        raise NotFound(f"unknown key {key}")
+    entry["summary"] = _summary(folder, key, entry.get("status", ""), "claude", summary, (clock or Clock()).today())
+    folder.save_postings(state)
+    return {"key": key, "status": entry.get("status", ""), "summary": entry["summary"]}
+
+
 def mark(root, key, status, by, note="", force=False, clock=None, choice="", at="", record_only=False,
-         rule="", quote="", evidence=False, candidate_rule=False):
+         rule="", quote="", evidence=False, candidate_rule=False, summary=None):
     """Record one verdict and return the decisions.log row. `choice` is the id of a click on the jobs
     page, kept so the same click is never recorded twice, and `at` the time it was made (default now).
 
@@ -90,7 +114,8 @@ def mark(root, key, status, by, note="", force=False, clock=None, choice="", at=
 
     `evidence` (the command line sets it for Claude) requires a Not a fit to name its `rule` and a Not a
     fit or Your call to `quote` the posting; both are kept on the row. `candidate_rule` marks the
-    user's reason as one that sounds like a rule, for the weekly review."""
+    user's reason as one that sounds like a rule, for the weekly review. `summary` is Claude's account
+    of the posting for the page and chat (summary.py), checked before anything is saved."""
     folder = store.Folder(root)
     state = folder.load_postings()
     entry = state["postings"].get(key)
@@ -105,9 +130,13 @@ def mark(root, key, status, by, note="", force=False, clock=None, choice="", at=
         if evidence:
             rule_id = _check_evidence(root, folder, key, entry, status, rule, quote)
         clk = clock or Clock()
+        checked = _summary(folder, key, status, by, summary, clk.today())
         row = {"at": at or clk.stamp(), "date": (at or clk.stamp())[:10], "key": key, "company": entry["company"],
                "title": entry["title"], "verdict": status, "reason": note, "by": by, "record_only": True}
-        row.update({k: v for k, v in (("rule", rule_id), ("quote", quote)) if v})
+        row.update({k: v for k, v in (("rule", rule_id), ("quote", quote), ("summary", checked)) if v})
+        if checked:  # shown on the page; the verdict on the posting stays as it is
+            entry["summary"] = checked
+            folder.save_postings(state)
         folder.log_decision(row)
         return row
     decisions = folder.read_decisions()
@@ -121,6 +150,7 @@ def mark(root, key, status, by, note="", force=False, clock=None, choice="", at=
     if evidence and by == "claude":
         rule_id = _check_evidence(root, folder, key, entry, status, rule, quote)
     clk = clock or Clock()
+    checked = _summary(folder, key, status, by, summary, clk.today())
     reversal = ""
     if by == "user" and earlier and status in OPPOSED.get(earlier[-1].get("verdict"), set()):
         reversal = earlier[-1].get("verdict")
@@ -131,6 +161,8 @@ def mark(root, key, status, by, note="", force=False, clock=None, choice="", at=
         entry["note"] = note
     if rule_id:
         entry["rule"] = rule_id
+    if checked:
+        entry["summary"] = checked
     folder.save_postings(state)
     row = {"at": at, "date": at[:10], "key": key, "company": entry["company"], "title": entry["title"],
            "verdict": status, "reason": note, "by": by}
@@ -138,7 +170,7 @@ def mark(root, key, status, by, note="", force=False, clock=None, choice="", at=
         row["reverses"] = reversal
     if choice:
         row["choice"] = choice
-    row.update({k: v for k, v in (("rule", rule_id), ("quote", quote)) if v})
+    row.update({k: v for k, v in (("rule", rule_id), ("quote", quote), ("summary", checked)) if v})
     if candidate_rule and by == "user":
         row["candidate_rule"] = True
     folder.log_decision(row)

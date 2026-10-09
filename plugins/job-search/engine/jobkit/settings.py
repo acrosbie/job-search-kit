@@ -118,7 +118,7 @@ def parse(raw):
         cooldown_days=int(raw.get("triage", {}).get("cooldown_days", 30)),
         follow_up_after_days=int(tr.get("follow_up_after_days", 5)),
         presume_after_days=int(tr.get("presume_after_days", 21)),
-        page={"url": "", "version": "", "route": "", "pushed": "", **raw.get("page", {})},
+        page={"url": "", "version": "", "route": "", "pushed": "", "contact_search": "", **raw.get("page", {})},
         schedule={"scan": "", "review": "", **raw.get("schedule", {})},
         labels={**DEFAULT_LABELS, **raw.get("labels", {})},
     )

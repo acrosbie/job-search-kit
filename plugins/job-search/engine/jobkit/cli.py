@@ -15,6 +15,7 @@ import sys
 from . import __fingerprint__, __version__, net, scan, settings, store
 from . import add, choices, configure, export, interviews, page, replay, resume, review, rules, schedule, titles, track, verdicts
 from . import start as starting
+from . import summary as summary_mod
 from . import init as starter
 from . import queue as triage_queue
 from .clock import Clock
@@ -97,7 +98,13 @@ def cmd_mark(a):
                       "they applied and whether it's a top pick")
     _out(verdicts.mark(a.folder, a.key, a.status, a.by, note=a.note, force=a.force, clock=_clock(a.folder),
                        record_only=a.record_only, rule=a.rule or "", quote=a.quote or "", evidence=a.by == "claude",
-                       candidate_rule=a.candidate_rule))
+                       candidate_rule=a.candidate_rule,
+                       summary=summary_mod.read_file(a.summary) if a.summary else None))
+    return 0
+
+
+def cmd_summarize(a):
+    _out(verdicts.summarize(a.folder, a.key, summary_mod.read_file(a.summary), clock=_clock(a.folder)))
     return 0
 
 
@@ -410,7 +417,14 @@ def parser():
     s.add_argument("--candidate-rule", action="store_true", help="the user's reason sounds like a rule, for the review")
     s.add_argument("--record-only", action="store_true",
                    help="log Claude's verdict without changing the posting (a job the user already applied to)")
+    s.add_argument("--summary", metavar="FILE", help="Claude's summary of the posting, a JSON file (headline, fits, watch, ...)")
     s.set_defaults(func=cmd_mark)
+
+    s = sub.add_parser("summarize", help="write Claude's summary of a posting again, with no new verdict")
+    s.add_argument("--folder", required=True)
+    s.add_argument("key")
+    s.add_argument("--summary", metavar="FILE", required=True, help="a JSON file: headline, fits, enjoy, watch, ask, tailor, mirror")
+    s.set_defaults(func=cmd_summarize)
 
     s = sub.add_parser("apply", help="record that the user applied (the user only)")
     s.add_argument("--folder", required=True)
@@ -660,7 +674,8 @@ def parser():
 
 
 # Commands after which the jobs page is written again, so it always shows the records as they are.
-REFRESHES = {"scan", "mark", "add", "add-link", "apply", "track", "due", "record-choices", "page", "requeue", "review"}
+REFRESHES = {"scan", "mark", "summarize", "add", "add-link", "apply", "track", "due", "record-choices", "page", "requeue",
+             "review"}
 
 
 def _refresh_page(folder, report):

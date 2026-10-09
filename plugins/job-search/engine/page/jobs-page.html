@@ -1,8 +1,9 @@
 <title>__PAGE_TITLE__</title>
 <style>
-/* Layout: one column, urgent first. A header and a sticky bar of counts; then the user's own choices
-   (only when there are some), what's due, the jobs worth a look as full cards, the applications with
-   their 21-day clock, the new jobs as compact rows, and what was screened out, folded away.
+/* Layout: one column, urgent first. A header and a bar of counts; then the user's own choices (only
+   when there are some), Today (the next interview, what to do now, how the search is going), what's
+   due, the jobs worth a look as full cards, the applications with their 21-day clock, the new jobs
+   as compact rows, and what was screened out, folded away.
    Status labels are stamps in the stamp-pad blue of an application form. */
 :root {
   --bg: #f3f5f8;
@@ -64,7 +65,7 @@ a:hover { text-decoration-thickness: 2px; }
 .status:empty { display: none; }
 .chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 0.85rem; font-weight: 600; }
 .chip.review { background: var(--good-soft); color: var(--good); }
-.chip.local { background: var(--warn-soft); color: var(--warn); }
+.chip.local, .chip.warn { background: var(--warn-soft); color: var(--warn); }
 .jump { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; display: flex; gap: 6px; overflow-x: auto;
   scrollbar-width: none; padding-block: 10px; background: var(--bg); border-bottom: 1px solid var(--line); }
 .jump::-webkit-scrollbar { display: none; }
@@ -168,6 +169,59 @@ select, input, textarea { background: var(--surface); border: 1px solid var(--li
 .said-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 7px 10px; border-radius: 6px;
   background: var(--accent-soft); font-size: 0.88rem; }
 
+/* ------------------------------------------------ today: what to do now, and how the search is going */
+.focus { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow);
+  padding: 16px 18px; display: grid; gap: 14px; min-width: 0; }
+.focus-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 14px 24px; }
+.focus-block { display: grid; gap: 6px; align-content: start; min-width: 0; }
+.k, .part .k { font-size: 0.74rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.focus-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.focus-list li { overflow-wrap: anywhere; }
+.focus .sub { display: block; color: var(--muted); font-size: 0.88rem; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr)); gap: 10px 12px;
+  border-top: 1px solid var(--line); padding-top: 12px; }
+.tile { display: grid; gap: 2px; align-content: start; min-width: 0; }
+.tile .label { font-size: 0.8rem; color: var(--muted); }
+.tile .value { font: 600 1.35rem/1.15 var(--display); }
+.tile .value small { font: 400 0.8rem var(--body); color: var(--muted); }
+.tile.wide { grid-column: span 2; }
+.spark { display: flex; align-items: flex-end; gap: 2px; height: 28px; margin-top: 4px; }
+.spark span { flex: 1 1 0; max-width: 14px; min-height: 2px; background: var(--faint); border-radius: 3px 3px 0 0; }
+.spark span.now { background: var(--accent); }
+
+/* ------------------------------------------------ a job's summary, and Claude's working notes folded away */
+.headline { font-weight: 600; max-width: 68ch; }
+.parts { display: grid; gap: 8px; max-width: 68ch; }
+.part { display: grid; gap: 2px; font-size: 0.93rem; overflow-wrap: anywhere; }
+.part ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 2px; }
+.part.ask { background: var(--accent-soft); border-radius: 8px; padding: 8px 10px; }
+.part.ask .k { color: var(--accent); }
+.part.tip .k { color: var(--good); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 2px; }
+.chip.word { background: var(--sunken); color: var(--ink); font-weight: 500; border: 1px solid var(--line); }
+details.behind { font-size: 0.87rem; color: var(--muted); }
+details.behind > summary { cursor: pointer; width: fit-content; }
+details.behind .behind-body { display: grid; gap: 4px; padding-top: 6px; overflow-wrap: anywhere; max-width: 68ch; }
+
+/* ------------------------------------------------ applications: which, in what order; people to find */
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.seg button { border: 0; border-radius: 0; min-height: 36px; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.controls input { max-width: 16rem; }
+.controls label { display: inline-flex; align-items: center; gap: 6px; font-size: 0.88rem; }
+.controls select { width: auto; }
+.people { list-style: none; margin: 0; padding: 0; }
+.people li { display: grid; grid-template-columns: 3rem minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 10px 0;
+  border-top: 1px solid var(--line); }
+.people li:first-child { border-top: 0; }
+.people .num { align-self: start; padding-top: 4px; }
+.people .panel, .people .said-line { grid-column: 2 / -1; }
+a.btn { display: inline-flex; align-items: center; min-height: 32px; padding: 4px 11px; border: 1px solid var(--line); border-radius: 7px;
+  font-size: 0.86rem; font-weight: 500; text-decoration: none; background: var(--surface); }
+a.btn:hover { border-color: var(--accent); }
+
 /* ------------------------------------------------ the user's own choices: the one tinted block, so a click lands */
 .yours { background: var(--accent-soft); border: 2px solid var(--accent); border-radius: 12px; padding: 16px; }
 .yours .lede { color: var(--ink); }
@@ -193,7 +247,11 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
 .error { color: var(--bad); }
 
 @media (max-width: 36rem) {
-  .jump { margin-inline: -16px; padding-inline: 16px; }
+  /* Every section's pill in view, on as many rows as it takes, rather than a strip to scroll sideways. */
+  .jump { position: static; flex-wrap: wrap; overflow: visible; margin-inline: -16px; padding-inline: 16px; }
+  .people li { grid-template-columns: 2.6rem minmax(0, 1fr); }
+  .people .actions { grid-column: 2; }
+  .focus { padding: 14px; }
   .row, .app { grid-template-columns: 2.6rem minmax(0, 1fr); }
   .row .actions, .app-side { grid-column: 2; justify-items: start; }
   .app-side { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
@@ -268,6 +326,15 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
   var toastTimer = null;
   var filter = "";
   try { filter = localStorage.getItem(FILTER) || ""; } catch (e) { filter = ""; }
+  // Which applications show, and in what order: remembered in this browser only.
+  var APPS_VIEW = "job-search-apps-view", APPS_SORT = "job-search-apps-sort";
+  var appsView = "open", appsSort = "recent", appsFind = "";
+  try { appsView = localStorage.getItem(APPS_VIEW) || "open"; appsSort = localStorage.getItem(APPS_SORT) || "recent"; } catch (e) { /* defaults */ }
+  var OPEN_STATUSES = ["applied", "replied", "screen", "interview", "offer"];
+  var FURTHEST = { offer: 0, interview: 1, screen: 2, replied: 3, applied: 4, presumed_rejected: 5, rejected: 6, withdrawn: 7, closed: 8 };
+  // A job's summary, part by part: [field, heading, extra class].
+  var PARTS = [["fits", "Why it fits you", ""], ["enjoy", "You'd probably enjoy", ""], ["watch", "Watch out for", ""],
+               ["ask", "The one question", "ask"], ["tailor", "For your resume", "tip"]];
 
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
@@ -282,6 +349,29 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
   // A link from a posting is only ever a web address: never javascript: or anything else.
   function href(url) { return /^https?:\/\//i.test(String(url || "")) ? esc(url) : ""; }
   function stamp(pair) { return '<span class="stamp ' + pair[1] + '">' + esc(pair[0]) + "</span>"; }
+  // "Tue 13 Oct, 10:00", or "Tue 13 Oct, time not set" for a day with no time yet.
+  function whenText(on) {
+    var t = new Date(on.length > 10 ? on : on + "T12:00:00");
+    if (isNaN(t)) return esc(on);
+    return t.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }) +
+      (on.length > 10 ? ", " + t.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }) : ", time not set");
+  }
+  function dayOf(on) {
+    var t = new Date(String(on).slice(0, 10) + "T12:00:00");
+    return isNaN(t) ? esc(on) : t.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
+  }
+  function stampText(iso) {
+    var t = new Date(iso);
+    return isNaN(t) ? esc(iso) : day(iso) + ", " + t.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  }
+  function scanFailed() { var s = (data.last_scan || {}).status; return s === "blocked" || s === "failed"; }
+  // A rule's number is for checking and tuning, not for reading: "Rule 12, applied by the scanner: pay ..."
+  // reads "Pay ...", and "Rule 5 (function): ..." reads "Function: ...".
+  function plainReason(t) {
+    var s = String(t || "").replace(/^\s*rules?\s*\d+\s*(?:\(([^)]*)\))?\s*(?:,\s*applied by the scanner)?\s*[:,]\s*/i,
+      function (m, name) { return name ? name + ": " : ""; });
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
   function newId() { return "c-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7); }
   function plural(n, one, many) { return n + " " + (n === 1 ? one : many); }
   // Days since a date, counted today: a page opened days after it was built still counts right.
@@ -375,18 +465,39 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
     return bits.join(" · ");
   }
 
-  // What Claude (or a rule) said, shown by what it is: a question to answer, advice for the resume, or
-  // a reason. Then the user's own words, if they gave any. The two are never mixed up.
-  function why(j) {
+  // Claude's account of the job, written to the user: the headline, then why it fits, what they'd
+  // enjoy, what to watch out for, the one question, the resume changes and the words to mirror.
+  function summaryBlock(j) {
+    var s = j.summary;
+    if (!s || !s.headline) return "";
+    var parts = PARTS.map(function (p) {
+      var v = s[p[0]];
+      if (!v || (Array.isArray(v) && !v.length)) return "";
+      var body = Array.isArray(v) ? "<ul>" + v.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>" : "<span>" + esc(v) + "</span>";
+      return '<div class="part ' + p[2] + '"><span class="k">' + p[1] + "</span>" + body + "</div>";
+    }).join("");
+    if (s.mirror && s.mirror.length) {
+      parts += '<div class="part tip"><span class="k">Words to mirror</span><div class="chips">' +
+        s.mirror.map(function (w) { return '<span class="chip word">' + esc(w) + "</span>"; }).join("") + "</div></div>";
+    }
+    return '<p class="headline">' + esc(s.headline) + "</p>" + (parts ? '<div class="parts">' + parts + "</div>" : "");
+  }
+
+  // Claude's working notes on the verdict (the note it was recorded with, and the posting's line it rests
+  // on): kept for checking and tuning, folded away.
+  function behind(j) {
     var said = j.claude_said != null ? String(j.claude_said || "") : (j.by === "user" ? "" : String(j.note || ""));
+    var bits = [];
+    if (said) bits.push("<p>" + esc(said) + "</p>");
+    if (j.quote) bits.push("<p>From the posting: “" + esc(j.quote) + "”</p>");
+    if (!bits.length) return "";
+    return '<details class="behind"><summary>Behind the call</summary><div class="behind-body">' + bits.join("") + "</div></details>";
+  }
+
+  // The user's own words, never mixed up with Claude's.
+  function yourWords(j) {
     var yours = j.you_said != null ? String(j.you_said || "") : (j.by === "user" ? String(j.note || "") : "");
-    var out = "";
-    var m = said.match(/^Question:\s*([\s\S]*)$/);
-    if (m) out += '<div class="why question"><span class="k">The question</span>' + esc(m[1]) + "</div>";
-    else if ((m = said.match(/^Tailor:\s*([\s\S]*)$/))) out += '<div class="why tip"><span class="k">For your resume</span>' + esc(m[1]) + "</div>";
-    else if (said) out += '<div class="why plain"><span class="k">Claude said</span>' + esc(said) + "</div>";
-    if (yours) out += '<div class="why said"><span class="k">You said</span>“' + esc(yours) + "”</div>";
-    return out;
+    return yours ? '<div class="why said"><span class="k">You said</span>“' + esc(yours) + "”</div>" : "";
   }
 
   function clockBar(days, closesOn) {
@@ -427,9 +538,7 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
 
   // An interview: when, who, and (opened from the folder) its prep sheet and calendar file.
   function comingCard(e) {
-    var t = new Date(e.on.length > 10 ? e.on : e.on + "T12:00:00");
-    var when = isNaN(t) ? e.on : t.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }) +
-      (e.on.length > 10 ? ", " + t.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }) : ", time not set");
+    var when = whenText(e.on);
     var rel = e.past ? "" : e.days === 0 ? "today" : e.days === 1 ? "tomorrow" : "in " + e.days + " days";
     var kind = { phone: "Phone", video: "Video call", onsite: "On site" }[e.kind] || "";
     var local = location.protocol === "file:";
@@ -438,9 +547,9 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
     if (e.calendar && local) links.push('<a href="' + esc(e.calendar) + '">Add to calendar</a>');
     return '<article class="card soon"><div class="card-top"><span class="num">' + (e.num ? "#" + esc(e.num) : "") + "</span>" +
       stamp([e.stage === "screen" ? "Screen" : "Interview", e.past ? "s-closing" : "s-screen"]) +
-      '<span class="pay">' + esc(when) + (rel ? " · " + rel : "") + "</span></div>" +
+      '<span class="pay">' + when + (rel ? " · " + rel : "") + "</span></div>" +
       "<h3>" + esc(e.company) + ", " + esc(e.role) + "</h3>" +
-      '<p class="where">' + [kind, e["with"] ? "with " + esc(e["with"]) : "", e.minutes ? e.minutes + " min" : ""].filter(Boolean).join(" · ") + "</p>" +
+      '<p class="where">' + [kind, e["with"] ? "with " + esc(e["with"]) : "", e.minutes && e.on.length > 10 ? e.minutes + " min" : ""].filter(Boolean).join(" · ") + "</p>" +
       (e.past ? '<p class="flag">How did it go? Tell Claude “how did my ' + esc(e.company) + " " + esc(e.stage || "interview") + " go”.</p>"
         : (e.prep ? "" : '<p class="muted">No prep sheet yet. Say “prep me for my ' + esc(e.company) + " " + esc(e.stage || "interview") + "”.</p>")) +
       (links.length ? '<p class="actions">' + links.join(" · ") + "</p>" : "") + "</article>";
@@ -460,19 +569,40 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
       (opened("s-todo") ? panel("app", t.id, "followed_up") + panel("app", t.id, "contact") : "") + "</article>";
   }
 
+  // Top picks with nobody to follow up with: one card, each with a search to open and a name to add.
+  function peopleCard(list) {
+    var rows = list.map(function (t) {
+      var q = "https://www.linkedin.com/search/results/people/?keywords=" + encodeURIComponent(t.search || t.company);
+      return '<li><span class="num">' + (t.num ? "#" + esc(t.num) : "") + "</span>" +
+        '<div class="row-main"><span class="row-title">' + esc(t.company) + ", " + esc(t.role) + "</span>" +
+        '<span class="row-meta">Day ' + esc(daysSince(t.applied_date, t.days)) + " of " + ((data.tracking || {}).presume_after_days || 21) +
+        (t.closes_on ? " · closes " + esc(day(t.closes_on)) + " if there’s no reply" : "") + "</span></div>" +
+        '<div class="actions"><a class="btn" href="' + esc(q) + '" target="_blank" rel="noopener">Search LinkedIn</a>' +
+        button("contact", "app", t.id, "mini primary", "Add their name", t.num) + button("followed_up", "app", t.id, "mini quiet", "", t.num) + "</div>" +
+        saidLines(t.id) + (opened("s-todo") ? panel("app", t.id, "followed_up") + panel("app", t.id, "contact") : "") + "</li>";
+    });
+    return '<article class="card todo"><div class="card-top">' + stamp(ROUTE.find_person) + "</div>" +
+      "<h3>" + plural(list.length, "top pick has", "top picks have") + " nobody to follow up with</h3>" +
+      "<p>For each, find the person who would manage the role (Search LinkedIn opens a search for you), then add their name. " +
+      "Claude can then draft a short note for you to send.</p>" + '<ul class="people">' + rows.join("") + "</ul></article>";
+  }
+
   function jobCard(j) {
     var wanted = j.status === "worth_applying" && j.by === "user";
     var verdict = wanted ? ["You want it", "s-worth"] : (VERDICT[j.status] || ["", ""]);
     var t = cleanTitle(j);
     var acts = wanted ? [["applied", "primary"], ["skip", "quiet"]] : [["want", "primary"], ["skip", "quiet"], ["applied", "quiet"]];
-    return '<article class="card">' +
+    var summary = summaryBlock(j);
+    return '<article class="card" id="job-' + esc(j.key) + '">' +
       '<div class="card-top"><span class="num">#' + esc(j.num) + "</span>" + stamp(verdict) +
       (j.salary ? '<span class="pay">' + esc(j.salary) + "</span>" : "") + "</div>" +
       "<h3>" + (href(j.url) ? '<a href="' + href(j.url) + '" target="_blank" rel="noopener">' + esc(t.title) + "</a>" : esc(t.title)) + "</h3>" +
       '<p class="where"><b>' + esc(j.company) + "</b> · " + esc(t.place || "place not stated") + (j.salary ? "" : " · pay not stated") + "</p>" +
-      why(j) +
+      (summary || (j.by !== "user" ? '<p class="muted">Claude writes this one up for you the next time you go through your jobs.</p>' : "")) +
+      yourWords(j) +
       (j.flag ? '<p class="flag">' + esc(j.flag) + "</p>" : "") +
       (j.gone ? '<p class="flag">No longer on the company\'s job board since ' + day(j.gone) + ".</p>" : "") +
+      behind(j) +
       '<div class="actions">' + acts.map(function (a) { return button(a[0], "job", j.key, a[1]); }).join("") + "</div>" +
       acts.map(function (a) { return panel("job", j.key, a[0]); }).join("") +
       "</article>";
@@ -487,7 +617,8 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
       (href(j.url) ? '<a class="row-title" href="' + href(j.url) + '" target="_blank" rel="noopener">' + esc(t.title) + "</a>" : '<span class="row-title">' + esc(t.title) + "</span>") +
       '<span class="row-meta">' + esc(j.company) + " · " + esc(t.place || "place not stated") +
       (j.salary ? ' · <span class="pay">' + esc(j.salary) + "</span>" : "") + "</span>" +
-      ((j.claude_said != null ? j.claude_said : j.note) ? '<span class="row-note">' + esc(j.claude_said != null ? j.claude_said : j.note) + "</span>" : "") +
+      (j.summary && j.summary.headline ? '<span class="row-note">' + esc(j.summary.headline) + "</span>"
+        : (j.claude_said != null ? j.claude_said : j.note) ? '<span class="row-note">' + esc(plainReason(j.claude_said != null ? j.claude_said : j.note)) + "</span>" : "") +
       (j.you_said ? '<span class="row-note">You said: \u201c' + esc(j.you_said) + "\u201d</span>" : "") +
       (j.flag ? '<span class="row-note flag">' + esc(j.flag) + "</span>" : "") +
       (j.gone ? '<span class="row-note flag">No longer on the company\'s job board since ' + day(j.gone) + ".</span>" : "") +
@@ -509,17 +640,16 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
   function appRow(a) {
     var st = STATUS[a.status] || [a.status, "s-closed"];
     var how = [VIA[a.channel], a.top_pick === true ? "a top pick" : ""].filter(Boolean).join(", ");
-    var meta = "Applied " + day(a.applied_date) + (a.estimated ? " (about)" : "") + (how ? " " + esc(how) : "") +
-      (a.contact ? " · contact " + esc(a.contact) : "") +
-      (a.followed_up ? " · followed up " + day(a.followed_up) : "") +
-      (a.status !== "applied" && a.last && a.last.date ? " · last news " + day(a.last.date) : "");
+    var meta = ["Applied " + day(a.applied_date) + (a.estimated ? " (about)" : ""), esc(how),
+      a.contact ? "contact " + esc(a.contact) : "", a.followed_up ? "followed up " + day(a.followed_up) : "",
+      a.status !== "applied" && a.last && a.last.date ? "last news " + day(a.last.date) : ""].filter(Boolean).join(" · ");
     var live = ["applied", "replied", "screen", "interview", "offer", "presumed_rejected"].indexOf(a.status) >= 0;
     var mine = opened("s-apps") && open.kind === "app" && open.ref === a.id;
     var menu = mine && open.action === "menu"
       ? '<div class="panel"><span class="muted">What happened?</span><div class="choices-menu">' + APP_CHOICES.map(function (o) {
           return button(o, "app", a.id, "mini");
         }).join("") + '<button type="button" class="mini quiet" data-cancel>Cancel</button></div></div>' : "";
-    return '<li class="app"><span class="num">' + (a.num ? "#" + esc(a.num) : "") + "</span>" +
+    return '<li class="app" data-search="' + esc((a.company + " " + a.role).toLowerCase()) + '"><span class="num">' + (a.num ? "#" + esc(a.num) : "") + "</span>" +
       '<div class="app-main"><span class="app-name"><b>' + esc(a.company) + "</b>, " +
       (href(a.url) ? '<a href="' + href(a.url) + '" target="_blank" rel="noopener">' + esc(a.role) + "</a>" : esc(a.role)) + "</span>" +
       '<span class="app-meta">' + meta + "</span>" +
@@ -550,6 +680,8 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
     document.getElementById("updated").textContent = "Updated " + day(data.as_of) +
       (isNaN(asOf) ? "" : ", " + asOf.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }));
     status.innerHTML = (data.review_ready ? '<span class="chip review">Your weekly review is ready</span><span>Say “go through my review” to Claude.</span>' : "") +
+      (scanFailed() ? '<span class="chip warn">The last check failed</span><span>It couldn’t reach your job boards, so nothing was checked' +
+        (data.last_scan.good_at ? "; the last one that did was " + stampText(data.last_scan.good_at) : "") + ".</span>" : "") +
       (mode === "file" ? '<span class="chip local">Opened from your folder</span><span>Clicks here stay in this browser until you copy them to Claude.</span>' : "") +
       (problem ? '<span class="error">' + esc(problem) + "</span>" : "");
 
@@ -572,7 +704,7 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
       return '<button type="button" data-jump="' + p[0] + '" class="' + (hot ? "hot" : p[2] ? "" : "zero") + '">' + esc(p[1]) + " <b>" + p[2] + "</b></button>";
     }).join("");
 
-    var html = [yoursSection()];
+    var html = [yoursSection(), focusSection()];
     if (coming.length) {
       html.push('<section id="s-coming" aria-labelledby="h-coming">' + head("coming", "Coming up", coming.length,
         "Your interviews, soonest first. Say “prep me for my " + esc(coming[0].company) + " " + esc(coming[0].stage || "interview") +
@@ -581,20 +713,22 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
     }
     html.push('<section id="s-todo" aria-labelledby="h-todo">' + head("todo", "To do", todo.length,
       todo.length ? "Follow-ups that are due. With no reply after " + ((data.tracking || {}).presume_after_days || 21) + " days, an application closes as no reply; a reply after that still counts." : "") +
-      (todo.length ? '<div class="stack">' + todo.map(todoCard).join("") + "</div>" : '<p class="empty">Nothing due.</p>') + "</section>");
+      (todo.length ? '<div class="stack">' + todo.filter(function (t) { return t.route !== "find_person"; }).map(todoCard).join("") +
+        (todo.some(function (t) { return t.route === "find_person"; }) ? peopleCard(todo.filter(function (t) { return t.route === "find_person"; })) : "") +
+        "</div>" : '<p class="empty">Nothing due.</p>') + "</section>");
     html.push('<section id="s-look" aria-labelledby="h-look">' + head("look", "Worth a look", look.length,
       look.length ? "The jobs Claude thinks are worth applying to, the ones that need your call, and the ones you want." : "") +
       (look.length ? '<div class="stack">' + look.map(jobCard).join("") + "</div>"
         : '<p class="empty">Nothing here yet. Ask Claude to go through the new ones.</p>') + "</section>");
     html.push('<section id="s-apps" aria-labelledby="h-apps">' + head("apps", "Applications", apps.length,
-      apps.length ? plural(openApps, "is open", "are open") + ". Press Update when you hear back." : "") +
-      (apps.length ? '<ul class="apps">' + apps.map(appRow).join("") + "</ul>"
+      apps.length ? openApps + " open of " + apps.length + ". Press Update when you hear back." : "") +
+      (apps.length ? appsControls(apps.length, openApps) + appsList(apps)
         : '<p class="empty">No applications yet. When you apply, tell Claude or press I applied on the job.</p>') + "</section>");
     html.push('<section id="s-new" aria-labelledby="h-new">' + head("new", "New", fresh.length,
       fresh.length ? "Claude hasn’t gone through these yet. Say “go through the new ones” and they’ll be sorted, or mark any here." : "") +
       (fresh.length ? '<div class="filter"><input type="search" id="filter-new" placeholder="Filter by title, company or place" value="' + esc(filter) + '" aria-label="Filter the new jobs">' +
         '<span class="count" id="filter-count"></span></div><ul class="rows" id="new-rows">' + fresh.map(function (j) { return jobRow(j, "new"); }).join("") + "</ul>"
-        : '<p class="empty">Nothing new. New jobs appear here after each check.</p>') +
+        : '<p class="empty">' + nothingNew() + "</p>") +
       (data.more_waiting ? '<p class="lede">And ' + data.more_waiting + " older ones not gone through yet, left off this page to keep it quick.</p>" : "") +
       "</section>");
     if (screened.length) {
@@ -613,7 +747,118 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
       try { if (caret != null) el.setSelectionRange(caret, caret); } catch (e) { /* not a text field */ }
     }
     applyFilter();
+    applyAppsFilter();
     renderSendbar();
+  }
+
+  // ---------------------------------------------------------------- today
+
+  function actionLine(a) {
+    var n = a.num ? "#" + esc(a.num) + " " : "";
+    var stage = esc(a.stage || "interview");
+    if (a.kind === "time") return "Find out the time of your " + esc(a.company) + " " + stage + " on " + dayOf(a.on) + ", and tell Claude.";
+    if (a.kind === "prep") return "Prep for your " + esc(a.company) + " " + stage + " (" + whenText(a.on) + "): say “prep me for my " + esc(a.company) + " " + stage + "”.";
+    if (a.kind === "debrief") return "Tell Claude how your " + esc(a.company) + " " + stage + " went, while it’s fresh.";
+    if (a.kind === "follow_up") return "Follow up with " + esc(a.contact) + " at " + n + esc(a.company) + ". Claude can draft a short note.";
+    if (a.kind === "find_person") return plural(a.count, "top pick has", "top picks have") + " nobody to follow up with. " +
+      '<button type="button" class="link" data-jump="todo">Find them a contact</button>';
+    if (a.kind === "apply") return "Apply to " + n + esc(a.company) + ", " + esc(cleanTitle(a).title) + ".";
+    return "";
+  }
+
+  function focusSection() {
+    var f = data.focus;
+    if (!f) return "";
+    var blocks = [];
+    var e = f.next_interview;
+    if (e) {
+      blocks.push('<div class="focus-block"><span class="k">Next interview</span><p><b>' + esc(e.company) + "</b>, " + esc(e.role) +
+        '<span class="sub">' + whenText(e.on) + (e["with"] ? " · with " + esc(e["with"]) : "") + " · " +
+        (e.prep ? "prep sheet ready" : "no prep sheet yet") + "</span></p></div>");
+    }
+    if (f.actions && f.actions.length) {
+      blocks.push('<div class="focus-block"><span class="k">To do now</span><ul class="focus-list">' +
+        f.actions.map(function (a) { return "<li>" + actionLine(a) + "</li>"; }).join("") + "</ul>" +
+        (f.more_actions ? '<p class="muted">And ' + plural(f.more_actions, "more thing", "more things") + " below.</p>" : "") + "</div>");
+    }
+    if (f.top_picks && f.top_picks.length) {
+      blocks.push('<div class="focus-block"><span class="k">Your top picks</span><ul class="focus-list">' + f.top_picks.map(function (p) {
+        return '<li><button type="button" class="link" data-jump-card="' + esc(p.key) + '">#' + esc(p.num) + " " + esc(p.company) + ", " +
+          esc(cleanTitle(p).title) + "</button>" + (p.headline ? '<span class="sub">' + esc(p.headline) + "</span>" : "") + "</li>";
+      }).join("") + "</ul></div>");
+    }
+    var kp = kpis();
+    if (!blocks.length && !kp) return "";
+    return '<section class="focus" id="s-today" aria-labelledby="h-today"><h2 id="h-today">Today</h2>' +
+      (blocks.length ? '<div class="focus-grid">' + blocks.join("") + "</div>" : '<p class="muted">Nothing needs you right now.</p>') + kp + "</section>";
+  }
+
+  // How the search is going, in facts: a row of numbers, and applications sent each week.
+  function kpis() {
+    var f = data.funnel;
+    if (!f) return "";
+    var tiles = [["Jobs saved", f.saved], ["Applied", f.applied], ["Got a screen", f.screens], ["Got an interview", f.interviews], ["Offers", f.offers]];
+    var html = tiles.map(function (t) {
+      return '<div class="tile"><span class="label">' + t[0] + '</span><span class="value">' + esc(t[1]) + "</span></div>";
+    });
+    var weeks = data.activity || [];
+    if (weeks.length) {
+      var max = Math.max.apply(null, weeks.map(function (w) { return w.applied; })) || 1;
+      var last = weeks.length - 1;
+      var bars = weeks.map(function (w, i) {
+        var label = "Week of " + day(w.week) + ": " + plural(w.applied, "application", "applications");
+        return "<span" + (i === last ? ' class="now"' : "") + ' style="height:' + Math.round(100 * w.applied / max) + '%" title="' + label + '"></span>';
+      }).join("");
+      html.push('<div class="tile wide"><span class="label">Applied each week</span><span class="value">' + esc(weeks[last].applied) +
+        " <small>this week</small></span>" + '<div class="spark" role="img" aria-label="Applications each week, the last ' + weeks.length + ": " +
+        weeks.map(function (w) { return day(w.week) + " " + w.applied; }).join(", ") + '">' + bars + "</div></div>");
+    }
+    return '<div class="kpis">' + html.join("") + "</div>";
+  }
+
+  function nothingNew() {
+    var ls = data.last_scan || {};
+    if (scanFailed()) {
+      return "Nothing new: the last check, " + stampText(ls.attempt_at) + ", couldn’t reach your job boards." +
+        (ls.good_at ? " The last one that did was " + stampText(ls.good_at) + "." : "");
+    }
+    return ls.good_at ? "Nothing new since the last check, " + stampText(ls.good_at) + "." : "Nothing new. New jobs appear here after each check.";
+  }
+
+  // ---------------------------------------------------------------- applications: which, and in what order
+
+  function appsControls(all, openN) {
+    return '<div class="controls"><div class="seg" role="group" aria-label="Which applications">' +
+      '<button type="button" data-apps-view="open" aria-pressed="' + (appsView !== "all") + '">Open <b>' + openN + "</b></button>" +
+      '<button type="button" data-apps-view="all" aria-pressed="' + (appsView === "all") + '">All <b>' + all + "</b></button></div>" +
+      '<input type="search" id="filter-apps" placeholder="Filter by company or role" value="' + esc(appsFind) + '" aria-label="Filter your applications">' +
+      '<label>Sort <select id="sort-apps">' + [["recent", "Newest first"], ["days", "Longest waiting"], ["stage", "Furthest along"], ["company", "Company"]].map(function (o) {
+        return '<option value="' + o[0] + '"' + (appsSort === o[0] ? " selected" : "") + ">" + o[1] + "</option>";
+      }).join("") + "</select></label></div>";
+  }
+
+  function appsList(apps) {
+    var list = apps.filter(function (a) { return appsView === "all" || OPEN_STATUSES.indexOf(a.status) >= 0 || (open && open.ref === a.id); });
+    if (appsSort === "days") list.sort(function (x, y) { return (daysSince(y.applied_date, y.days) || 0) - (daysSince(x.applied_date, x.days) || 0); });
+    else if (appsSort === "stage") list.sort(function (x, y) { return (FURTHEST[x.status] == null ? 9 : FURTHEST[x.status]) - (FURTHEST[y.status] == null ? 9 : FURTHEST[y.status]); });
+    else if (appsSort === "company") list.sort(function (x, y) { return String(x.company).localeCompare(String(y.company)); });
+    if (!list.length) return '<p class="empty">No open applications. Choose All to see the rest.</p>';
+    return '<ul class="apps" id="app-rows">' + list.map(appRow).join("") + "</ul>" + '<p class="muted" id="apps-count" hidden></p>';
+  }
+
+  function applyAppsFilter() {
+    var list = document.getElementById("app-rows");
+    if (!list) return;
+    var words = appsFind.toLowerCase().split(/\s+/).filter(Boolean);
+    var rows = list.querySelectorAll("li.app");
+    var shown = 0;
+    Array.prototype.forEach.call(rows, function (r) {
+      var hit = words.every(function (w) { return r.getAttribute("data-search").indexOf(w) >= 0; });
+      r.hidden = !hit;
+      shown += hit ? 1 : 0;
+    });
+    var c = document.getElementById("apps-count");
+    if (c) { c.hidden = !words.length; c.textContent = "Showing " + shown + " of " + rows.length + "."; }
   }
 
   function openOut() {
@@ -739,7 +984,14 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
   document.addEventListener("click", function (e) {
     var t = e.target.closest("button");
     if (!t) return;
-    if (t.hasAttribute("data-jump")) {
+    if (t.hasAttribute("data-apps-view")) {
+      appsView = t.getAttribute("data-apps-view");
+      try { localStorage.setItem(APPS_VIEW, appsView); } catch (err) { /* for now only */ }
+      render();
+    } else if (t.hasAttribute("data-jump-card")) {
+      var card = document.getElementById("job-" + t.getAttribute("data-jump-card"));
+      if (card) card.scrollIntoView({ block: "start", behavior: "smooth" });
+    } else if (t.hasAttribute("data-jump")) {
       var target = document.getElementById("s-" + t.getAttribute("data-jump"));
       if (target) {
         if (target.querySelector("details.out")) target.querySelector("details.out").open = true;
@@ -778,10 +1030,21 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
       applyFilter();
       return;
     }
+    if (e.target.id === "filter-apps") {
+      appsFind = e.target.value;
+      applyAppsFilter();
+      return;
+    }
     var f = e.target.getAttribute && e.target.getAttribute("data-field");
     if (f) draft[f] = e.target.value;
   });
   document.addEventListener("change", function (e) {
+    if (e.target.id === "sort-apps") {
+      appsSort = e.target.value;
+      try { localStorage.setItem(APPS_SORT, appsSort); } catch (err) { /* for now only */ }
+      render();
+      return;
+    }
     var f = e.target.getAttribute("data-field");
     if (f) draft[f] = e.target.value;
   });
