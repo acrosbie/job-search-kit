@@ -38,6 +38,14 @@ Found as well, not in the requests: an interview's job number was missing when i
   - `start` and `doctor`, after installing the new engine: engine current, 2 ids repaired, no problems;
   - the page, in headless Edge at 1280 px, 390 px (in a frame) and dark: about 6,460 px tall on a desk (the requests measured 11,169), and the view toggle, sort, filter, jump links and contact form all worked.
 
+## 0.11.1, the same day
+
+Fixes found while testing the pass, each checked on a copy of the real folder: Today lists each top pick once (it had #79 twice); "Screened out" gives the real count (70, of which the page keeps the latest 60); roles lose the places the old tracker added, including lists with no "Remote" in them; a Your call judged before summaries shows its old question until it's written up; snapshots are gzipped (2.6 MB for 30 slots instead of 17.6 MB); cancelling an interview writes its calendar file as the same event cancelled; a summary may say "Ask Hannah about her team"; `start` says what's new once after an update.
+
+How the kit is built: the jobs page now runs in a real browser in the tests (`tests/test_page_browser.py`, skipped where no Chrome or Edge is installed; it fails with the script's own error when the page breaks, checked by breaking it). A pre-commit hook in `.githooks` keeps the engine's fingerprint in step (`git config core.hooksPath .githooks`). It found its own bug on the first day: the fingerprint tool left a compiled `__init__.py` behind, so a later run read the old fingerprint; it now writes no bytecode.
+
+The next design, contacts and referrals, is [decision 4](../decisions/0004-contacts-and-referrals.md), proposed.
+
 ## Not done, and why
 
 - **Deferred to their own designs:** networking and referrals (the requests' biggest lever: a decision on contacts as records first, keeping "Claude never looks a person up"), the apply kit and answer bank, offers and the walk-away number, email and calendar import, new job-board readers, a hosted fetcher, voice mocks, form filling, field and place packs, data export and deletion, demo mode.
