@@ -12,7 +12,7 @@ import os
 import re
 import sys
 
-from . import __version__, net, scan, settings, store
+from . import __fingerprint__, __version__, net, scan, settings, store
 from . import add, choices, configure, interviews, page, replay, resume, review, rules, schedule, titles, track, verdicts
 from . import init as starter
 from . import queue as triage_queue
@@ -320,7 +320,7 @@ def cmd_changed(a):
 
 
 def cmd_version(a):
-    print(f"job-search-kit engine {__version__}, Python {sys.version.split()[0]}")
+    print(f"job-search-kit engine {__version__} (fingerprint {__fingerprint__}), Python {sys.version.split()[0]}")
     return 0
 
 

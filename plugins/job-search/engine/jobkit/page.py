@@ -120,6 +120,7 @@ def build(root, clock):
     name = (s.raw.get("you", {}).get("name") or "").strip()
     return _fit({
         "version": __version__,
+        "design": design(),
         "title": f"{name}'s job search" if name else "My job search",
         "as_of": clock.stamp(),
         "today": today.isoformat(),
@@ -137,6 +138,13 @@ def build(root, clock):
         "screened": [{**job(k, v), "date": v.get("triaged") or v.get("first_seen", "")} for k, v in screened],
         "more_waiting": 0,
     })
+
+
+def design():
+    """The page's design, as a short fingerprint of its template: the page in the user's Claude account
+    is published again when this differs from the one it was published with ([page] version)."""
+    with open(TEMPLATE, "rb") as f:
+        return hashlib.sha1(f.read().replace(b"\r\n", b"\n")).hexdigest()[:12]
 
 
 def digest(data):

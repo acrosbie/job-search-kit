@@ -34,10 +34,9 @@ Before a scan, if you're unsure, run `probe` (it reads three of the user's board
 
 The engine runs from a copy inside the user's folder, `<folder>/.kit/engine/`, so the shell on their computer can reach it.
 
-1. Run `python3 "<folder>/.kit/engine/run.py" version`. It prints `job-search-kit engine X.Y.Z, Python ...`.
-2. Compare that with `__version__` in `${CLAUDE_PLUGIN_ROOT}/engine/jobkit/__init__.py`.
-3. If the copy is missing, or the versions differ, copy **every file** under `${CLAUDE_PLUGIN_ROOT}/engine/` into `<folder>/.kit/engine/`, keeping the same paths: `run.py`, `README.md`, `jobkit/`, `jobkit/boards/`, `jobkit/_vendor/tomli/`, `page/` and `starter/`. Overwrite what's there; never delete anything. The plugin's files live on Anthropic's servers, so use whichever route your tools give you to write files into the user's folder.
-4. Run the version check again. It must now match. If copying isn't possible at all, use the fallback in section 6.
+1. Read the `__fingerprint__` line in `<folder>/.kit/engine/jobkit/__init__.py` and in `${CLAUDE_PLUGIN_ROOT}/engine/jobkit/__init__.py`, with your file tools. The fingerprint changes whenever any engine file does, even when the version number doesn't.
+2. If the copy is missing, has no `__fingerprint__` line, or the two differ, copy **every file** under `${CLAUDE_PLUGIN_ROOT}/engine/` into `<folder>/.kit/engine/`, keeping the same paths: `run.py`, `README.md`, `jobkit/`, `jobkit/boards/`, `jobkit/_vendor/tomli/`, `page/` and `starter/`. Overwrite what's there; never delete anything. The plugin's files live on Anthropic's servers, so use whichever route your tools give you to write files into the user's folder.
+3. Run `python3 "<folder>/.kit/engine/run.py" version`. It prints `job-search-kit engine X.Y.Z (fingerprint ...), Python ...`, and the fingerprint must now be the plugin's. If copying isn't possible at all, use the fallback in section 6. **Never write the user's records by hand instead**: without the engine, say what you'd record and record it next time.
 
 ## 5. Commands
 

@@ -46,14 +46,40 @@ class EngineGuardTest(unittest.TestCase):
 
 
 class VersionTest(unittest.TestCase):
-    def test_engine_version_moves_with_the_plugin(self):
-        # Skills refresh a user's copy of the engine only when its version differs from the plugin's,
-        # so a plugin release that changes the engine must change the engine's version too.
+    def test_engine_version_is_the_plugin_version(self):
         import json
         with open(os.path.join(REPO, "plugins", "job-search", ".claude-plugin", "plugin.json"), encoding="utf-8") as f:
             plugin = json.load(f)["version"]
         engine = re.search(r'__version__ = "([^"]+)"', read(os.path.join(ENGINE, "jobkit", "__init__.py"))).group(1)
-        self.assertEqual(engine.split(".")[:2], plugin.split(".")[:2])
+        self.assertEqual(engine, plugin)
+
+    def test_the_recorded_fingerprint_is_the_files(self):
+        # Skills refresh a user's copy of the engine when its fingerprint differs from the plugin's, so
+        # any change to an engine file must change the recorded one. Line endings don't count.
+        import sys
+        sys.path.insert(0, ENGINE)
+        from jobkit import fingerprint
+        recorded = re.search(r'__fingerprint__ = "([0-9a-f]*)"', read(os.path.join(ENGINE, "jobkit", "__init__.py"))).group(1)
+        self.assertEqual(recorded, fingerprint.compute(), "an engine file changed: run python tools/update_fingerprint.py")
+
+    def test_line_endings_dont_change_the_fingerprint(self):
+        import shutil
+        import sys
+        import tempfile
+        sys.path.insert(0, ENGINE)
+        from jobkit import fingerprint
+        copy = os.path.join(tempfile.mkdtemp(), "engine")
+        self.addCleanup(shutil.rmtree, os.path.dirname(copy))
+        shutil.copytree(ENGINE, copy, ignore=shutil.ignore_patterns("__pycache__"))
+        path = os.path.join(copy, "jobkit", "_vendor", "tomli", "_re.py")
+        with open(path, "rb") as f:
+            body = f.read()
+        with open(path, "wb") as f:
+            f.write(body.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n"))
+        self.assertEqual(fingerprint.compute(copy), fingerprint.compute())
+        with open(path, "ab") as f:
+            f.write(b"# changed" + bytes([13, 10]))
+        self.assertNotEqual(fingerprint.compute(copy), fingerprint.compute())
 
 
 class OnRequestTest(unittest.TestCase):
