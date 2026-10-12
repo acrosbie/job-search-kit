@@ -48,6 +48,16 @@ class TitlesTest(unittest.TestCase):
         out = titles.try_patterns(self.root, exclude=r"\bsales\b|associate|\bdirector\b")
         self.assertEqual((out["lost"], out["lost_sample"][0]["title"]), (1, "Support Operations Director"))
 
+    def test_try_roles_they_take(self):
+        with open(os.path.join(self.root, "data", "titles-latest.tsv"), "a", encoding="utf-8") as f:
+            f.write("acme\tProduct Manager, Support Tools\tDenver\nacme\tProduct Manager, Payments\tDenver\n")
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(cli.main(["try-titles", "--folder", self.root, "--roles", "product manager",
+                                       "--roles-field", r"\bsupport\b"]), 0)
+        got = json.loads(out.getvalue())
+        self.assertEqual((got["gained"], got["lost"], [x["title"] for x in got["gained_sample"]]),
+                         (1, 0, ["Product Manager, Support Tools"]))
+
     def test_cli(self):
         with contextlib.redirect_stdout(io.StringIO()) as out:
             self.assertEqual(cli.main(["titles", "--folder", self.root, "--sample", "1"]), 0)

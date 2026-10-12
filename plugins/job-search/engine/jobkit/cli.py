@@ -309,7 +309,8 @@ def cmd_titles(a):
 
 def cmd_try_titles(a):
     try:
-        patterns = {"function": a.function, "level": a.level, "exclude": a.exclude, "field_words": a.field_words}
+        patterns = {"function": a.function, "level": a.level, "exclude": a.exclude, "field_words": a.field_words,
+                    "roles": a.roles, "roles_field": a.roles_field}
         result = titles.try_patterns(a.folder, sample=a.sample, seed=a.seed, **patterns)
         replay.record_titles(a.folder, _clock(a.folder), patterns, result)  # the replay a title change needs
         _out(result)
@@ -667,7 +668,7 @@ def parser():
 
     s = sub.add_parser("try-titles", help="what a change to the title patterns would gain and lose, without fetching")
     s.add_argument("--folder", required=True)
-    for opt in ("--function", "--level", "--exclude", "--field-words"):
+    for opt in ("--function", "--level", "--exclude", "--field-words", "--roles", "--roles-field"):
         s.add_argument(opt)
     s.add_argument("--sample", type=int, default=10)
     s.add_argument("--seed", type=int, default=1)

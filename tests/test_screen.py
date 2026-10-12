@@ -54,6 +54,21 @@ class TitleTest(unittest.TestCase):
         self.assertFalse(screen.title_ok("Customer Support Specialist", s))    # no level word
         self.assertFalse(screen.title_ok("Sales Customer Support Manager", s)) # excluded
 
+    def test_a_role_they_take_with_a_word_of_their_field(self):
+        """Found in real use (2026-10-12): the user takes product, program and systems-owner roles without
+        managing anyone, but "Product Manager, Support Copilot" has no function word, so it never reached
+        triage. Now a role they take, with a word of their field and no exclusion, passes too."""
+        raw = {"titles": {"function": "customer support", "level": "manager", "exclude": "sales|customer success",
+                          "roles": "product manager|program manager", "roles_field": "support|conversational|customer"}}
+        s = settings.parse(raw)
+        self.assertTrue(screen.title_ok("Sr. Product Manager (Support Copilot)", s))
+        self.assertTrue(screen.title_ok("Principal Product Manager - Conversational AI", s))
+        self.assertFalse(screen.title_ok("Product Manager, Payments", s))                # not in their field
+        self.assertFalse(screen.title_ok("Program Manager, Customer Success", s))       # excluded either way
+        self.assertFalse(screen.title_ok("Support Copilot Lead", s))                    # neither way
+        raw["titles"]["roles"] = ""
+        self.assertFalse(screen.title_ok("Sr. Product Manager (Support Copilot)", settings.parse(raw)))  # none taken
+
     def test_empty_pattern_matches_nothing(self):
         s = settings.parse({"titles": {"function": "support", "level": "manager"}})
         self.assertTrue(screen.title_ok("Support Manager", s))                 # no exclude pattern: nothing excluded

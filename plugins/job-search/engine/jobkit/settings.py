@@ -6,6 +6,8 @@ pattern matches nothing, so a half-written file can't wave every job through.
 
     [you]          timezone
     [titles]       function, level, exclude: a title needs a function word AND a level word, and no exclusion;
+                   roles, roles_field: or a role the user said they'd take without managing anyone (product
+                   manager, program manager, systems owner) AND a word that puts it in their field, and no exclusion;
                    field_words: broader words of the user's field, for spotting titles the filter nearly kept
     [places]       remote, hybrid_ok, remote_only, in_country, country_wide, abroad (tested on the listed location)
     [description]  remote_language, contract, onsite_days, onsite_place (tested on the description)
@@ -72,6 +74,8 @@ class Settings:
     level: object
     exclude: object
     field_words: object
+    roles: object
+    roles_field: object
     remote: object
     hybrid_ok: object
     remote_only: object
@@ -107,7 +111,7 @@ def parse(raw):
         raw=raw,
         timezone=raw.get("you", {}).get("timezone", ""),
         function=_rx(t.get("function")), level=_rx(t.get("level")), exclude=_rx(t.get("exclude")),
-        field_words=_rx(t.get("field_words")),
+        field_words=_rx(t.get("field_words")), roles=_rx(t.get("roles")), roles_field=_rx(t.get("roles_field")),
         remote=_rx(p.get("remote")), hybrid_ok=_rx(p.get("hybrid_ok")), remote_only=_rx(p.get("remote_only")),
         in_country=_rx(p.get("in_country")), country_wide=_rx(p.get("country_wide")), abroad=_rx(p.get("abroad")),
         remote_language=_rx(d.get("remote_language")), contract=_rx(d.get("contract")),

@@ -83,12 +83,14 @@ def summary(folder, sample=10, seed=1):
             "kept_sample": _sample(k, sample, seed), "near_sample": _sample(n, sample, seed)}
 
 
-def try_patterns(folder, function=None, level=None, exclude=None, field_words=None, sample=10, seed=1):
+def try_patterns(folder, function=None, level=None, exclude=None, field_words=None, roles=None, roles_field=None,
+                 sample=10, seed=1):
     """What keeping titles with these patterns would change, compared with the current settings."""
     current = settings.load(folder)
     raw = dict(current.raw)
     t = dict(raw.get("titles", {}))
-    for key, v in (("function", function), ("level", level), ("exclude", exclude), ("field_words", field_words)):
+    for key, v in (("function", function), ("level", level), ("exclude", exclude), ("field_words", field_words),
+                   ("roles", roles), ("roles_field", roles_field)):
         if v is not None:
             re.compile(v, re.I)  # a broken pattern fails here, before anything is compared
             t[key] = v

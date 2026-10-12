@@ -33,7 +33,7 @@ Decide which kind of rule it is:
 ```
 python3 "<folder>/.kit/engine/run.py" replay --set <key> "<new value>" --folder "<folder>"
 ```
-For a phrase rule, use `--phrase-reject <name> --phrases "<pattern>"` instead of `--set`. For titles, use `try-titles` (setup's step 6 shows how); it's the replay for a title change.
+For a phrase rule, use `--phrase-reject <name> --phrases "<pattern>"` instead of `--set`. For titles, use `try-titles` (setup's step 6 shows how); it's the replay for a title change. **Roles they'd take without managing anyone** ("I'd take product manager roles"): `try-titles --roles "<pattern>"`, joining the patterns of the shapes they name from their field pack's `[role_shapes]` (`<folder>/.kit/engine/starter/fields/`), and add `--roles-field` with the pack's `roles_field` if their settings have none. Save each key the same way once they say yes.
 
 **A triage rule:**
 1. Run `rule-evidence <N> --words "<the rule's key words, as a pattern>"`. You get:

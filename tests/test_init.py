@@ -26,6 +26,13 @@ class InitTest(unittest.TestCase):
         self.assertTrue(s.function.search("Senior Manager, Customer Support"))
         self.assertEqual(s.hybrid_ok, None)  # setup fills the commute in
         self.assertEqual(s.phrase_rejects[0].name, "quota and renewals")
+        # Roles they'd take without managing anyone are offered, and only saved as the ones they choose.
+        self.assertIn("product manager", out["role_shapes"])
+        self.assertIsNone(s.roles)
+        self.assertTrue(s.roles_field.search("Product Manager, Agent Development"))
+        self.assertFalse(s.exclude.search("Senior Agent Product Manager"))
+        self.assertTrue(s.exclude.search("Customer Support Agent"))  # a frontline job stays out
+        self.assertNotIn("role_shapes", s.raw)
         companies = settings.load_companies(self.root)
         self.assertEqual(companies[-1]["ats"], "himalayas")
         self.assertEqual(len({c["slug"] for c in companies}), len(companies))

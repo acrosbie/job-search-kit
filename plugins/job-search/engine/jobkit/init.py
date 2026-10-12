@@ -55,12 +55,13 @@ def init(folder, field="custom", places="us", timezone=""):
     raw = {"you": {"timezone": timezone}}
     _merge(raw, load_file(os.path.join(STARTER, "defaults.toml")))
     _merge(raw, load_file(os.path.join(STARTER, "places", f"{places}.toml")))
-    queries = []
+    queries, shapes = [], {}
     if field == "custom":
         raw["titles"] = {"function": "", "level": "", "exclude": "", "field_words": ""}
     else:
         pack = load_file(os.path.join(STARTER, "fields", f"{field}.toml"))
         queries = pack.pop("aggregator", {}).get("queries", [])
+        shapes = pack.pop("role_shapes", {})  # for setup to offer; saved only as the ones the user takes
         _merge(raw, pack)
     settings.parse(raw)  # the starting file must load
 
@@ -79,4 +80,4 @@ def init(folder, field="custom", places="us", timezone=""):
         with open(apps, "w", encoding="utf-8", newline="\n") as f:
             json.dump({"applications": []}, f)
     return {"field": field, "places": places, "boards": len(boards), "timezone": timezone,
-            "titles_set": field != "custom"}
+            "titles_set": field != "custom", "role_shapes": shapes}

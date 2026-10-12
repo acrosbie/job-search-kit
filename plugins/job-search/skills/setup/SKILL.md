@@ -85,7 +85,7 @@ Record in `what-i-want.md` the field, the adjacent fields they'd take, and the f
 
 Short, plain questions, one at a time, each with choices and "not sure". Save every answer verbatim, with the date, in `profile/what-i-want.md`. Use the table in `profile-format.md`.
 
-1. **Role shape:** individual contributor, manager, or either? What do they need to own?
+1. **Role shape:** individual contributor, manager, or either? What do they need to own? If they'd take individual contributor roles, offer the field pack's `role_shapes` (from `init`'s answer, such as product manager or program manager) and ask which count for them. Join the patterns of the ones they choose with `|` and save them: `settings set titles.roles "<pattern>" --setup`. A title then passes with one of those and one of the pack's `roles_field` words, so a "Product Manager, Support Tools" isn't lost for having no level word. With a custom field, write `titles.roles_field` too: the words that put such a title in their field.
 2. **Pay:** the lowest pay they'd consider. If the pay is below that, reject it automatically, or just flag it?
 3. **Place:**
    - which city they live in;

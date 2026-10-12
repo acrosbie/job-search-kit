@@ -25,7 +25,11 @@ def _has(rx, s):
 
 
 def title_ok(title, s):
-    return _has(s.function, title) and _has(s.level, title) and not _has(s.exclude, title)
+    """A function word and a level word, or one of the roles the user takes with a word of their field;
+    and no exclusion either way."""
+    if _has(s.exclude, title):
+        return False
+    return (_has(s.function, title) and _has(s.level, title)) or (_has(s.roles, title) and _has(s.roles_field, title))
 
 
 def norm_loc(location):
