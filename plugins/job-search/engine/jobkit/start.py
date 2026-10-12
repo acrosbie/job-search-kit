@@ -141,7 +141,7 @@ def start(root, clock, expect=""):
     last_ok, last_try = schedule.last_scans(runs)
     out["scan"] = {"last_good_at": last_ok.get("at", ""), "last_attempt_at": last_try.get("at", ""),
                    "last_status": schedule.status_of(last_try), "overdue": schedule.scan_overdue(s, runs, clock),
-                   "scheduled": s.schedule.get("scan", "")}
+                   "scheduled": s.schedule.get("scan", ""), "fresh": schedule.fresh(last_ok, clock)}
     ready, review_due = schedule.review_state(root, s, clock)
     soon = interviews.soon(root, clock)
     debrief = interviews.debrief_due(root, clock)

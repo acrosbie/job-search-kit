@@ -191,7 +191,9 @@ Many unemployment programs ask for a weekly record of job-search contacts. Ask f
 <details>
 <summary><b>On a schedule</b></summary>
 
-Ask for a daily check and a weekly review, and Claude sets them up as scheduled tasks. They run while your computer is on and the Claude app is open. A missed one is caught up the next time you talk.
+Ask for a morning run and a weekly review, and Claude sets them up as scheduled tasks. The morning run checks your job boards, goes through the new jobs and writes them up, and brings your jobs page up to date, so it's ready when you sit down. Every verdict is Claude's and yours to overturn; nothing is applied for or sent. They run while your computer is on and the Claude app is open. A missed one is caught up the next time you talk.
+
+If Claude's workspace on your computer can't reach job boards, Claude can set up a Windows scheduled task that checks them a few minutes before the morning run (Windows only for now).
 </details>
 
 ## What it won't do
@@ -230,7 +232,8 @@ Setup is one conversation, about an hour, one question at a time; you can stop a
 | "I have an interview with Acme on Thursday at 2" | Records it, with a calendar file and a prep offer |
 | "prep me for it" / "mock interview" / "how did it go?" | Before, during practice, and after |
 | "show me my jobs page" | Opens your jobs page |
-| "check my job boards every morning" | Sets up the daily check |
+| "check my job boards every morning" | Sets up the morning run |
+| "do my morning job search" | The morning run now: check, go through the new ones, update the page |
 
 ## How it works
 

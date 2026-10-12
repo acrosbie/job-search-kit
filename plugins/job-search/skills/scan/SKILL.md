@@ -1,11 +1,11 @@
 ---
 name: scan
-description: Check the user's job boards and say what's new. Use for "any new jobs?", "check for new jobs", "scan", a scheduled check, or to set up or stop the daily check ("check my job boards every morning", "stop the daily check"). Needs their Job Search folder.
+description: Check the user's job boards and say what's new, or do the whole morning. Use for "any new jobs?", "check for new jobs", "scan", "do my morning job search", a scheduled check, or to set up or stop the daily check ("check my job boards every morning", "stop the daily check"). Needs their Job Search folder.
 ---
 
 # Scan: any new jobs?
 
-Fetch, then report. Judging fit is the triage skill's job, not this one's.
+Fetch, then report. Judging fit is the triage skill's job; the morning run (below) follows it.
 
 ## Steps
 
@@ -27,13 +27,25 @@ Fetch, then report. Judging fit is the triage skill's job, not this one's.
 4. **Keep the jobs page current** (`${CLAUDE_PLUGIN_ROOT}/reference/jobs-page.md`, "Keeping it current"). In a scheduled check, skip anything it can't do, without comment.
 5. **End by offering the next step:** "Want me to go through the new ones?" If nothing is new, say so and stop.
 
+## The morning run: "do my morning job search"
+
+Usually a scheduled task sends this at the time they chose, with nobody there. Do the whole morning, so they open their jobs page to new jobs already read and written up:
+
+1. **Start** as in step 1. Do the quiet items in `next` (refresh the engine, read their clicks, the page). Leave anything that needs their answer, such as how they applied or an interview's time, for the next conversation.
+2. **The jobs.** If `start`'s `scan.fresh` is true, a scan ran in the last few hours, usually the Windows task on their computer (`schedules.md`): don't scan again. What it found is in `data/scan-latest.json`. Otherwise scan (step 2). If nothing could be reached, note it and go on: jobs from earlier may still be waiting.
+3. **Go through the new ones** as the triage skill says, its first batch of 15, with nobody to ask. Every verdict is yours, with its summary, and they can overturn any. Never mark anything applied, change a rule, or judge again a job they decided.
+4. **Keep the jobs page current** (`jobs-page.md`): it's what they look at first.
+5. **Leave a short note**, at most five lines: how many new jobs, how many worth applying, with the best one by number and its headline, any Your call questions, and anything that went wrong (no boards reached, the page not updated).
+
+If they typed it themselves, do the same, then report as the triage skill does.
+
 ## Setting up or stopping the daily check
 
 Follow `${CLAUDE_PLUGIN_ROOT}/reference/schedules.md`.
 
 ## Don't
 
-- Don't comment on whether a job fits. The title filter only narrows the list; the verdict comes from reading the whole posting in triage.
+- Outside the morning run, don't comment on whether a job fits. The title filter only narrows the list; the verdict comes from reading the whole posting in triage.
 - Don't open the saved postings here.
 - Don't edit anything in the user's folder by hand. The engine is the only thing that writes the records.
 - Don't use technical words with the user: no "engine", "JSON", "exit code" or "egress". Say "your job boards", "your saved jobs", "network access".

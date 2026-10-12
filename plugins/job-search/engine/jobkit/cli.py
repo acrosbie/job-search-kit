@@ -379,6 +379,17 @@ def cmd_restore(a):
     return 0
 
 
+def cmd_windows_task(a):
+    from . import wintask
+    if a.action == "create":
+        _out(wintask.create(a.folder, a.at, weekdays=a.weekdays))
+    elif a.action == "show":
+        _out(wintask.show())
+    else:
+        _out(wintask.remove())
+    return 0
+
+
 def cmd_version(a):
     print(f"job-search-kit engine {__version__} (fingerprint {__fingerprint__}), Python {sys.version.split()[0]}")
     return 0
@@ -686,6 +697,18 @@ def parser():
     s.add_argument("--file", required=True, help="the file's path in the folder, as snapshots lists it")
     s.set_defaults(func=cmd_restore)
 
+    s = sub.add_parser("windows-task", help="the morning scan as a Windows scheduled task, on a computer where only Windows reaches job boards")
+    acts = s.add_subparsers(dest="action", required=True)
+    x = acts.add_parser("create", help="make it, or replace it: a scan each morning at --at, saved to data/scan-latest.json")
+    x.add_argument("--folder", required=True)
+    x.add_argument("--at", required=True, help="HH:MM, the user's local time")
+    x.add_argument("--weekdays", action="store_true", help="Monday to Friday only")
+    x = acts.add_parser("show", help="whether it's there, when it runs next and how the last run went")
+    x.add_argument("--folder", help="accepted, like every command; not needed")
+    x = acts.add_parser("remove")
+    x.add_argument("--folder", help="accepted, like every command; not needed")
+    s.set_defaults(func=cmd_windows_task)
+
     s = sub.add_parser("version")
     s.add_argument("--folder", help="accepted, like every command; not needed")
     s.set_defaults(func=cmd_version)
@@ -713,7 +736,7 @@ def _refresh_page(folder, report):
 
 
 # Commands that never change the records: no snapshot is taken before them.
-NO_SNAPSHOT = {"version", "discover", "changed", "snapshots", "restore", "probe", "show", "init"}
+NO_SNAPSHOT = {"version", "discover", "changed", "snapshots", "restore", "probe", "show", "init", "windows-task"}
 
 
 def _snapshot(a):

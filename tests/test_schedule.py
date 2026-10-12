@@ -1,6 +1,7 @@
 """Scan health, and when a scheduled check is overdue, for catching up."""
 
 import datetime as dt
+import os
 import unittest
 
 from jobkit import configure, health, net, scan, schedule, settings, store
@@ -68,6 +69,33 @@ class ScheduleTest(ScanBase):
         facts = schedule.facts(self.root, s, clock)
         self.assertEqual((facts["last_scan_at"], facts["last_attempt_at"], facts["last_scan_status"]),
                          ("2026-09-25T09:00:00-06:00", "2026-09-26T10:00:00-06:00", "blocked"))
+
+    def test_a_scan_in_the_last_few_hours_is_fresh(self):
+        # A Windows task's scan at 06:45 is what the 07:00 Cowork run goes through, rather than scanning again.
+        self.folder.log_run({"at": "2026-09-26T06:45:00-06:00", "status": "ok", "boards": 589, "failed": 3})
+        self.folder.log_run({"at": "2026-09-26T08:00:00-06:00", "status": "blocked", "boards": 0, "failed": 3})
+        last_ok, _ = schedule.last_scans(self.folder.read_runs())
+        at = lambda t: Clock("America/Denver", fixed=dt.datetime.fromisoformat(t))
+        self.assertTrue(schedule.fresh(last_ok, at("2026-09-26T07:00:00-06:00")))
+        self.assertFalse(schedule.fresh(last_ok, at("2026-09-26T13:00:00-06:00")))
+        self.assertFalse(schedule.fresh({}, at("2026-09-26T07:00:00-06:00")))
+
+    def test_the_windows_task(self):
+        from jobkit import wintask
+        xml = wintask.task_xml(r"C:\Users\Sam\Job Search", "06:45", weekdays=True, today=dt.date(2026, 10, 13))
+        self.assertIn("<StartBoundary>2026-10-13T06:45:00</StartBoundary>", xml)
+        self.assertIn("<Monday />", xml)
+        self.assertNotIn("<Saturday />", xml)
+        self.assertIn("<StartWhenAvailable>true</StartWhenAvailable>", xml)  # catches up after the computer sleeps
+        self.assertIn("<LogonType>InteractiveToken</LogonType>", xml)       # no password kept
+        self.assertIn('scan --folder "C:\\Users\\Sam\\Job Search" --out', xml)
+        self.assertIn("scan-latest.json", xml)
+        self.assertIn("<ScheduleByDay>", wintask.task_xml(r"C:\Sam", "07:00", today=dt.date(2026, 10, 13)))
+        with self.assertRaises(configure.Refused):
+            wintask._check_time("7am")
+        if os.name != "nt":
+            with self.assertRaises(configure.Refused):
+                wintask.create(self.root, "06:45")
 
     def test_a_choice_of_words_is_checked(self):
         with self.assertRaises(configure.Refused):

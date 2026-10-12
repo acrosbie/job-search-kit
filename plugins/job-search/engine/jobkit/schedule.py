@@ -41,6 +41,16 @@ def last_scans(runs):
     return (ok[-1] if ok else {}), (full[-1] if full else {})
 
 
+FRESH_HOURS = 6
+
+
+def fresh(last_ok, clock, hours=FRESH_HOURS):
+    """True when a scan that read boards ran in the last few hours, say a Windows task's at 06:45:
+    the morning run goes through what it found rather than scanning again (schedules.md)."""
+    t = _when((last_ok or {}).get("at", ""))
+    return bool(t) and clock.now() - t <= dt.timedelta(hours=hours)
+
+
 def status_of(run):
     if not run:
         return ""
