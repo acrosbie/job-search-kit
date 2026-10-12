@@ -31,9 +31,21 @@ def _utf8_out():
         pass
 
 
-def _out(obj):
+def _out(obj, to=None):
+    text = json.dumps(obj, indent=1, ensure_ascii=False)
+    if to:
+        _write_out(to, text + "\n")
+        return
     _utf8_out()
-    print(json.dumps(obj, indent=1, ensure_ascii=False))
+    print(text)
+
+
+def _write_out(path, text):
+    """A result written to a file by the engine itself: UTF-8 with no byte-order mark. PowerShell's `>`
+    adds one (or writes UTF-16), which is how a scan's output once came back unreadable. Written in
+    place, like every file the engine writes (test_guards)."""
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
+        f.write(text)
 
 
 def _clock(folder):
@@ -56,7 +68,7 @@ def cmd_scan(a):
     summary["closed_day_21"] = due["closed_now"]
     summary["follow_ups_due"] = {k: len(due[k]) for k in ("send", "find_person", "closing")}
     summary["due"] = due  # everything catching up needs (running-the-engine.md, 5a), so the scan skill needn't run due
-    _out(summary)
+    _out(summary, a.out)
     return 0
 
 
@@ -379,6 +391,7 @@ def parser():
     g.add_argument("--record", metavar="DIR", help="also save every board answer to this cassette folder")
     g.add_argument("--replay", metavar="DIR", help="read board answers from this cassette folder, not the network")
     s.add_argument("--as-of", metavar="TIME", help="pretend it is this time (ISO, with offset); for replays")
+    s.add_argument("--out", metavar="FILE", help="write the result (or what went wrong) to this file, as UTF-8, instead of printing it")
     s.set_defaults(func=cmd_scan)
 
     s = sub.add_parser("start", help="the start of every conversation: what's wrong, what's due, and what to do next")
@@ -709,6 +722,16 @@ def main(argv):
     if not getattr(a, "func", None):
         p.print_help()
         return 0
+
+    def fail(message, code):
+        print(message, file=sys.stderr)
+        if getattr(a, "out", None):  # run with nobody watching: the file says what went wrong
+            try:
+                _out({"error": message, "exit": code, "at": _clock(getattr(a, "folder", "") or ".").stamp()}, a.out)
+            except OSError:
+                pass
+        return code
+
     try:
         _snapshot(a)
         code = a.func(a)
@@ -717,15 +740,15 @@ def main(argv):
         return code
     except FileNotFoundError as e:
         why = f" ({e.strerror})" if e.strerror and "No such file" not in e.strerror else ""
-        print(f"missing file: {e.filename or e}{why}", file=sys.stderr)
-        return 1
+        return fail(f"missing file: {e.filename or e}{why}", 1)
     except json.JSONDecodeError as e:  # a file broken by hand, with no good backup to read instead
-        print(f"a file in the folder isn't readable as JSON ({e.msg}, line {e.lineno}); its .backup.json copy "
-              "may hold the last good version", file=sys.stderr)
-        return 1
+        return fail(f"a file in the folder isn't readable as JSON ({e.msg}, line {e.lineno}); its .backup.json copy "
+                    "may hold the last good version", 1)
     except (NotFound, BadFile) as e:
-        print(str(e), file=sys.stderr)
-        return 1
+        return fail(str(e), 1)
     except Refused as e:
-        print(str(e), file=sys.stderr)
-        return 3
+        return fail(str(e), 3)
+    except Exception as e:
+        if getattr(a, "out", None):
+            fail(f"{type(e).__name__}: {e}", 1)
+        raise

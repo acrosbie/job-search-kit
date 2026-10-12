@@ -212,6 +212,36 @@ class MarkTest(ScanBase):
         self.assertIn("apply KEY --channel", err)
 
 
+class ScanOutTest(ScanBase):
+    """Found in real use (2026-10-12): scans run from PowerShell on Windows were saved with `>`, which
+    wrote a byte-order mark. `--out` writes the result itself, as plain UTF-8, or what went wrong."""
+
+    def run_cli(self, *args):
+        with contextlib.redirect_stdout(io.StringIO()) as out, contextlib.redirect_stderr(io.StringIO()):
+            code = cli.main(list(args))
+        return code, out.getvalue()
+
+    def test_the_result_goes_to_the_file(self):
+        self.addCleanup(net.use, net.use(Fake(answers())))
+        target = os.path.join(self.root, "data", "scan-latest.json")
+        code, printed = self.run_cli("scan", "--folder", self.root, "--as-of", FIXED.isoformat(), "--out", target)
+        self.assertEqual((code, printed), (0, ""))
+        with open(target, "rb") as f:
+            raw = f.read()
+        self.assertTrue(raw.startswith(b"{"))  # no byte-order mark
+        self.assertEqual(json.loads(raw.decode("utf-8"))["new"], 3)
+
+    def test_what_went_wrong_goes_to_the_file(self):
+        os.remove(os.path.join(self.root, "profile", "settings.toml"))
+        target = os.path.join(self.root, "scan-latest.json")
+        code, _ = self.run_cli("scan", "--folder", self.root, "--out", target)
+        self.assertEqual(code, 1)
+        with open(target, encoding="utf-8") as f:
+            got = json.load(f)
+        self.assertEqual(got["exit"], 1)
+        self.assertIn("settings.toml", got["error"])
+
+
 class BlockedScanTest(ScanBase):
     """Found in real use (2026-10-08): Claude's sandbox reached no job board through its proxy, and the
     scan logged 0 boards read as if it were a scan. A blocked scan now changes nothing but the log."""
