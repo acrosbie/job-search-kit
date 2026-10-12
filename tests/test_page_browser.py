@@ -70,6 +70,45 @@ document.getElementById("f").addEventListener("load", function () {
 </script></body></html>"""
 
 
+# A click and an Undo on a job, scrolled part way down a short window, measuring where the job is on
+# the screen before and after each.
+CLICK = """<!doctype html><html><body><pre id="out">running</pre>
+<iframe id="f" src="%s" style="width:1200px;height:500px"></iframe>
+<script>
+var out = {};
+document.getElementById("f").addEventListener("load", function () {
+  try {
+    var w = this.contentWindow, d = w.document;
+    function card() { return d.querySelector("#s-look article.card"); }
+    function top(el) { return Math.round(el.getBoundingClientRect().top); }
+    w.scrollTo(0, card().getBoundingClientRect().top + w.scrollY - 150);
+    out.scrolled = w.scrollY > 0;
+    card().querySelector('[data-open="applied"]').click();  // the browser may scroll to show the form opened
+    var how = d.getElementById("f-channel");
+    how.value = "linkedin"; how.dispatchEvent(new w.Event("change", { bubbles: true }));
+    var before = top(card());
+    d.querySelector("#s-look [data-save]").click();
+    var c = card();
+    out.moved = c ? top(c) - before : null;
+    out.stamp = c ? (c.querySelector(".said-line .stamp") || {}).textContent || "" : "";
+    out.detail = c ? (c.querySelector(".said-line") || {}).textContent || "" : "";
+    out.undo_here = c ? c.querySelectorAll("[data-undo]").length : 0;
+    out.buttons_left = c ? c.querySelectorAll("[data-open]").length : -1;
+    out.outlined = !!c && c.classList.contains("chosen");
+    out.focus_on_undo = !!d.activeElement && d.activeElement.hasAttribute("data-undo");
+    var tray = d.querySelector("details.tray");
+    out.tray = tray ? { open: tray.open, count: tray.querySelector(".count").textContent } : null;
+    before = top(c);
+    c.querySelector("[data-undo]").click();
+    out.undo_moved = top(card()) - before;
+    out.buttons_back = card().querySelectorAll("[data-open]").length;
+    out.tray_after_undo = d.querySelectorAll("details.tray").length;
+  } catch (e) { out.error = String(e); }
+  document.getElementById("out").textContent = JSON.stringify(out);
+});
+</script></body></html>"""
+
+
 @unittest.skipUnless(browser(), "no Chrome, Chromium or Edge to run the page in")
 class BrowserTest(ScanBase):
     def setUp(self):
@@ -89,12 +128,12 @@ class BrowserTest(ScanBase):
                                              "fits": ["You'd lead the Denver team."], "tailor": ["Lead with the team."]})
         page.refresh(self.root, on(10))
 
-    def run_page(self):
+    def run_page(self, harness_text=HARNESS):
         work = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, work, True)
         target = pathlib.Path(self.root, "My jobs.html").resolve().as_uri()
         harness = pathlib.Path(work, "harness.html")
-        harness.write_text(HARNESS % target, encoding="utf-8")
+        harness.write_text(harness_text % target, encoding="utf-8")
         cmd = [browser(), "--headless=new", "--disable-gpu", f"--user-data-dir={os.path.join(work, 'profile')}",
                "--allow-file-access-from-files", "--virtual-time-budget=5000", "--dump-dom", harness.resolve().as_uri()]
         if sys.platform.startswith("linux"):
@@ -116,6 +155,24 @@ class BrowserTest(ScanBase):
         self.assertEqual(got["people"], 1)
         self.assertIn("linkedin.com/search/results/people/?keywords=Initech", got["linkedin"])
         self.assertEqual(got["contact_form"], 1)
+
+    def test_a_click_lands_on_the_job_and_nothing_moves(self):
+        """Found in real use (2026-10-12): every click moved the job up into Your choices and scrolled the
+        page there, so the list being worked through jumped away. Now the job stays put on the screen, its
+        buttons give way to the choice and an Undo, and Your choices is a closed tray with the count."""
+        got = self.run_page(CLICK)
+        self.assertNotIn("error", got)
+        self.assertTrue(got["scrolled"])
+        self.assertEqual(got["moved"], 0)
+        self.assertEqual(got["stamp"], "You applied")
+        self.assertIn("through LinkedIn", got["detail"])
+        self.assertEqual((got["undo_here"], got["buttons_left"]), (1, 0))  # nothing left to press twice
+        self.assertTrue(got["outlined"])
+        self.assertTrue(got["focus_on_undo"])
+        self.assertEqual(got["tray"], {"open": False, "count": "1"})
+        self.assertEqual(got["undo_moved"], 0)
+        self.assertEqual(got["buttons_back"], 3)
+        self.assertEqual(got["tray_after_undo"], 0)
 
 
 if __name__ == "__main__":

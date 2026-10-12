@@ -1,7 +1,7 @@
 <title>__PAGE_TITLE__</title>
 <style>
-/* Layout: one column, urgent first. A header and a bar of counts; then the user's own choices (only
-   when there are some), Today (the next interview, what to do now, how the search is going), what's
+/* Layout: one column, urgent first. A header and a bar of counts; then a closed tray of the user's
+   choices waiting for Claude (only when there are some), Today (the next interview, what to do now, how the search is going), what's
    due, the jobs worth a look as full cards, the applications with their 21-day clock, the new jobs
    as compact rows, and what was screened out, folded away.
    Status labels are stamps in the stamp-pad blue of an application form. */
@@ -77,7 +77,9 @@ a:hover { text-decoration-thickness: 2px; }
 .jump button.zero { color: var(--faint); }
 
 /* ------------------------------------------------ sections */
-.sections { display: grid; gap: 34px; min-width: 0; }
+/* The page keeps what the user is looking at in place itself when it redraws (keepPlace), so the
+   browser's own scroll anchoring stays out of it. */
+.sections { display: grid; gap: 34px; min-width: 0; overflow-anchor: none; }
 section { display: grid; gap: 12px; min-width: 0; scroll-margin-top: 64px; }
 .section-head { display: grid; gap: 4px; }
 .lede { color: var(--muted); font-size: 0.92rem; max-width: 64ch; }
@@ -222,13 +224,23 @@ a.btn { display: inline-flex; align-items: center; min-height: 32px; padding: 4p
   font-size: 0.86rem; font-weight: 500; text-decoration: none; background: var(--surface); }
 a.btn:hover { border-color: var(--accent); }
 
-/* ------------------------------------------------ the user's own choices: the one tinted block, so a click lands */
-.yours { background: var(--accent-soft); border: 2px solid var(--accent); border-radius: 12px; padding: 16px; }
-.yours .lede { color: var(--ink); }
-.yours .rows { box-shadow: none; }
+/* ------------------------------------------------ a choice lands where it was made: the job stays put, outlined, its
+   buttons give way to the stamp and an Undo, and Your choices is a closed tray of what's waiting for Claude */
+.card.chosen { border-color: var(--accent); }
+.row.chosen { background: var(--accent-soft); }
+.tray { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.tray > summary { cursor: pointer; padding: 10px 14px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; font-weight: 600; }
+.tray > summary .muted { font-weight: 400; font-size: 0.9rem; }
+.tray > summary .error { font-weight: 400; font-size: 0.9rem; }
+.tray > summary::after { content: "Show"; margin-left: auto; font-weight: 500; font-size: 0.88rem; color: var(--accent); }
+.tray[open] > summary::after { content: "Hide"; }
+.tray[open] > summary { border-bottom: 1px solid var(--line); }
+.tray .lede { padding: 10px 14px 0; }
+.tray .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
+.tray > .actions { padding: 0 14px 14px; }
 .choice .row-note { color: var(--muted); }
 .choice.problem .row-note { color: var(--bad); }
-.yours textarea { min-height: 7rem; font: 0.8rem/1.4 var(--mono); }
+.tray textarea { display: block; margin: 0 14px 14px; width: calc(100% - 28px); min-height: 7rem; font: 0.8rem/1.4 var(--mono); }
 
 details.out { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
 details.out > summary { cursor: pointer; padding: 14px 16px; font-family: var(--display); font-weight: 600; font-size: 1.05rem;
@@ -521,13 +533,17 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
 
   // ---------------------------------------------------------------- sections
 
+  // What's waiting for Claude, in a tray that stays closed until the user opens it: each choice already
+  // shows on its own job, so a click never sends them up here. Opened from the folder, it holds the copy step.
+  function openTray() { var d = document.querySelector("details.tray"); return !!(d && d.open); }
+
   function yoursSection() {
     var list = pending();
     var bad = problems();
     if (!list.length && !bad.length) return "";
     var rows = list.map(function (c) {
       var detail = chosenDetail(c);
-      return '<li class="row choice"><span class="num">' + (c.num ? "#" + esc(c.num) : "") + "</span>" +
+      return '<li class="row choice" data-place="choice:' + esc(c.id) + '"><span class="num">' + (c.num ? "#" + esc(c.num) : "") + "</span>" +
         '<div class="row-main"><span>' + stamp(CHOSEN[c.action] || [c.action, "s-call"]) + " " + esc(c.label) + "</span>" +
         (detail ? '<span class="row-note">' + esc(detail) + "</span>" : "") + "</div>" +
         '<div class="actions"><button type="button" class="mini quiet" data-undo="' + esc(c.id) + '">Undo</button></div></li>';
@@ -537,14 +553,17 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
         '<span class="row-note">Claude couldn\'t record this: ' + esc(problemOf(c)) + "</span></div><span></span></li>";
     }));
     var lede = mode === "saving"
-      ? "Saved on this page. Claude records " + (list.length === 1 ? "it" : "them") + " in your Job Search folder the next time you talk to it. Changed your mind? Undo, or choose again."
+      ? "Saved on this page. Claude records " + (list.length === 1 ? "it" : "them") + " in your Job Search folder the next time you talk to it. Changed your mind? Undo, here or on the job."
       : "This copy of the page can't send them to Claude by itself. Press <strong>Copy my choices</strong>, then paste them into Claude.";
-    return '<section class="yours" id="s-yours" aria-labelledby="h-yours"><div class="section-head"><h2 id="h-yours">Your choices <span class="count">' + list.length + "</span></h2>" +
-      '<p class="lede">' + lede + "</p></div>" + '<ul class="rows">' + rows.join("") + "</ul>" +
+    var says = list.length ? (mode === "saving" ? "saved for Claude" : "not sent to Claude yet") : "";
+    return '<section id="s-yours" aria-label="Your choices"><details class="tray"' + (openTray() ? " open" : "") + ">" +
+      '<summary>Your choices <span class="count">' + list.length + "</span>" + (says ? '<span class="muted">' + says + "</span>" : "") +
+      (bad.length ? '<span class="error">' + plural(bad.length, "choice", "choices") + " Claude couldn't record</span>" : "") + "</summary>" +
+      '<p class="lede">' + lede + "</p>" + '<ul class="rows">' + rows.join("") + "</ul>" +
       (mode === "file" && list.length ? '<div class="actions"><button type="button" class="primary" data-copy>Copy my choices</button>' +
         '<span class="muted" id="copy-note">Then paste them into Claude.</span></div>' +
         '<textarea id="copy-text" readonly hidden aria-label="Your choices, to copy"></textarea>' : "") +
-      "</section>";
+      "</details></section>";
   }
 
   // An interview: when, who, and (opened from the folder) its prep sheet and calendar file.
@@ -556,7 +575,7 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
     var links = [];
     if (e.prep) links.push(local ? '<a href="' + esc(e.prep) + '">Prep sheet</a>' : "Prep sheet: " + esc(e.prep));
     if (e.calendar && local) links.push('<a href="' + esc(e.calendar) + '">Add to calendar</a>');
-    return '<article class="card soon"><div class="card-top"><span class="num">' + (e.num ? "#" + esc(e.num) : "") + "</span>" +
+    return '<article class="card soon" data-place="coming:' + esc((e.application || e.num || "") + " " + e.on) + '"><div class="card-top"><span class="num">' + (e.num ? "#" + esc(e.num) : "") + "</span>" +
       stamp([e.stage === "screen" ? "Screen" : "Interview", e.past ? "s-closing" : "s-screen"]) +
       '<span class="pay">' + when + (rel ? " · " + rel : "") + "</span></div>" +
       "<h3>" + esc(e.company) + ", " + esc(e.role) + "</h3>" +
@@ -572,7 +591,7 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
       : t.route === "find_person"
         ? "A top pick with nobody to follow up with. Look for the person who would manage this role, and add their name."
         : "Nothing to send without a contact.";
-    return '<article class="card todo"><div class="card-top"><span class="num">' + (t.num ? "#" + esc(t.num) : "") + "</span>" + stamp(ROUTE[t.route]) + "</div>" +
+    return '<article class="card todo" data-place="todo:' + esc(t.id) + '"><div class="card-top"><span class="num">' + (t.num ? "#" + esc(t.num) : "") + "</span>" + stamp(ROUTE[t.route]) + "</div>" +
       "<h3>" + esc(t.company) + ", " + esc(t.role) + "</h3><p>" + what + "</p>" + clockBar(daysSince(t.applied_date, t.days), t.closes_on) + saidLines(t.id) +
       '<div class="actions">' + (t.route === "send"
         ? button("followed_up", "app", t.id, "primary")
@@ -584,7 +603,7 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
   function peopleCard(list) {
     var rows = list.map(function (t) {
       var q = "https://www.linkedin.com/search/results/people/?keywords=" + encodeURIComponent(t.search || t.company);
-      return '<li><span class="num">' + (t.num ? "#" + esc(t.num) : "") + "</span>" +
+      return '<li data-place="todo:' + esc(t.id) + '"><span class="num">' + (t.num ? "#" + esc(t.num) : "") + "</span>" +
         '<div class="row-main"><span class="row-title">' + esc(t.company) + ", " + esc(t.role) + "</span>" +
         '<span class="row-meta">Day ' + esc(daysSince(t.applied_date, t.days)) + " of " + ((data.tracking || {}).presume_after_days || 21) +
         (t.closes_on ? " · closes " + esc(day(t.closes_on)) + " if there’s no reply" : "") + "</span></div>" +
@@ -598,13 +617,16 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
       "Claude can then draft a short note for you to send.</p>" + '<ul class="people">' + rows.join("") + "</ul></article>";
   }
 
+  // A job with a choice waiting for Claude stays where it is: its buttons give way to the choice, with an
+  // Undo, so a click lands where it was made and there's nothing left to press twice.
   function jobCard(j) {
     var wanted = j.status === "worth_applying" && j.by === "user";
     var verdict = wanted ? ["You want it", "s-worth"] : (VERDICT[j.status] || ["", ""]);
     var t = cleanTitle(j);
     var acts = wanted ? [["applied", "primary"], ["skip", "quiet"]] : [["want", "primary"], ["skip", "quiet"], ["applied", "quiet"]];
     var summary = summaryBlock(j);
-    return '<article class="card" id="job-' + esc(j.key) + '">' +
+    var chosen = waitingOn("key", j.key);
+    return '<article class="card' + (chosen ? " chosen" : "") + '" id="job-' + esc(j.key) + '" data-place="job:' + esc(j.key) + '">' +
       '<div class="card-top"><span class="num">#' + esc(j.num) + "</span>" + stamp(verdict) +
       (j.salary ? '<span class="pay">' + esc(j.salary) + "</span>" : "") + "</div>" +
       "<h3>" + (href(j.url) ? '<a href="' + href(j.url) + '" target="_blank" rel="noopener">' + esc(t.title) + "</a>" : esc(t.title)) + "</h3>" +
@@ -614,8 +636,9 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
       (j.flag ? '<p class="flag">' + esc(j.flag) + "</p>" : "") +
       (j.gone ? '<p class="flag">No longer on the company\'s job board since ' + day(j.gone) + ".</p>" : "") +
       behind(j) +
-      '<div class="actions">' + acts.map(function (a) { return button(a[0], "job", j.key, a[1]); }).join("") + "</div>" +
-      acts.map(function (a) { return panel("job", j.key, a[0]); }).join("") +
+      (chosen ? saidLine(chosen)
+        : '<div class="actions">' + acts.map(function (a) { return button(a[0], "job", j.key, a[1]); }).join("") + "</div>" +
+          acts.map(function (a) { return panel("job", j.key, a[0]); }).join("")) +
       "</article>";
   }
 
@@ -623,7 +646,8 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
     var t = cleanTitle(j);
     var acts = kind === "screened" ? [["want", "Want it anyway"]] : [["want", "Want it"], ["skip", "Skip"]];
     var search = (t.title + " " + j.company + " " + t.place).toLowerCase();
-    return '<li class="row" data-search="' + esc(search) + '"><span class="num">#' + esc(j.num) + "</span>" +
+    var chosen = waitingOn("key", j.key);
+    return '<li class="row' + (chosen ? " chosen" : "") + '" data-search="' + esc(search) + '" data-place="job:' + esc(j.key) + '"><span class="num">#' + esc(j.num) + "</span>" +
       '<div class="row-main">' +
       (href(j.url) ? '<a class="row-title" href="' + href(j.url) + '" target="_blank" rel="noopener">' + esc(t.title) + "</a>" : '<span class="row-title">' + esc(t.title) + "</span>") +
       '<span class="row-meta">' + esc(j.company) + " · " + esc(t.place || "place not stated") +
@@ -634,18 +658,23 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
       (j.flag ? '<span class="row-note flag">' + esc(j.flag) + "</span>" : "") +
       (j.gone ? '<span class="row-note flag">No longer on the company\'s job board since ' + day(j.gone) + ".</span>" : "") +
       "</div>" +
-      '<div class="actions">' + acts.map(function (a) { return button(a[0], "job", j.key, "mini", a[1], j.num); }).join("") + "</div>" +
-      acts.map(function (a) { return panel("job", j.key, a[0]); }).join("") +
+      (chosen ? '<div class="actions">' + stamp(CHOSEN[chosen.action] || [chosen.action, "s-call"]) +
+          '<button type="button" class="mini quiet" data-undo="' + esc(chosen.id) + '" aria-label="Undo, #' + esc(j.num) + '">Undo</button></div>'
+        : '<div class="actions">' + acts.map(function (a) { return button(a[0], "job", j.key, "mini", a[1], j.num); }).join("") + "</div>" +
+          acts.map(function (a) { return panel("job", j.key, a[0]); }).join("")) +
       "</li>";
   }
 
+  // A choice waiting for Claude, on the job or application it was made on: what, when, and an Undo.
+  function saidLine(c) {
+    var detail = chosenDetail(c);
+    return '<p class="said-line">You said: ' + stamp(CHOSEN[c.action] || [c.action, "s-call"]) +
+      (detail ? " " + esc(detail) : "") + ' <span class="muted">' + (mode === "saving" ? "Saved for Claude, " : "Not sent to Claude yet, ") +
+      stampText(c.at) + ".</span> " + '<button type="button" class="link" data-undo="' + esc(c.id) + '">Undo</button></p>';
+  }
+
   function saidLines(id) {
-    return pending().filter(function (c) { return c.app === id; }).map(function (c) {
-      var detail = chosenDetail(c);
-      return '<p class="said-line">You said: ' + stamp(CHOSEN[c.action] || [c.action, "s-call"]) +
-        (detail ? " " + esc(detail) : "") + ' <span class="muted">' + (mode === "saving" ? "Saved for Claude." : "Not sent to Claude yet.") + "</span> " +
-        '<button type="button" class="link" data-undo="' + esc(c.id) + '">Undo</button></p>';
-    }).join("");
+    return pending().filter(function (c) { return c.app === id; }).map(saidLine).join("");
   }
 
   function appRow(a) {
@@ -660,7 +689,7 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
       ? '<div class="panel"><span class="muted">What happened?</span><div class="choices-menu">' + APP_CHOICES.map(function (o) {
           return button(o, "app", a.id, "mini");
         }).join("") + '<button type="button" class="mini quiet" data-cancel>Cancel</button></div></div>' : "";
-    return '<li class="app" data-search="' + esc((a.company + " " + a.role).toLowerCase()) + '"><span class="num">' + (a.num ? "#" + esc(a.num) : "") + "</span>" +
+    return '<li class="app" data-search="' + esc((a.company + " " + a.role).toLowerCase()) + '" data-place="app:' + esc(a.id) + '"><span class="num">' + (a.num ? "#" + esc(a.num) : "") + "</span>" +
       '<div class="app-main"><span class="app-name"><b>' + esc(a.company) + "</b>, " +
       (href(a.url) ? '<a href="' + href(a.url) + '" target="_blank" rel="noopener">' + esc(a.role) + "</a>" : esc(a.role)) + "</span>" +
       '<span class="app-meta">' + meta + "</span>" +
@@ -676,10 +705,38 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
 
   // ---------------------------------------------------------------- the page
 
+  // The page redraws whole whenever anything changes. What the user is looking at stays where it is on
+  // the screen: the job or row they last clicked, if it's in view, otherwise the first thing in view.
+  var placeKey = "";
+  function findPlace(key) {
+    var all = document.querySelectorAll("[data-place]");
+    for (var i = 0; i < all.length; i++) if (all[i].getAttribute("data-place") === key) return all[i];
+    return null;
+  }
+  function notePlace() {
+    var top = Math.max(0, document.getElementById("jump").getBoundingClientRect().bottom || 0);  // under the sticky bar
+    var el = placeKey ? findPlace(placeKey) : null;
+    var r = el && el.getBoundingClientRect();
+    if (!r || !r.height || r.bottom <= top || r.top >= window.innerHeight) {
+      el = null;
+      var all = document.querySelectorAll("[data-place]");
+      for (var i = 0; i < all.length && !el; i++) {
+        var q = all[i].getBoundingClientRect();
+        if (q.height && q.bottom > top) { el = all[i]; r = q; }
+      }
+    }
+    return el ? { key: el.getAttribute("data-place"), top: r.top } : null;
+  }
+  function keepPlace(p) {
+    var el = p && findPlace(p.key);
+    if (el) window.scrollBy(0, el.getBoundingClientRect().top - p.top);
+  }
+
   function render() {
     var app = document.getElementById("app");
     var status = document.getElementById("status");
     var jump = document.getElementById("jump");
+    var place = notePlace();
     if (!data) {
       document.getElementById("updated").textContent = "";
       app.innerHTML = yoursSection() + '<p class="empty">Your jobs appear here after Claude next checks your job boards. Ask Claude “show me my jobs page” to fill it in.</p>';
@@ -696,11 +753,11 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
       (mode === "file" ? '<span class="chip local">Opened from your folder</span><span>Clicks here stay in this browser until you copy them to Claude.</span>' : "") +
       (problem ? '<span class="error">' + esc(problem) + "</span>" : "");
 
-    // A job with a choice waiting for Claude moves up into Your choices, so the click visibly lands.
-    var waiting = data.waiting.filter(function (j) { return !waitingOn("key", j.key); });
+    // A job with a choice waiting for Claude stays in its place, showing the choice (jobCard, jobRow).
+    var waiting = data.waiting;
     var look = waiting.filter(function (j) { return j.status !== "new"; });
     var fresh = waiting.filter(function (j) { return j.status === "new"; });
-    var screened = data.screened.filter(function (j) { return !waitingOn("key", j.key); });
+    var screened = data.screened;
     var todo = data.todo;
     var apps = data.applications;
     var openApps = apps.filter(function (a) { return ["applied", "replied", "screen", "interview", "offer"].indexOf(a.status) >= 0; }).length;
@@ -754,9 +811,10 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
     var focused = document.activeElement && document.activeElement.id;
     var caret = focused && document.activeElement.selectionStart;
     app.innerHTML = html.join("");
+    keepPlace(place);
     if (focused && document.getElementById(focused)) {
       var el = document.getElementById(focused);
-      el.focus();
+      el.focus({ preventScroll: true });
       try { if (caret != null) el.setSelectionRange(caret, caret); } catch (e) { /* not a text field */ }
     }
     applyFilter();
@@ -802,7 +860,7 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
     }
     var kp = kpis();
     if (!blocks.length && !kp) return "";
-    return '<section class="focus" id="s-today" aria-labelledby="h-today"><h2 id="h-today">Today</h2>' +
+    return '<section class="focus" id="s-today" aria-labelledby="h-today" data-place="today"><h2 id="h-today">Today</h2>' +
       (blocks.length ? '<div class="focus-grid">' + blocks.join("") + "</div>" : '<p class="muted">Nothing needs you right now.</p>') + kp + "</section>";
   }
 
@@ -841,7 +899,7 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
   // ---------------------------------------------------------------- applications: which, and in what order
 
   function appsControls(all, openN) {
-    return '<div class="controls"><div class="seg" role="group" aria-label="Which applications">' +
+    return '<div class="controls" data-place="apps-controls"><div class="seg" role="group" aria-label="Which applications">' +
       '<button type="button" data-apps-view="open" aria-pressed="' + (appsView !== "all") + '">Open <b>' + openN + "</b></button>" +
       '<button type="button" data-apps-view="all" aria-pressed="' + (appsView === "all") + '">All <b>' + all + "</b></button></div>" +
       '<input type="search" id="filter-apps" placeholder="Filter by company or role" value="' + esc(appsFind) + '" aria-label="Filter your applications">' +
@@ -975,14 +1033,15 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
         delete choices[c.id]; render();
       });
       toast("Saved: " + (CHOSEN[c.action] || [c.action])[0] + (c.num ? ", #" + c.num : "") + " " + c.label +
-            ". It's under Your choices at the top, and Claude records it next time you talk.");
+            ". Claude records it the next time you talk.");
     } else {
       saveLocal();
       toast("Noted: " + (CHOSEN[c.action] || [c.action])[0] + (c.num ? ", #" + c.num : "") + ". Use Copy my choices to send it to Claude.");
     }
-    render();
-    var yours = document.getElementById("s-yours");
-    if (yours) yours.scrollIntoView({ block: "start", behavior: "smooth" });
+    render();  // the job stays where it is, now showing the choice; nothing scrolls
+    var where = placeKey && findPlace(placeKey);
+    var again = where && where.querySelector('[data-undo="' + c.id + '"]');
+    if (again) again.focus({ preventScroll: true });
   }
 
   function undo(id) {
@@ -990,13 +1049,18 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
     if (!c || c.recorded) return;
     remove(id);
     if (mode !== "saving") saveLocal();
-    toast("Undone: " + (c.num ? "#" + c.num + " " : "") + c.label + " is back where it was.");
+    toast("Undone: " + (c.num ? "#" + c.num + " " : "") + c.label + ".");
     render();
+    var where = placeKey && findPlace(placeKey);
+    var first = where && where.querySelector("[data-open]");
+    if (first) first.focus({ preventScroll: true });
   }
 
   document.addEventListener("click", function (e) {
     var t = e.target.closest("button");
     if (!t) return;
+    var holder = t.closest("[data-place]");
+    if (holder) placeKey = holder.getAttribute("data-place");
     if (t.hasAttribute("data-apps-view")) {
       appsView = t.getAttribute("data-apps-view");
       try { localStorage.setItem(APPS_VIEW, appsView); } catch (err) { /* for now only */ }
@@ -1007,7 +1071,8 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
     } else if (t.hasAttribute("data-jump")) {
       var target = document.getElementById("s-" + t.getAttribute("data-jump"));
       if (target) {
-        if (target.querySelector("details.out")) target.querySelector("details.out").open = true;
+        var fold = target.querySelector("details.out, details.tray");
+        if (fold) fold.open = true;
         target.scrollIntoView({ block: "start", behavior: "smooth" });
       }
     } else if (t.hasAttribute("data-open")) {
@@ -1029,6 +1094,8 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
       var done = function () { if (note) note.textContent = "Copied. Now paste them into Claude."; toast("Copied. Now paste them into Claude."); };
       var fallback = function () {
         if (!area) return;
+        var tray = document.querySelector("details.tray");
+        if (tray) tray.open = true;
         area.hidden = false; area.value = text; area.focus(); area.select();
         if (note) note.textContent = "Select all of this text, copy it, and paste it into Claude.";
         area.scrollIntoView({ block: "center" });
@@ -1053,6 +1120,7 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
   });
   document.addEventListener("change", function (e) {
     if (e.target.id === "sort-apps") {
+      placeKey = "apps-controls";  // the list reorders under the controls; they stay put
       appsSort = e.target.value;
       try { localStorage.setItem(APPS_SORT, appsSort); } catch (err) { /* for now only */ }
       render();
