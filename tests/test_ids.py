@@ -87,6 +87,34 @@ class MergeTest(TrackBase):
         self.assertEqual([(a["num"], a["status"]) for a in got], [(121, "rejected"), (110, "applied"), (130, "applied")])
 
 
+class CloseWhileAnotherWritesTest(TrackBase):
+    """Found in real use (2026-10-12), on engine 0.8.0: a scan's day-21 close saved while another
+    command had written the file, so the save merged rows by id, and each pair sharing an id came out
+    as two copies of one of them. Still 60 rows, but the 09-14 TikTok application and a LinkedIn row
+    were gone, until restored by hand from a copy made before the scan."""
+
+    def setUp(self):
+        super().setUp()
+        rows = [row(SHARED, "2026-09-14", "https://www.linkedin.com/jobs/view/4466722142/", 121),
+                row(SHARED, "2026-09-03", "https://www.linkedin.com/jobs/view/4453350221/", 110)]
+        with open(self.folder.applications_json, "w", encoding="utf-8") as f:
+            json.dump({"applications": rows}, f)
+
+    def test_both_applications_to_one_title_survive_the_close(self):
+        apps = track.load(self.root)  # what close_due does: load, change, save
+        track.apply(self.root, on("10-12"), company="Roblox", role="Senior Product Support Manager",
+                    date="2026-10-08", channel="company_site")  # meanwhile, another command writes
+        for a in apps:
+            if a["company"] == "TikTok":
+                a["status"] = "presumed_rejected"
+        track.save(self.root, apps)
+        tiktok = sorted((a["num"], a["applied_date"], a["urls"][0][-11:-1], a["status"])
+                        for a in track.load(self.root) if a["company"] == "TikTok")
+        self.assertEqual(tiktok, [(110, "2026-09-03", "4453350221", "presumed_rejected"),
+                                  (121, "2026-09-14", "4466722142", "presumed_rejected")])
+        self.assertEqual(len({a["id"] for a in track.load(self.root)}), len(track.load(self.root)))
+
+
 class ApplyAgainTest(TrackBase):
     def test_another_link_for_the_same_title_is_asked_about(self):
         track.apply(self.root, on(3), company="Globex", role="Support Lead", url="https://globex.test/1",
