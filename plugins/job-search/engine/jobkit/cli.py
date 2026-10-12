@@ -293,6 +293,10 @@ def cmd_companies(a):
         entry = {"name": a.name, "slug": a.slug, "ats": a.ats, "token": a.token, "host": a.host, "tenant": a.tenant,
                  "site": a.site, "queries": a.query or [], "careers_url": a.careers_url}
         _out(configure.add_company(a.folder, entry))
+    elif a.action == "edit":
+        fields = {"name": a.name, "ats": a.ats, "token": a.token, "host": a.host, "tenant": a.tenant, "site": a.site,
+                  "careers_url": a.careers_url}
+        _out(configure.edit_company(a.folder, a.slug, fields, a.add_query or [], a.drop_query or []))
     else:
         _out({"dropped": a.slug, "companies_left": configure.drop_company(a.folder, a.slug)})
     return 0
@@ -625,6 +629,13 @@ def parser():
     for opt in ("--token", "--host", "--tenant", "--site", "--careers-url"):
         x.add_argument(opt)
     x.add_argument("--query", action="append", help="a search phrase, for an aggregator; repeat for several")
+    x = acts.add_parser("edit", help="change a watched company in place: its search phrases, or where its board is")
+    x.add_argument("--folder", required=True)
+    x.add_argument("slug")
+    for opt in ("--name", "--ats", "--token", "--host", "--tenant", "--site", "--careers-url"):
+        x.add_argument(opt)
+    x.add_argument("--add-query", action="append", help="a search phrase to add; repeat for several")
+    x.add_argument("--drop-query", action="append", help="a search phrase to take off; repeat for several")
     x = acts.add_parser("drop")
     x.add_argument("--folder", required=True)
     x.add_argument("slug")

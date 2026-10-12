@@ -198,6 +198,43 @@ def add_company(folder, entry):
     return companies[-1]
 
 
+def edit_company(folder, slug, fields=None, add_queries=(), drop_queries=()):
+    """Change a watched company in place: its search phrases (an aggregator's), or where its board is
+    (a board found again after it moved). Everything else on the entry stays as it was."""
+    fields = {k: v for k, v in (fields or {}).items() if v not in (None, "")}
+    path = _paths(folder)[1]
+    text = _read(path)
+    companies = load_file(path).get("company", [])
+    entry = next((c for c in companies if c["slug"] == slug), None)
+    if entry is None:
+        raise Refused(f"{slug} isn't on the list")
+    if not (fields or add_queries or drop_queries):
+        raise Refused("nothing to change: give a phrase to add or drop, or a field")
+    queries = list(entry.get("queries") or [])
+    missing = [q for q in drop_queries if q not in queries]
+    if missing:
+        raise Refused(f"{', '.join(repr(q) for q in missing)} isn't one of {slug}'s phrases: {', '.join(queries) or 'none'}")
+    added = [q for q in dict.fromkeys(q.strip() for q in add_queries) if q and q not in queries]
+    queries = [q for q in queries if q not in drop_queries] + added
+    if "ats" in fields and fields["ats"] != entry.get("ats"):
+        for k in ("token", "host", "tenant", "site"):  # where the old board was says nothing about the new one
+            entry.pop(k, None)
+    entry.update(fields)
+    if queries:
+        entry["queries"] = queries
+    else:
+        entry.pop("queries", None)
+    ats = entry.get("ats", "")
+    if ats not in NEEDS:
+        raise Refused(f"unknown board system {ats!r}; one of {', '.join(sorted(NEEDS))}")
+    lacking = [k for k in NEEDS[ats] if not entry.get(k)]
+    if lacking:
+        raise Refused(f"a {ats} board needs {', '.join(lacking)}")
+    _write(path, tomlwrite.companies_text(companies, tomlwrite.header_of(text)))
+    return {"company": entry, "added": added, "dropped": list(drop_queries),
+            "already_there": [q for q in add_queries if q.strip() and q.strip() not in added]}
+
+
 def drop_company(folder, slug):
     """Take a company off the list. Its saved postings and verdicts stay."""
     path = _paths(folder)[1]

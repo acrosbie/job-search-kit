@@ -84,6 +84,30 @@ class ConfigureTest(unittest.TestCase):
             configure.drop_company(self.root, "globex")
         self.assertTrue(read(os.path.join(self.root, "profile", "companies.toml")).startswith("# Watched companies."))
 
+    def test_editing_a_board_in_place(self):
+        """Found in real use (2026-10-12): `companies add` refuses a slug already there, and nothing else
+        changed an entry, so eight Himalayas phrases were added to companies.toml by hand."""
+        configure.add_company(self.root, {"name": "Himalayas", "slug": "himalayas", "ats": "himalayas",
+                                          "queries": ["support operations", "customer support"]})
+        got = configure.edit_company(self.root, "himalayas", add_queries=["cx systems", "ai agent", "customer support"],
+                                     drop_queries=["support operations"])
+        self.assertEqual((got["added"], got["dropped"], got["already_there"]),
+                         (["cx systems", "ai agent"], ["support operations"], ["customer support"]))
+        him = next(c for c in settings.load_companies(self.root) if c["slug"] == "himalayas")
+        self.assertEqual(him["queries"], ["customer support", "cx systems", "ai agent"])
+        with self.assertRaises(configure.Refused):
+            configure.edit_company(self.root, "himalayas", drop_queries=["not one of them"])
+        with self.assertRaises(configure.Refused):
+            configure.edit_company(self.root, "himalayas", drop_queries=["customer support", "cx systems", "ai agent"])
+        # A board that moved: the new system's details replace the old one's, and the name stays.
+        configure.edit_company(self.root, "acme", {"ats": "ashby", "token": "acme-inc"})
+        acme = next(c for c in settings.load_companies(self.root) if c["slug"] == "acme")
+        self.assertEqual(acme, {"name": "Acme", "slug": "acme", "ats": "ashby", "token": "acme-inc"})
+        with self.assertRaises(configure.Refused):
+            configure.edit_company(self.root, "acme", {"ats": "workday"})  # a Workday board needs its host and site
+        with self.assertRaises(configure.Refused):
+            configure.edit_company(self.root, "nobody", add_queries=["x"])
+
     def test_cli_refusal_is_exit_3(self):
         with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()) as err:
             code = cli.main(["settings", "set", "--folder", self.root, "titles.function", "support(("])
