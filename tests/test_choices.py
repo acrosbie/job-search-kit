@@ -42,6 +42,28 @@ class ChoicesTest(ScanBase):
         a = track.find(track.load(self.root), "greenhouse-acme-1")
         self.assertEqual((a["status"], a["contact"]), ("replied", "Lee Example"))
 
+    def test_a_second_click_that_changes_nothing_is_already(self):
+        """Found in real use (2026-10-12): a second "I applied" click on #126 Roblox, made after the first
+        was recorded, changed nothing but was reported as recorded."""
+        first = click("c-1", "applied", key="greenhouse-acme-1", channel="company_site", top_pick="yes")
+        self.assertEqual(len(choices.record(self.root, CLOCK, [first])["recorded"]), 1)
+        again = [click("c-2", "applied", key="greenhouse-acme-1", channel="company_site", at="2026-09-24T17:01:00Z"),
+                 click("c-3", "skip", key="greenhouse-acme-4", at="2026-09-24T17:02:00Z"),
+                 click("c-4", "skip", key="greenhouse-acme-4", at="2026-09-24T17:03:00Z")]
+        choices.record(self.root, CLOCK, again[:2])
+        out = choices.record(self.root, CLOCK, again[2:])
+        self.assertEqual([c["id"] for c in out["already"]], ["c-4"])
+        logged = {r["id"]: r["outcome"] for r in self.folder.read_choices()}
+        self.assertEqual((logged["c-2"], logged["c-3"], logged["c-4"]), ("already", "recorded", "already"))
+        self.assertEqual(len(track.find(track.load(self.root), "greenhouse-acme-1")["history"]), 1)
+        # One that says something new is recorded: how they applied, or a status the application hasn't got.
+        out = choices.record(self.root, CLOCK, [
+            click("c-5", "applied", key="greenhouse-acme-1", channel="referral", at="2026-09-24T17:04:00Z"),
+            click("c-6", "replied", app="greenhouse-acme-1", at="2026-09-24T17:05:00Z")])
+        self.assertEqual([c["id"] for c in out["recorded"]], ["c-5", "c-6"])
+        out = choices.record(self.root, CLOCK, [click("c-7", "replied", app="greenhouse-acme-1", at="2026-09-24T17:06:00Z")])
+        self.assertEqual([c["id"] for c in out["already"]], ["c-7"])
+
     def test_what_happened_to_each_click_is_kept_for_the_page(self):
         # A page opened from the folder can't be told directly; it reads these back (page.json `handled`).
         from jobkit import page

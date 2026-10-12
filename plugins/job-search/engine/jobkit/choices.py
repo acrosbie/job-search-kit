@@ -78,6 +78,32 @@ def _changed_on_the_page(choices, done):
                  or (c.get("action") in APP_ACTIONS and c.get("action") not in ("followed_up", "contact")))}
 
 
+def _changes_nothing(root, c, day):
+    """True when the records already say everything this click says: a second "I applied" on a job
+    already applied to, a skip on a job already skipped, a status the application already has. It's
+    reported as already done, not as recorded."""
+    action = c.get("action")
+    if (c.get("note") or "").strip():
+        return False
+    contact = (c.get("contact") or "").strip()
+    if action in ("want", "skip"):
+        last = verdicts.last_user_decision(store.Folder(root).read_decisions(), c.get("key"))
+        return bool(last) and last.get("verdict") == POSTING_ACTIONS[action]
+    if action == "applied":
+        a = track.find(track.load(root), c.get("key", ""))
+        top = {"yes": True, "no": False}.get(c.get("top_pick") or "")
+        return a is not None and (not c.get("channel") or c["channel"] == a.get("channel")) \
+            and (not contact or contact == a.get("contact")) and (top is None or top == a.get("top_pick"))
+    a = track.find(track.load(root), c.get("app", ""))
+    if a is None:
+        return False
+    if action == "contact":
+        return contact == a.get("contact")
+    if action == "followed_up":
+        return a.get("followed_up") == day
+    return a.get("status") == action and (not contact or contact == a.get("contact"))
+
+
 def record(root, clock, choices):
     """Record a list of page choices. Returns what happened to each, in four lists."""
     out = {"recorded": [], "already": [], "superseded": [], "unknown": []}
@@ -117,6 +143,9 @@ def record(root, clock, choices):
         try:
             if _later_in_chat(root, c):
                 out["superseded"].append(brief)
+                continue
+            if _changes_nothing(root, c, day):
+                out["already"].append({**brief, "why": "the records already say this"})
                 continue
             note = (c.get("note") or "").strip()
             if action == "applied":
