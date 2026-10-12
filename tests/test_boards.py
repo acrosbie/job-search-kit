@@ -95,16 +95,42 @@ class ReaderTest(unittest.TestCase):
         self.assertEqual(recs[0]["location"], "Denver, United States; Remote")
         self.assertEqual(recs[100]["location"], "Chennai, non-US (in)")
 
+    def test_himalayas_reads_newest_first_back_to_the_last_good_read(self):
+        """Found in real use (2026-10-12): read by relevance, five pages a phrase, the search missed most
+        of what was new. Now newest first, until the jobs are older than the last good read."""
+        url = lambda q, p: "https://himalayas.app/jobs/api/search?q=" + q + "&country=United+States&sort=recent&page=" + str(p)
+        day = lambda d: str(int(__import__("datetime").datetime(2026, 10, d, 12, tzinfo=__import__("datetime").timezone.utc).timestamp()))
+        job = lambda n, d: {"companyName": f"Co{n}", "companySlug": f"co{n}", "guid": f"https://himalayas.app/c/co{n}/jobs/{n}",
+                            "title": "Support Manager", "locationRestrictions": ["United States"], "pubDate": day(d)}
+        fake = self.use({
+            url("support", 1): {"jobs": [job(n, 12) for n in range(16)], "limit": 20, "totalCount": 900},  # short, not the end
+            url("support", 2): {"jobs": [job(n, 11) for n in range(20, 40)], "limit": 20, "totalCount": 900},
+            url("support", 3): {"jobs": [job(n, 10) for n in range(40, 50)] + [job(n, 7) for n in range(50, 60)],
+                                "limit": 20, "totalCount": 900},
+        })
+        ctx = Context(today="2026-10-12", last_ok={"himalayas": "2026-10-11T07:00:00-07:00"})
+        recs = READERS["himalayas"]({"name": "Himalayas", "slug": "himalayas", "queries": ["support"]}, ctx)
+        self.assertEqual(len(recs), 46)  # back to 10-10: the last good read, less a day; page 4 never asked
+        self.assertEqual(len(fake.asked), 3)
+        # The first time, two weeks back; and a phrase that keeps going stops at 25 pages, read partly.
+        from jobkit.boards import himalayas
+        fake = self.use({url("support", p): {"jobs": [job(p * 100 + n, 12) for n in range(20)], "limit": 20, "totalCount": 3000}
+                         for p in range(1, 26)})
+        ctx = Context(today="2026-10-12")
+        self.assertEqual(len(READERS["himalayas"]({"name": "Himalayas", "slug": "himalayas", "queries": ["support"]}, ctx)),
+                         himalayas.MAX_PAGES * 20)
+        self.assertEqual(ctx.partial, {"himalayas"})
+
     def test_himalayas_skips_watched_and_keeps_partial_on_429(self):
-        url = lambda q, p: "https://himalayas.app/jobs/api/search?q=" + q + "&country=United+States&page=" + str(p)
+        url = lambda q, p: "https://himalayas.app/jobs/api/search?q=" + q + "&country=United+States&sort=recent&page=" + str(p)
         job = lambda co, n: {"companyName": co, "companySlug": co.lower(), "guid": f"https://himalayas.app/c/{co}/jobs/{n}",
                              "title": "Support Manager", "locationRestrictions": ["United States"], "description": "<p>Hi</p>",
                              "minSalary": 90000, "maxSalary": 120000, "pubDate": "1790000000"}
         self.use({
-            url("support", 1): {"jobs": [job("Acme", 1)] * 1 + [job("Other", n) for n in range(19)]},
+            url("support", 1): {"jobs": [job("Acme", 1)] * 1 + [job("Other", n) for n in range(19)], "limit": 20, "totalCount": 60},
             url("support", 2): urllib.error.HTTPError(url("support", 2), 429, "Too Many Requests", None, None),
         })
-        ctx = Context(watched={"acme"})
+        ctx = Context(watched={"acme"}, today="2026-09-25")
         recs = READERS["himalayas"]({"name": "Himalayas", "slug": "himalayas", "queries": ["support"]}, ctx)
         self.assertEqual(len(recs), 19)  # Acme skipped; page 2 rate-limited, page 1 kept
         self.assertEqual(recs[0]["location"], "United States; Remote")

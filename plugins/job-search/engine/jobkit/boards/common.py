@@ -13,6 +13,10 @@ class Context:
     # Slugs of boards a reader stopped reading at a cap: a job missing from what it returned may
     # still be listed, so the scan doesn't mark their jobs gone.
     partial: set = field(default_factory=set)
+    # When each board was last read whole (slug -> its last_ok stamp), and today (YYYY-MM-DD): an
+    # aggregator read newest first stops at what the last good read already saw.
+    last_ok: dict = field(default_factory=dict)
+    today: str = ""
 
 
 def watched_names(companies):

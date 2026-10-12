@@ -3,16 +3,15 @@
   "Initech"
  ],
  "counts": {
-  "boards": 29,
+  "boards": 28,
   "dropped_location": 2,
-  "dropped_title": 4790,
+  "dropped_title": 4720,
   "failed": 1,
-  "matched": 29,
-  "new": 19,
-  "read": 4822,
+  "matched": 22,
+  "new": 13,
+  "read": 4745,
   "rejected_by_rule": {
    "location_in_country": 8,
-   "pay": 1,
    "phrases:quota": 1
   }
  },
@@ -33,7 +32,6 @@
   "f5": 2,
   "github": 78,
   "happyco": 9,
-  "himalayas": 77,
   "intuit": 535,
   "lyft": 178,
   "maestroqa": 1,
@@ -192,76 +190,6 @@
    "salary": "",
    "status": "not_a_fit",
    "title": "Customer Care Manager, Boca"
-  },
-  "himalayas-athos-commerce-director-of-customer-support": {
-   "description": "dfabeadee93f",
-   "flag": "",
-   "location": "United States; Remote",
-   "reason": "",
-   "rule": "",
-   "salary": "",
-   "status": "new",
-   "title": "Director of Customer Support"
-  },
-  "himalayas-bob-s-discount-furniture-director-customer-support-operations": {
-   "description": "cf67bde70229",
-   "flag": "",
-   "location": "United States; Remote",
-   "reason": "",
-   "rule": "",
-   "salary": "$115K to $140K",
-   "status": "new",
-   "title": "Director, Customer Support Operations"
-  },
-  "himalayas-boulevard-support-operations-manager": {
-   "description": "7fe9529b8e1f",
-   "flag": "",
-   "location": "United States; Remote",
-   "reason": "",
-   "rule": "",
-   "salary": "",
-   "status": "new",
-   "title": "Support Operations Manager"
-  },
-  "himalayas-instrumentl-customer-support-operations-team-lead": {
-   "description": "aaab2f6b752f",
-   "flag": "",
-   "location": "United States; Remote",
-   "reason": "",
-   "rule": "",
-   "salary": "$95K to $115K",
-   "status": "new",
-   "title": "Customer Support & Operations Team Lead"
-  },
-  "himalayas-new-york-life-insurance-co-corporate-vice-president-manager-agent-support-operations": {
-   "description": "e5ff31edee08",
-   "flag": "",
-   "location": "United States; Remote",
-   "reason": "",
-   "rule": "",
-   "salary": "$133K to $190K",
-   "status": "new",
-   "title": "Corporate Vice President - Manager, Agent Support Operations"
-  },
-  "himalayas-new-york-life-insurance-co-manager-proposal-support-operations": {
-   "description": "10f07a3d699b",
-   "flag": "",
-   "location": "United States; Remote",
-   "reason": "Not a fit: the posted pay tops out at $90K ($70K to $90K), below your $100K line.",
-   "rule": "pay",
-   "salary": "$70K to $90K",
-   "status": "not_a_fit",
-   "title": "Manager, Proposal Support Operations"
-  },
-  "himalayas-obsidian-security-head-of-customer-support": {
-   "description": "c13472786891",
-   "flag": "",
-   "location": "United States; Remote",
-   "reason": "",
-   "rule": "",
-   "salary": "$165K to $199K",
-   "status": "new",
-   "title": "Head of Customer Support"
   },
   "lever-dutch-ebb3eab7-4d59-4144-b814-f572cb590c6f": {
    "description": "5bab70f62f6d",

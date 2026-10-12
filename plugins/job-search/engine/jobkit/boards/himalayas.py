@@ -18,15 +18,31 @@ from ..net import fetch_json, pause
 from ..text import html_to_text
 from .common import make_record
 
-PAGES = 5  # 20 jobs a page; broad searches match hundreds, so cap it
+# Each phrase is read newest first, page by page, until the jobs are older than the last good read
+# (with OVERLAP days to spare), or FIRST_DAYS back the first time. Searches match loosely, so a broad
+# phrase can list thousands: MAX_PAGES (20 jobs a page) stops one that keeps going. Read by relevance,
+# as before 0.12, five pages missed most of what was new, and a short page was taken for the last.
+MAX_PAGES = 25
+OVERLAP = 1
+FIRST_DAYS = 14
+
+
+def _since(company, ctx):
+    today = dt.date.fromisoformat(ctx.today) if ctx.today else dt.datetime.now(dt.timezone.utc).date()
+    try:
+        last = dt.date.fromisoformat((ctx.last_ok.get(company.get("slug", "")) or "")[:10])
+        return last - dt.timedelta(days=OVERLAP)
+    except ValueError:
+        return today - dt.timedelta(days=FIRST_DAYS)
 
 
 def read(company, ctx):
     out, got = [], set()
+    since = _since(company, ctx)
     for q in company.get("queries") or []:
-        for page in range(1, PAGES + 1):
+        for page in range(1, MAX_PAGES + 1):
             url = "https://himalayas.app/jobs/api/search?" + urllib.parse.urlencode(
-                {"q": q, "country": "United States", "page": page})
+                {"q": q, "country": "United States", "sort": "recent", "page": page})
             try:
                 data = fetch_json(url)
             except urllib.error.HTTPError as e:
@@ -34,7 +50,12 @@ def read(company, ctx):
                     return out
                 raise
             jobs = data.get("jobs") or []
+            older = False
             for j in jobs:
+                pub = str(j.get("pubDate") or "")
+                if pub.isdigit() and dt.datetime.fromtimestamp(int(pub), dt.timezone.utc).date() < since:
+                    older = True  # what's left of this phrase, the last good read already saw
+                    continue
                 co = j.get("companyName") or ""
                 if re.sub(r"[^a-z0-9]", "", co.lower()) in ctx.watched:
                     continue
@@ -53,7 +74,10 @@ def read(company, ctx):
                 posted = dt.datetime.fromtimestamp(int(pub), dt.timezone.utc).date().isoformat() if pub.isdigit() else ""
                 out.append(make_record("himalayas", {"name": co, "slug": cslug}, jid, j.get("title"),
                                        "; ".join(locs + ["Remote"]), link, posted, description=desc))
-            if len(jobs) < 20:
+            # A page can hold fewer than 20 with hundreds still to come, so the end is the total it reports.
+            if not jobs or older or page * (data.get("limit") or 20) >= (data.get("totalCount") or 0):
                 break
+            if page == MAX_PAGES:
+                ctx.partial.add(company.get("slug", ""))  # stopped with more to read; the next run starts newest first again
             pause(0.5)
     return out

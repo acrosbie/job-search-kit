@@ -172,12 +172,6 @@ ats = "talentbrew"
 host = "jobs.intuit.com"
 
 [[company]]
-name = "Himalayas"
-slug = "himalayas"
-ats = "himalayas"
-queries = ["support operations", "head of support"]
-
-[[company]]
 name = "No Such Board"
 slug = "no-such-board"
 ats = "greenhouse"

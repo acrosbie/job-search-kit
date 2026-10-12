@@ -1,5 +1,7 @@
 """The engine on real public job boards, replayed from tests/recorded/sample (29 boards recorded
-live on 2026-09-24), for the made-up New York job seeker in tests/fixtures/sample-folder.
+live on 2026-09-24), for the made-up New York job seeker in tests/fixtures/sample-folder. Himalayas
+left the sample in 0.12, when it began to be read newest first back to the last good read: its
+recording, made by relevance, no longer applies (test_boards covers it).
 
 The expected results in tests/fixtures/sample-expected.json were produced by the engine after it
 matched the reference scanner with 0 differences over 590 boards (docs/phase-1/equivalence.md).
@@ -84,7 +86,7 @@ class RecordedSampleTest(unittest.TestCase):
 
     def test_every_board_system_answered(self):
         systems = {k.split("-")[0] if not k.startswith("careers-api") else "careers-api" for k in self.got["postings"]}
-        self.assertGreaterEqual(self.got["counts"]["boards"], 29)
+        self.assertGreaterEqual(self.got["counts"]["boards"], 28)
         # Not every system has a match for this job seeker, but the ones that do must keep matching.
         self.assertEqual(systems, {k.split("-")[0] if not k.startswith("careers-api") else "careers-api"
                                    for k in self.want["postings"]})

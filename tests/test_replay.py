@@ -17,7 +17,7 @@ from jobkit.errors import Refused
 from tests.test_recorded import replay_sample
 
 CLOCK = Clock("America/New_York", fixed=dt.datetime(2026, 9, 25, 15, 0, tzinfo=dt.timezone.utc))
-INSTRUMENTL = "himalayas-instrumentl-customer-support-operations-"
+HAPPYCO = "lever-happyco-"
 DUTCH = "lever-dutch-ebb3eab7-4d59-4144-b814-f572cb590c6f"
 
 
@@ -40,15 +40,15 @@ class ScannedBase(unittest.TestCase):
 
 class ReplayTest(ScannedBase):
     def test_a_higher_pay_line(self):
-        rep = replay.settings_change(self.root, CLOCK, sets=[("pay.reject_if_top_below", "120000")])
-        self.assertEqual([f["key"] for f in rep["flips"]], [self.key(INSTRUMENTL)])  # $95K to $115K
+        rep = replay.settings_change(self.root, CLOCK, sets=[("pay.reject_if_top_below", "125000")])
+        self.assertEqual([f["key"] for f in rep["flips"]], [self.key(HAPPYCO)])  # $90K to $120K
         flip = rep["flips"][0]
         self.assertEqual((flip["before"], flip["after"]), ("passes", "turned away (pay)"))
-        self.assertIn("$115K", flip["reason"])
+        self.assertIn("$120K", flip["reason"])
         self.assertEqual(rep["rejected_after"], rep["rejected_before"] + 1)
         self.assertEqual(rep["wanted"], [])  # nobody has decided it yet
         on_disk = self.folder.read_json(self.folder.replay_json)
-        self.assertEqual(on_disk["change"]["set"], [["pay.reject_if_top_below", 120000]])
+        self.assertEqual(on_disk["change"]["set"], [["pay.reject_if_top_below", 125000]])
 
     def test_a_new_place_lets_a_job_through(self):
         hybrid = configure.show(self.root)["places"]["hybrid_ok"] + "|oakland"
@@ -64,7 +64,7 @@ class ReplayTest(ScannedBase):
 
 
 class GuardTest(ScannedBase):
-    def save(self, value="120000", **kw):
+    def save(self, value="125000", **kw):
         return configure.set_value(self.root, "pay.reject_if_top_below", value, clock=CLOCK, **kw)
 
     def test_no_save_without_its_replay(self):
@@ -76,18 +76,18 @@ class GuardTest(ScannedBase):
         self.assertEqual(configure.show(self.root)["pay"]["reject_if_top_below"], 100000)
 
     def test_the_users_words_and_an_explicit_yes_to_wanted_jobs(self):
-        verdicts.mark(self.root, self.key(INSTRUMENTL), "worth_applying", "claude", clock=CLOCK)
-        rep = replay.settings_change(self.root, CLOCK, sets=[("pay.reject_if_top_below", "120000")])
-        self.assertEqual(rep["wanted"], [self.key(INSTRUMENTL)])
+        verdicts.mark(self.root, self.key(HAPPYCO), "worth_applying", "claude", clock=CLOCK)
+        rep = replay.settings_change(self.root, CLOCK, sets=[("pay.reject_if_top_below", "125000")])
+        self.assertEqual(rep["wanted"], [self.key(HAPPYCO)])
         with self.assertRaises(Refused) as no_yes:
-            self.save(why="under $120K isn't worth it")
-        self.assertIn("Instrumentl", str(no_yes.exception))
+            self.save(why="under $125K isn't worth it")
+        self.assertIn("HappyCo", str(no_yes.exception))
         with self.assertRaises(Refused):  # the user's words are part of the record
-            self.save(accept=[self.key(INSTRUMENTL)])
-        self.assertEqual(self.save(why="under $120K isn't worth it", accept=[self.key(INSTRUMENTL)]), (100000, 120000))
+            self.save(accept=[self.key(HAPPYCO)])
+        self.assertEqual(self.save(why="under $125K isn't worth it", accept=[self.key(HAPPYCO)]), (100000, 125000))
         row = self.folder.read_changes()[-1]
-        self.assertEqual((row["what"], row["kind"], row["was"], row["now"]), ("setting pay.reject_if_top_below", "changed", 100000, 120000))
-        self.assertEqual((row["why"], row["accepted_flips"], row["replay"]["flips"]), ("under $120K isn't worth it", [self.key(INSTRUMENTL)], 1))
+        self.assertEqual((row["what"], row["kind"], row["was"], row["now"]), ("setting pay.reject_if_top_below", "changed", 100000, 125000))
+        self.assertEqual((row["why"], row["accepted_flips"], row["replay"]["flips"]), ("under $125K isn't worth it", [self.key(HAPPYCO)], 1))
 
     def test_a_replay_from_another_day_is_stale(self):
         replay.settings_change(self.root, CLOCK, sets=[("pay.reject_if_top_below", "120000")])
@@ -113,7 +113,7 @@ class GuardTest(ScannedBase):
         with contextlib.redirect_stdout(io.StringIO()) as out:
             code = cli.main(["replay", "--folder", self.root, "--set", "pay.reject_if_top_below", "125000"])
         self.assertEqual(code, 0)
-        self.assertEqual(len(json.loads(out.getvalue())["flips"]), 2)  # HappyCo tops out at $120K too
+        self.assertEqual(len(json.loads(out.getvalue())["flips"]), 1)  # HappyCo tops out at $120K
         with contextlib.redirect_stderr(io.StringIO()) as err:
             self.assertEqual(cli.main(["settings", "set", "--folder", self.root, "pay.reject_if_top_below", "130000"]), 3)
         self.assertIn("replay", err.getvalue())
@@ -126,7 +126,7 @@ class SetupTest(ScannedBase):
         configure.set_value(self.root, "titles.level", "\\bdirector\\b", setup=True)
         configure.phrase_reject(self.root, "quota", "quota|book of business", setup=True)
         self.assertEqual(self.folder.read_changes(), [])
-        verdicts.mark(self.root, self.key(INSTRUMENTL), "skipped", "user", clock=CLOCK)  # the first triage together
+        verdicts.mark(self.root, self.key(HAPPYCO), "skipped", "user", clock=CLOCK)  # the first triage together
         with self.assertRaises(Refused) as over:
             configure.set_value(self.root, "places.hybrid_ok", "new york", setup=True)
         self.assertIn("setup is over", str(over.exception))

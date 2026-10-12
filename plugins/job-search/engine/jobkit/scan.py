@@ -49,7 +49,8 @@ def run(root, only=None, clock=None, workers=WORKERS):
     folder = store.Folder(root)
     state = folder.load_postings()
     postings, boards = state["postings"], state["boards"]
-    ctx = Context(workday=s.workday, watched=watched_names(companies))
+    ctx = Context(workday=s.workday, watched=watched_names(companies), today=today,
+                  last_ok={k: b.get("last_ok", "") for k, b in boards.items() if not b.get("error")})
 
     queue, manual = [], []
     for c in companies:
