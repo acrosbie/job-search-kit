@@ -114,7 +114,7 @@ def _closing_today(root, clock):
     return out
 
 
-def start(root, clock, expect=""):
+def start(root, clock, expect="", plugin_version=""):
     """Everything catching up needs, and what to do next, in order."""
     out = {"engine": {"version": __version__, "fingerprint": __fingerprint__,
                       "current": (not expect) or expect == __fingerprint__},
@@ -122,7 +122,13 @@ def start(root, clock, expect=""):
            "folder_ready": os.path.exists(os.path.join(root, "profile", "settings.toml"))}
     nxt = []
     if expect and expect != __fingerprint__:
-        nxt.append({"do": "refresh_engine", "why": "the folder's engine isn't the plugin's; copy it, then run start again"})
+        # An older plugin never overwrites a newer copy: an account whose plugin stopped syncing
+        # would otherwise take the folder back a version at every conversation.
+        if plugin_version and news._v(plugin_version) < news._v(__version__):
+            nxt.append({"do": "plugin_behind", "why": "the plugin in Claude is older than the folder's engine; keep "
+                        "the folder's", "plugin_version": plugin_version, "folder_version": __version__})
+        else:
+            nxt.append({"do": "refresh_engine", "why": "the folder's engine isn't the plugin's; copy it, then run start again"})
     if not out["folder_ready"]:
         nxt.append({"do": "offer_setup", "why": "this folder hasn't been set up yet"})
         out["next"] = nxt

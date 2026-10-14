@@ -22,14 +22,14 @@ Use `python3`; on Windows, `python`. Python 3.10 or later. Before a scan, if you
 
 ## 3. The engine's copy in the folder
 
-The engine runs from `<folder>/.kit/engine/`. Read the `__fingerprint__` line of `<folder>/.kit/engine/jobkit/__init__.py` and of `${CLAUDE_PLUGIN_ROOT}/engine/jobkit/__init__.py` with your file tools. If the copy is missing or they differ, copy **every file** under `${CLAUDE_PLUGIN_ROOT}/engine/` into `<folder>/.kit/engine/`, keeping the paths (`run.py`, `README.md`, `jobkit/` with `boards/` and `_vendor/tomli/`, `page/`, `starter/`). Overwrite; never delete. In Code mode, run `${CLAUDE_PLUGIN_ROOT}/engine/run.py` directly instead.
+The engine runs from `<folder>/.kit/engine/`. Read the `__version__` and `__fingerprint__` lines of `<folder>/.kit/engine/jobkit/__init__.py` and of `${CLAUDE_PLUGIN_ROOT}/engine/jobkit/__init__.py` with your file tools. If the copy is missing, or the fingerprints differ and the plugin's version is the same or later, copy **every file** under `${CLAUDE_PLUGIN_ROOT}/engine/` into `<folder>/.kit/engine/`, keeping the paths (`run.py`, `README.md`, `jobkit/` with `boards/` and `_vendor/tomli/`, `page/`, `starter/`). Overwrite; never delete. If the folder's version is later, don't copy: run the folder's own. In Code mode, run `${CLAUDE_PLUGIN_ROOT}/engine/run.py` directly instead.
 
 **Never write the user's records by hand.** If the engine can't run, say what you'd record and record it next time.
 
 ## 4. Start
 
 ```
-python3 "<folder>/.kit/engine/run.py" start --expect <the plugin's fingerprint> --folder "<folder>"
+python3 "<folder>/.kit/engine/run.py" start --expect <the plugin's fingerprint> --plugin-version <the plugin's version> --folder "<folder>"
 ```
 
 Quote every path. The answer's `next` lists what only you can do now, in order. Do each, in a line or two at most: the user asked for something else.
@@ -37,6 +37,7 @@ Quote every path. The answer's `next` lists what only you can do now, in order. 
 | `next` | What to do |
 |---|---|
 | `refresh_engine` | Copy the engine (step 3), then run `start` again |
+| `plugin_behind` | Don't copy. Once, in one line, after what they asked: "Your folder has a newer version of the kit than Claude does, so I'm using your folder's. Updating the job-search plugin in Claude's settings brings them back in step." |
 | `tell_about_records` | For each of `problems`, its `fix`, in plain words. Ask the user what only they can say |
 | `read_clicks` | Record their clicks on the jobs page: `jobs-page.md`, "Reading the user's clicks" |
 | `publish_page`, `republish_page`, `push_page` | `jobs-page.md`: "Making the page", or "Keeping it current". Quietly |

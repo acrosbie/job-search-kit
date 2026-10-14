@@ -27,6 +27,20 @@ class StartTest(TrackBase):
         self.assertTrue(out["engine"]["current"])
         self.assertNotIn("refresh_engine", dos(out))
 
+    def test_an_older_plugin_never_takes_the_folder_back(self):
+        # An account's plugin stopped syncing at 0.8.0 while the folder ran 0.11.1 (2026-10-12).
+        from jobkit import __version__
+        older = start.start(self.root, on(24), expect="0" * 16, plugin_version="0.8.0")
+        self.assertEqual(dos(older)[0], "plugin_behind")
+        self.assertNotIn("refresh_engine", dos(older))
+        self.assertEqual(older["next"][0]["folder_version"], __version__)
+        for same_or_newer in (__version__, "99.0.0"):
+            self.assertEqual(dos(start.start(self.root, on(24), expect="0" * 16, plugin_version=same_or_newer))[0],
+                             "refresh_engine")
+        with contextlib.redirect_stdout(io.StringIO()) as buf:
+            cli.main(["start", "--folder", self.root, "--expect", "0" * 16, "--plugin-version", "0.8.0"])
+        self.assertEqual(dos(json.loads(buf.getvalue()))[0], "plugin_behind")
+
     def test_a_new_user_gets_a_jobs_page_and_one_who_has_one_has_their_clicks_read(self):
         self.assertIn("publish_page", dos(start.start(self.root, on(24))))
         configure.set_value(self.root, "page.url", "https://claude.ai/artifact/x")

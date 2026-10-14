@@ -73,7 +73,7 @@ def cmd_scan(a):
 
 
 def cmd_start(a):
-    _out(starting.start(a.folder, _clock(a.folder), expect=a.expect or ""))
+    _out(starting.start(a.folder, _clock(a.folder), expect=a.expect or "", plugin_version=a.plugin_version or ""))
     return 0
 
 
@@ -413,6 +413,7 @@ def parser():
     s = sub.add_parser("start", help="the start of every conversation: what's wrong, what's due, and what to do next")
     s.add_argument("--folder", required=True)
     s.add_argument("--expect", metavar="FINGERPRINT", help="the plugin's engine fingerprint, to say whether this copy is current")
+    s.add_argument("--plugin-version", metavar="X.Y.Z", help="the plugin's engine version: an older one never replaces this copy")
     s.set_defaults(func=cmd_start)
 
     s = sub.add_parser("doctor", help="every check in full, for when something is wrong")
