@@ -16,6 +16,9 @@ NEWS = {
               "Each job worth a look is written up for you.",
     "0.11.1": "Your jobs page lists each top pick once and says how many jobs were screened out, and a cancelled "
               "interview can be taken off your calendar.",
+    "0.12.0": "Tapping a job on your jobs page keeps your place, and the morning check now goes through the new jobs "
+              "and updates your page. Roles you'd take without managing anyone, such as a product manager in your "
+              "field, can now reach you: say \"change my rules\" to add them.",
 }
 
 
