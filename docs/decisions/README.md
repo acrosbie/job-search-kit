@@ -7,7 +7,7 @@ Each file records one decision: what was decided, the evidence, what it changes 
 | [1](0001-where-fetching-runs.md) | The engine fetches job boards inside Cowork, in the workspace that can see the user's folder; setup turns network access on | accepted |
 | [2](0002-how-the-jobs-page-works.md) | The jobs page is a Claude artifact whose buttons save; a plain page in the folder is the backup | accepted |
 | [3](0003-how-checks-are-scheduled.md) | Periodic checks are scheduled tasks with the folder attached, and run the check themselves | accepted |
-| [4](0004-contacts-and-referrals.md) | Contacts are records the user gives; the kit finds who they know at each company, keeps the referral window and counts outreach | proposed |
+| [4](0004-contacts-and-referrals.md) | Contacts are records the user gives; the kit finds who they know at each company, keeps the referral window and counts outreach | accepted |
 
 The first three come from the phase 0 platform check (`plugins/platform-check`, run with `docs/platform-check/how-to-run.md`) on 2026-09-24, on Windows only.
 

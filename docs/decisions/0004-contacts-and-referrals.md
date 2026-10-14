@@ -1,6 +1,6 @@
 # 4. Contacts, referrals and outreach
 
-- **Status:** proposed 2026-10-09. Needs answers to the questions at the end before it's built.
+- **Status:** accepted 2026-10-14. The user answered the four questions below.
 - **Date:** 2026-10-09
 - **Evidence:** the search the kit was built from (phase 6), as of 2026-10-09, and its own outreach playbook.
 
@@ -47,17 +47,19 @@ Contacts are other people's names and jobs. The kit keeps only what the user giv
 - **New:** `data/contacts.json`; `jobkit/contacts.py`; commands `contact add | touch | list | match` and `import-connections FILE`; `start` steps `contact_due` and `referral_window`; the page's People section; the `network` skill; `[outreach]` settings.
 - **Changed:** an application's contact becomes a link; `due`'s routes look at contacts; triage offers the referral route first; the weekly review counts outreach.
 
-## Questions for the reviewer
+## Questions, answered 2026-10-14
 
-1. **Email addresses from the export:** proposed not to keep them unless the user adds one. Agreed?
-2. **Targets:** count against the playbook's 2 messages a day by default, or only once the user sets a target?
-3. **Who to search for:** the "find a person" search derives the field from the role's title, so "Customer Support Systems Administrator" searches for systems administrators. The playbook says to search for the support or CX leader by real titles ("Director of Customer Support", "Senior Manager, Customer Support"), never "Support Technology". Proposed: the field pack names the leaders' titles, and the search uses those. Agreed?
-4. **A recruiter who writes first, with no posting:** a contact and a lead, with the playbook's scam check (the sending domain) as a flag. In this decision, or a separate one?
+1. **Email addresses from the export:** not kept. An email is saved only when the user adds one, such as an interviewer's after a round.
+2. **Targets:** counted against the playbook's 2 messages a day from day one; the user can change or turn off the number.
+3. **Who to search for:** the "find a person" search derives the field from the role's title, so "Customer Support Systems Administrator" searches for systems administrators. The answer: it depends on the job's function, and it is **generalized, not support-specific**. Each field pack names the titles of that field's leaders (for support, "Director of Customer Support", "Senior Manager, Customer Support"), and the search uses those; a field without them falls back to the head of the job's own function.
+4. **A recruiter who writes first, with no posting:** in this decision. The pasted message makes a contact and a lead, with the playbook's scam check (the sending domain first) as a flag, and Claude drafts a reply the user sends.
+
+Evidence the user added on 2026-10-14: still 1 contact on 60 applications. The one referral (BCM One) moved fastest, with two more rounds booked the same day as the screen. A thank-you to an interviewer (Scentbird) had to go through the recruiter because the interviewer's email was never captured.
 
 ## Build order
 
-1. Contact records, the move of existing contact names, and the connections import.
-2. Who you know there, and the referral window.
+1. Contact records and the move of existing contact names, with interviewers saved as contacts when a round is recorded (source: interview) and the thank-you as a touch. Then the connections import.
+2. Who you know there, and the referral window (built on the "on hold until" list that replaces the cooldown rule's Not a fit).
 3. The `network` skill.
 4. The page's People section.
 5. Outreach targets and counts.
