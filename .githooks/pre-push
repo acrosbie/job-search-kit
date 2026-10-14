@@ -1,0 +1,18 @@
+#!/bin/sh
+# Refuses a push to main that changes the plugin without moving its version (tools/check_release.py):
+# users' Claude takes a new plugin when the version moves, and their folder's engine follows it.
+# Turn it on once per clone:  git config core.hooksPath .githooks
+zero=0000000000000000000000000000000000000000
+PY=python3
+python3 -c 'import sys' >/dev/null 2>&1 || PY=python  # on Windows, python3 can be a shortcut that runs nothing
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ "$remote_ref" = "refs/heads/main" ] || continue
+  [ "$local_sha" = "$zero" ] && continue
+  [ "$remote_sha" = "$zero" ] && continue
+  if ! git cat-file -e "$remote_sha^{commit}" 2>/dev/null; then
+    echo "push refused: the remote's main ($remote_sha) isn't here; fetch first" >&2
+    exit 1
+  fi
+  "$PY" -B tools/check_release.py "$remote_sha" "$local_sha" || exit 1
+done
+exit 0

@@ -53,6 +53,24 @@ class VersionTest(unittest.TestCase):
         engine = re.search(r'__version__ = "([^"]+)"', read(os.path.join(ENGINE, "jobkit", "__init__.py"))).group(1)
         self.assertEqual(engine, plugin)
 
+    def test_each_version_says_whats_new(self):
+        import sys
+        sys.path.insert(0, ENGINE)
+        from jobkit import __version__, news
+        self.assertIn(__version__, news.NEWS, "add a line for this version to engine/jobkit/news.py")
+
+    def test_a_push_that_changes_the_plugin_moves_its_version(self):
+        # 2026-10-12: eight commits sat under 0.11.1 and never reached the user (tools/check_release.py).
+        import sys
+        sys.path.insert(0, os.path.join(REPO, "tools"))
+        from check_release import problems
+        plugin = ["plugins/job-search/engine/page/jobs-page.html", "tests/test_page_browser.py"]
+        self.assertEqual(len(problems("0.11.1", "0.11.1", plugin)), 1)
+        self.assertEqual(problems("0.11.1", "0.12.0", plugin), [])
+        self.assertIn("goes back", problems("0.12.0", "0.11.1", plugin)[0])
+        self.assertEqual(problems("0.11.1", "0.11.1", ["docs/decisions/README.md", "tests/test_start.py"]), [])
+        self.assertEqual(problems("0.9.0", "0.10.0", plugin), [])  # by number, not as text
+
     def test_the_recorded_fingerprint_is_the_files(self):
         # Skills refresh a user's copy of the engine when its fingerprint differs from the plugin's, so
         # any change to an engine file must change the recorded one. Line endings don't count.
