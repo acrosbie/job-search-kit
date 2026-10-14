@@ -82,13 +82,16 @@ class ScheduleTest(ScanBase):
 
     def test_the_windows_task(self):
         from jobkit import wintask
-        xml = wintask.task_xml(r"C:\Users\Sam\Job Search", "06:45", weekdays=True, today=dt.date(2026, 10, 13))
+        # A path of the system the tests run on: the task is only ever made on Windows, and elsewhere
+        # a Windows path reads as a relative one.
+        folder = r"C:\Users\Sam\Job Search" if os.name == "nt" else "/home/sam/Job Search"
+        xml = wintask.task_xml(folder, "06:45", weekdays=True, today=dt.date(2026, 10, 13))
         self.assertIn("<StartBoundary>2026-10-13T06:45:00</StartBoundary>", xml)
         self.assertIn("<Monday />", xml)
         self.assertNotIn("<Saturday />", xml)
         self.assertIn("<StartWhenAvailable>true</StartWhenAvailable>", xml)  # catches up after the computer sleeps
         self.assertIn("<LogonType>InteractiveToken</LogonType>", xml)       # no password kept
-        self.assertIn('scan --folder "C:\\Users\\Sam\\Job Search" --out', xml)
+        self.assertIn(f'scan --folder "{folder}" --out', xml)
         self.assertIn("scan-latest.json", xml)
         self.assertIn("<ScheduleByDay>", wintask.task_xml(r"C:\Sam", "07:00", today=dt.date(2026, 10, 13)))
         with self.assertRaises(configure.Refused):
