@@ -567,6 +567,14 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
   }
 
   // An interview: when, who, and (opened from the folder) its prep sheet and calendar file.
+  var ASKER = { recruiter: "recruiter", hiring_manager: "hiring manager", head_of_function: "head of the team",
+    executive: "executive", peer: "a peer", panel: "a panel", other: "" };
+  function whoLine(e) {
+    var who = e["with"] ? "with " + esc(e["with"]) : "";
+    var asker = ASKER[e.asker] || "";
+    return who && asker ? who + " (" + asker + ")" : who || (asker ? "with " + asker : "");
+  }
+
   function comingCard(e) {
     var when = whenText(e.on);
     var rel = e.past ? "" : e.days === 0 ? "today" : e.days === 1 ? "tomorrow" : "in " + e.days + " days";
@@ -579,7 +587,8 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
       stamp([e.stage === "screen" ? "Screen" : "Interview", e.past ? "s-closing" : "s-screen"]) +
       '<span class="pay">' + when + (rel ? " · " + rel : "") + "</span></div>" +
       "<h3>" + esc(e.company) + ", " + esc(e.role) + "</h3>" +
-      '<p class="where">' + [kind, e["with"] ? "with " + esc(e["with"]) : "", e.minutes && e.on.length > 10 ? e.minutes + " min" : ""].filter(Boolean).join(" · ") + "</p>" +
+      '<p class="where">' + [kind, whoLine(e), e.minutes && e.on.length > 10 ? e.minutes + " min" : ""].filter(Boolean).join(" · ") + "</p>" +
+      (e["for"] ? '<p class="row-note">For: ' + esc(e["for"]) + "</p>" : "") +
       (e.past ? '<p class="flag">How did it go? Tell Claude “how did my ' + esc(e.company) + " " + esc(e.stage || "interview") + " go”.</p>"
         : (e.prep ? "" : '<p class="muted">No prep sheet yet. Say “prep me for my ' + esc(e.company) + " " + esc(e.stage || "interview") + "”.</p>")) +
       (links.length ? '<p class="actions">' + links.join(" · ") + "</p>" : "") + "</article>";
@@ -694,6 +703,10 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
       '<div class="app-main"><span class="app-name"><b>' + esc(a.company) + "</b>, " +
       (href(a.url) ? '<a href="' + href(a.url) + '" target="_blank" rel="noopener">' + esc(a.role) + "</a>" : esc(a.role)) + "</span>" +
       '<span class="app-meta">' + meta + "</span>" +
+      (a.gone && live ? '<span class="row-note flag">Posting pulled on ' + day(a.gone) + ". " +
+        (location.protocol === "file:" && a.saved_copy ? '<a href="' + esc(a.saved_copy) + '">Your saved copy</a> is in your folder. '
+          : "Your saved copy is in your folder; ask Claude for it. ") +
+        "Companies often take a posting down once they have enough people in process; on its own it doesn't end yours.</span>" : "") +
       (a.status === "applied" ? clockBar(daysSince(a.applied_date, a.days), a.closes_on) : "") + "</div>" +
       '<div class="app-side">' + stamp(st) + (live && !mine ? button("menu", "app", a.id, "mini", "Update", a.num) : "") + "</div>" +
       '<div class="more">' + saidLines(a.id) + menu + (mine && open.action !== "menu" ? panel("app", a.id, open.action) : "") + "</div></li>";
@@ -766,6 +779,7 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
     var mineCount = pending().length;
 
     var coming = data.coming_up || [];
+    var expected = data.expected || [];
     var parts = [["yours", "Your choices", mineCount], ["coming", "Coming up", coming.length], ["todo", "To do", todo.length], ["look", "Worth a look", look.length],
                  ["hold", "On hold", held.length], ["apps", "Applications", apps.length], ["new", "New", fresh.length + (data.more_waiting || 0)], ["out", "Screened out", Math.max(screened.length, data.screened_total || 0)]];
     jump.hidden = false;
@@ -776,11 +790,15 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
     }).join("");
 
     var html = [yoursSection(), focusSection()];
-    if (coming.length) {
+    if (coming.length || expected.length) {
       html.push('<section id="s-coming" aria-labelledby="h-coming">' + head("coming", "Coming up", coming.length,
-        "Your interviews, soonest first. Say “prep me for my " + esc(coming[0].company) + " " + esc(coming[0].stage || "interview") +
-        "” to Claude for a prep sheet, or “how did it go” afterwards.") +
-        '<div class="stack">' + coming.map(comingCard).join("") + "</div></section>");
+        coming.length ? "Your interviews, soonest first. Say “prep me for my " + esc(coming[0].company) + " " + esc(coming[0].stage || "interview") +
+        "” to Claude for a prep sheet, or “how did it go” afterwards." : "") +
+        '<div class="stack">' + coming.map(comingCard).join("") + "</div>" +
+        (expected.length ? '<p class="lede">Still to come, no day yet:</p><ul class="rows">' + expected.map(function (x) {
+          return '<li class="row"><div class="row-main"><span class="row-title">' + esc(x.company) + ": " + esc(x["for"]) + "</span>" +
+            '<span class="row-meta">' + [whoLine(x), "noted " + day(x.noted)].filter(Boolean).join(" · ") + "</span></div></li>";
+        }).join("") + "</ul>" : "") + "</section>");
     }
     html.push('<section id="s-todo" aria-labelledby="h-todo">' + head("todo", "To do", todo.length,
       todo.length ? "Follow-ups that are due. With no reply after " + ((data.tracking || {}).presume_after_days || 21) + " days, an application closes as no reply; a reply after that still counts." : "") +
@@ -853,7 +871,7 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
     var e = f.next_interview;
     if (e) {
       blocks.push('<div class="focus-block"><span class="k">Next interview</span><p><b>' + esc(e.company) + "</b>, " + esc(e.role) +
-        '<span class="sub">' + whenText(e.on) + (e["with"] ? " · with " + esc(e["with"]) : "") + " · " +
+        '<span class="sub">' + whenText(e.on) + (whoLine(e) ? " · " + whoLine(e) : "") + (e["for"] ? " · " + esc(e["for"]) : "") + " · " +
         (e.prep ? "prep sheet ready" : "no prep sheet yet") + "</span></p></div>");
     }
     if (f.actions && f.actions.length) {

@@ -142,6 +142,7 @@ def start(root, clock, expect="", plugin_version=""):
     problems, facts = checks(root)
     out["records"] = {**facts, "problems": len(problems)}
 
+    pulled = _pulled(root, clock)
     released = verdicts.release_holds(root, clock)
     held = verdicts.hold_candidates(root, clock)
     try:  # so whether the page is behind is judged on the records as they are now
@@ -155,7 +156,10 @@ def start(root, clock, expect="", plugin_version=""):
                    "scheduled": s.schedule.get("scan", ""), "fresh": schedule.fresh(last_ok, clock)}
     ready, review_due = schedule.review_state(root, s, clock)
     soon = interviews.soon(root, clock)
+    no_time = [x for x in interviews.listing(root, clock)
+               if not x["past"] and x["days"] <= interviews.TIME_DAYS and x["time_unknown"]]
     debrief = interviews.debrief_due(root, clock)
+    thanks = interviews.thanks_due(root, clock)
     stale = resume.stale(root)
     closing = _closing_today(root, clock)
     apps = track.load(root)
@@ -179,6 +183,9 @@ def start(root, clock, expect="", plugin_version=""):
                 nxt.append({"do": "push_page", "why": "the page doesn't yet show what the folder holds"})
         else:
             nxt.append({"do": "publish_page", "why": "the user has no jobs page in their Claude account yet"})
+    if pulled:
+        nxt.append({"do": "say_posting_pulled", "why": "a posting taken down while the user is in process there",
+                    "applications": pulled})
     if released:
         nxt.append({"do": "say_holds_over", "why": "the wait at these companies ended; they're back with your "
                     "other jobs", "jobs": released})
@@ -195,12 +202,15 @@ def start(root, clock, expect="", plugin_version=""):
                     "status": out["scan"]["last_status"], "last_good_at": out["scan"]["last_good_at"]})
     if ready or review_due:
         nxt.append({"do": "offer_review", "why": "the weekly review is ready" if ready else "a week since the last review"})
+    for x in no_time:
+        nxt.append({"do": "ask_interview_time", "why": "an interview this week with no time yet", "interview": _short(x)})
     for x in soon:
-        if x.get("time_unknown"):
-            nxt.append({"do": "ask_interview_time", "why": "an interview soon with no time yet", "interview": _short(x)})
         nxt.append({"do": "offer_prep", "why": "an interview in the next few days", "interview": _short(x)})
     for x in debrief:
         nxt.append({"do": "offer_debrief", "why": "an interview held and not gone through", "interview": _short(x)})
+    for x in thanks:
+        nxt.append({"do": "ask_thank_you", "why": "a round held in the last few days, its thank-you not recorded",
+                    "interview": x})
     if open_no_channel:
         nxt.append({"do": "ask_channels", "why": "how these were sent isn't known, so outcomes can't be counted by it",
                     "applications": [track.brief(a) for a in open_no_channel[:ASK_CHANNELS]],
@@ -214,8 +224,28 @@ def start(root, clock, expect="", plugin_version=""):
     return out
 
 
+def _pulled(root, clock):
+    """Open applications whose posting left its board in the last week, each said once (data/kit.json)."""
+    folder = store.Folder(root)
+    postings = folder.load_postings()["postings"]
+    path = os.path.join(folder.data, "kit.json")
+    kit = folder.read_json(path) or {}
+    said = set(kit.get("pulled_said", []))
+    since = (dt.date.fromisoformat(clock.today()) - dt.timedelta(days=7)).isoformat()
+    out = []
+    for a in track.load(root):
+        p = postings.get(a.get("key") or "")
+        if a["status"] in OPEN and p and (p.get("gone") or "") >= since and a["id"] not in said:
+            out.append({**track.brief(a), "gone": p["gone"], "num": p.get("num"),
+                        "saved_copy": f"data/postings/{p.get('file') or a['key'] + '.md'}"})
+    if out:
+        folder.write_json(path, {**kit, "pulled_said": sorted(said | {x["id"] for x in out})})
+    return out
+
+
 def _short(x):
-    return {k: x.get(k) for k in ("application", "num", "company", "role", "on", "stage", "with", "days", "time_unknown")}
+    return {k: x.get(k) for k in ("application", "num", "company", "role", "on", "stage", "with", "days", "time_unknown",
+                                  "asker", "for")}
 
 
 def doctor(root, clock, probe=False):

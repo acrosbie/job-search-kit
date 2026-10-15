@@ -67,6 +67,8 @@ document.getElementById("f").addEventListener("load", function () {
     out.hold_rows = n("#s-hold li.row");
     out.hold_note = (d.querySelector("#s-hold .row-note") || {}).textContent || "";
     out.hold_jump = n('#jump [data-jump="hold"]');
+    out.coming_text = (d.querySelector("#s-coming") || {}).textContent || "";
+    out.today_text = (d.querySelector("#s-today") || {}).textContent || "";
   } catch (e) { out.error = String(e); }
   document.getElementById("out").textContent = JSON.stringify(out);
 });
@@ -125,7 +127,9 @@ class BrowserTest(ScanBase):
         track.apply(self.root, on(2), company="Initech", role="Head of Support", date="2026-09-02", channel="other",
                     top_pick=True)  # a top pick with nobody to follow up with, by day 8
         from jobkit import interviews
-        interviews.schedule(self.root, on(10), "greenhouse-acme-4", "2026-09-14", status="screen")
+        interviews.schedule(self.root, on(10), "greenhouse-acme-4", "2026-09-14", status="screen", who="Dana",
+                            asker="recruiter", purpose="a first screen")
+        interviews.expect(self.root, on(10), "greenhouse-acme-4", "final round with the CEO", asker="executive")
         verdicts.mark(self.root, "greenhouse-acme-1", "worth_applying", "claude", note="Tailor: lead with the team",
                       clock=on(10), summary={"headline": "A close match, near home.",
                                              "fits": ["You'd lead the Denver team."], "tailor": ["Lead with the team."]})
@@ -161,6 +165,10 @@ class BrowserTest(ScanBase):
         self.assertEqual(got["contact_form"], 1)
         self.assertEqual((got["hold_rows"], got["hold_jump"]), (1, 1))  # on hold, apart from the rejects
         self.assertIn("On hold until", got["hold_note"])
+        self.assertIn("with Dana (recruiter)", got["coming_text"])
+        self.assertIn("For: a first screen", got["coming_text"])
+        self.assertIn("final round with the CEO", got["coming_text"])  # still to come, no day yet
+        self.assertIn("a first screen", got["today_text"])
 
     def test_a_click_lands_on_the_job_and_nothing_moves(self):
         """Found in real use (2026-10-12): every click moved the job up into Your choices and scrolled the

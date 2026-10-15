@@ -170,6 +170,35 @@ class CheckTest(InterviewBase):
         bad = {it["text"][:20]: [p["kind"] for p in it["problems"]] for it in out["items"] if not it["ok"]}
         self.assertEqual(bad, {"I led a team of 8 th": ["number"], "No SOX: we're privat": ["no_source"]})
 
+    def check_as(self, name, body):
+        path = os.path.join(self.root, name)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(body)
+        return interviews.check(self.root, path)
+
+    def test_a_cheat_sheet_is_one_phone_scroll(self):
+        # Found in real use (2026-10-14): a hand-made cheat sheet for one round ran to 10 KB.
+        line = "I run a month-end close cut from 10 business days to 6.\nfrom: Cut the month-end close from 10 business days to 6\n"
+        short = self.check_as("2026-10-16 interview cheat sheet.md", "## Opener\n" + line + "## Ask them\n- How is success measured?\n")
+        self.assertTrue(short["ready"])
+        self.assertEqual(short["length"]["max"], interviews.CHEAT_LINES)
+        long = self.check_as("2026-10-16 interview cheat sheet.md", "## Opener\n" + line * 70)
+        self.assertEqual((long["flagged"], long["length"]["lines"], long["ready"]), (0, 71, False))
+        self.assertTrue(self.check("## Opener\n" + line * 70)["ready"])  # a prep sheet can be long
+
+    def test_a_company_brief_cites_every_line(self):
+        out = self.check_as("company.md", "# Acme\n\n## What they do\n"
+                            "- Support software for 4,000 teams (https://acme.example/about, 2026)\n"
+                            "- Bought Globex last spring\n")
+        self.assertEqual((out["unsourced"], out["ready"]), ([5], False))
+
+    def test_stories_carry_their_skills(self):
+        out = self.check_as("stories.md", "## Stories\n### The month-end close\ntags: process, leadership\n"
+                            "I cut the month-end close from 10 business days to 6.\n"
+                            "from: Cut the month-end close from 10 business days to 6\n")
+        self.assertEqual(out["flagged"], 0)  # the tags line isn't a claim
+        self.assertEqual(out["stories"], [{"name": "The month-end close", "tags": ["process", "leadership"], "line": 2}])
+
     def test_a_badly_made_file(self):
         from jobkit.errors import BadFile
         with self.assertRaises(BadFile):

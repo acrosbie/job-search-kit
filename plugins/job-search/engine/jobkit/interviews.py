@@ -10,9 +10,17 @@ An interview is kept on its application (applications.json), in `upcoming`:
     minutes    how long, or 0 if not said
     link       the video call's link, if the user gave it
     stage      screen or interview, the application's status it belongs to
+    asker      who's asking: recruiter, hiring_manager, head_of_function, executive, peer, panel or other
+    for        what the round is for, in the user's words ("final round with the CEO")
+    interviewers  the contacts met in it (contacts.py), each named by the user
+    thanked    {contact id or "none": the day the thank-you went out, or the user said there'd be none}
     calendar   the .ics file written for it, under interviews/
     sequence   how many times that file has been written again (calendars take the highest as current)
     debriefed  the date the user went through how it went, or ""
+
+Rounds the user knows are coming but has no day for yet ("two more rounds, then the CEO") are kept in
+the application's `expected`: [{for, asker, with, noted}]. Recording a round with the same asker takes
+the first such one off the list.
 
 The prep sheet, the story bank and the quick reference are Claude's writing, in the user's folder
 under interviews/ (the interview skill). Lines under an Opener, Answers, Stories, Gaps, Strengths or
@@ -31,8 +39,14 @@ from .errors import BadFile, NotFound, Refused
 FOLDER = "interviews"
 KINDS = ("phone", "video", "onsite")
 SOON_DAYS = 3        # an interview this close is offered prep when catching up
+TIME_DAYS = 7        # one this close with no time yet: ask for it (the page's Today does the same)
 DEBRIEF_DAYS = 14    # one held this recently, and not gone through, is offered a debrief
+THANKS_DAYS = 3      # one held this recently: has the thank-you gone out?
+ASKERS = ("recruiter", "hiring_manager", "head_of_function", "executive", "peer", "panel", "other")
 CLAIM_SECTIONS = ("opener", "answer", "stor", "gap", "strength", "caveat")
+CHEAT_LINES = 60     # a round's cheat sheet is one phone-length scroll (found in real use: a 10 KB one, 2026-10-14)
+_SOURCED = re.compile(r"https?://\S+")
+_DATED = re.compile(r"\b(19|20)\d{2}\b")
 
 _WHEN = re.compile(r"^(\d{4}-\d{2}-\d{2})(?:[T ](\d{1,2}):(\d{2}))?$")
 
@@ -144,7 +158,7 @@ def calendar(a, entry, tz, stamp, cancel=False):
     return "\r\n".join(_fold(x) for x in lines) + "\r\n"
 
 
-def schedule(root, clock, ident, on, kind="", who="", minutes=0, status="", note="", link=""):
+def schedule(root, clock, ident, on, kind="", who="", minutes=0, status="", note="", link="", asker="", purpose=""):
     """Record an interview on its application, and write its calendar file. `status` (screen or
     interview) moves the application on, as `track` would. Saying it again for the same day updates
     that interview rather than adding a second."""
@@ -156,6 +170,8 @@ def schedule(root, clock, ident, on, kind="", who="", minutes=0, status="", note
         raise Refused(f"the call's link is a web address starting https://, not {link!r}")
     if status and status not in ("screen", "interview"):
         raise Refused("an interview's stage is screen or interview")
+    if asker and asker not in ASKERS:
+        raise Refused(f"who's asking is one of {', '.join(ASKERS)}, not {asker!r}")
     applications = track.load(root)
     a = track.find(applications, ident)
     if a is None:
@@ -169,6 +185,7 @@ def schedule(root, clock, ident, on, kind="", who="", minutes=0, status="", note
         a["history"].append(track._event(clock, clock.today(), note, event="note"))
     entries = a.setdefault("upcoming", [])
     entry = next((e for e in entries if e["on"][:10] == on[:10] and not e.get("debriefed") and not e.get("cancelled")), None)
+    is_new = entry is None
     if entry is None:
         entry = {"on": on, "kind": "", "with": "", "minutes": 0, "stage": stage, "calendar": "", "debriefed": "",
                  "sequence": 0}
@@ -176,9 +193,15 @@ def schedule(root, clock, ident, on, kind="", who="", minutes=0, status="", note
     else:
         entry["sequence"] = entry.get("sequence", 0) + 1  # the same event, written again
     entry.update({"on": on, "stage": stage})
-    for field, value in (("kind", kind), ("with", (who or "").strip()), ("link", link)):
+    for field, value in (("kind", kind), ("with", (who or "").strip()), ("link", link), ("asker", asker),
+                         ("for", (purpose or "").strip())):
         if value:
             entry[field] = value
+    expected = a.get("expected") or []
+    match = next((x for x in expected if asker and x.get("asker") == asker), None) or (expected[0] if expected and not asker else None)
+    if is_new and match is not None and (asker or purpose):  # the round they were waiting for now has its day
+        expected.remove(match)
+        entry.setdefault("for", match.get("for", ""))
     if minutes:
         entry["minutes"] = int(minutes)
     entries.sort(key=lambda e: e["on"])
@@ -254,7 +277,7 @@ def _when(entry, tz):
     return start if start is not None else (end_of_day.replace(tzinfo=tz) if tz else end_of_day.astimezone())
 
 
-def listing(root, clock):
+def listing(root, clock, include_debriefed=False):
     """Every interview not yet gone through, soonest first, each with its application and files. Its
     number is the job's on the page: an application joined to a saved posting has the posting's."""
     tz = clock.tz
@@ -263,7 +286,7 @@ def listing(root, clock):
     out = []
     for a in track.load(root):
         for e in a.get("upcoming", []):
-            if e.get("debriefed") or e.get("cancelled"):
+            if e.get("cancelled") or (e.get("debriefed") and not include_debriefed):
                 continue
             when = _when(e, tz)
             prep = f"{folder_for(a)}/prep.md"
@@ -302,6 +325,11 @@ def parse(text_):
         if not s:
             continue
         low = s.casefold()
+        if low.startswith("tags:"):  # a story's skills, for finding it again: not a claim
+            heads = [it for it in items if it["kind"] == "heading"]
+            if heads:
+                heads[-1]["tags"] = [x.strip().casefold() for x in s[5:].split(",") if x.strip()]
+            continue
         if low.startswith(("from:", "flag:")):
             if not items or items[-1]["kind"] in ("heading",):
                 raise BadFile(f"line {n}: a {low[:5]} line must come right under the line it is about")
@@ -326,17 +354,38 @@ def parse(text_):
 
 
 def check(root, path):
-    """Every claim in a prep sheet, story bank or quick reference, traced to about-me.md."""
+    """Every claim in a prep sheet, story bank, cheat sheet or quick reference, traced to about-me.md.
+    A round's cheat sheet ("... cheat sheet.md") must also fit CHEAT_LINES lines. A company brief
+    (company.md) has no claims about the user; each of its lines needs its source's link and a year.
+    `ready` is all of it."""
     with open(path, encoding="utf-8-sig") as f:
-        items = resume.check_items(parse(f.read()), resume.read_about(root))
+        body = f.read()
+    name = os.path.basename(path).casefold()
+    parsed = parse(body)
+    items = resume.check_items(parsed, resume.read_about(root))
     claims = [it for it in items if it["kind"] == "para"]
     kinds = {}
     for it in claims:
         for p in it["problems"]:
             kinds[p["kind"]] = kinds.get(p["kind"], 0) + 1
-    return {"file": resume._rel(root, path), "lines": len(claims), "traced": sum(it["ok"] for it in claims),
-            "flagged": sum(not it["ok"] for it in claims), "problems": kinds,
-            "items": [it for it in items if it["kind"] == "para"]}
+    out = {"file": resume._rel(root, path), "lines": len(claims), "traced": sum(it["ok"] for it in claims),
+           "flagged": sum(not it["ok"] for it in claims), "problems": kinds, "items": claims}
+    ready = out["flagged"] == 0
+    if name.endswith("cheat sheet.md"):
+        n = sum(1 for line in body.splitlines() if line.strip() and not line.strip().casefold().startswith("from:"))
+        out["length"] = {"lines": n, "max": CHEAT_LINES}
+        ready = ready and n <= CHEAT_LINES
+    if name == "company.md":
+        unsourced = [n for n, line in enumerate(body.splitlines(), 1)
+                     if line.strip().startswith(("- ", "* ")) and not (_SOURCED.search(line) and _DATED.search(line))]
+        out["unsourced"] = unsourced
+        ready = ready and not unsourced
+    stories = [{"name": it["text"], "tags": it.get("tags", []), "line": it["line"]} for it in parsed
+               if it["kind"] == "heading" and it["section"].casefold().startswith("stor") and it["text"] != it["section"]]
+    if stories:
+        out["stories"] = stories
+    out["ready"] = ready
+    return out
 
 
 # ------------------------------------------------------------------ pay
@@ -381,3 +430,99 @@ def pay(root, ask=0):
     wanted = [x for x in rows if x[1].get("status") in ("worth_applying", "applied", "your_call")]
     return {"postings": len(postings), "ask": ask, "all": summary(rows), "worth_a_look_or_applied": summary(wanted),
             "note": "Posted ranges only, as written in the postings. Not a prediction of an offer."}
+
+
+def expect(root, clock, ident, purpose, asker="", who=""):
+    """A round the user knows is coming, with no day yet."""
+    if not (purpose or "").strip():
+        raise Refused("say what the round is for, in the user's words")
+    if asker and asker not in ASKERS:
+        raise Refused(f"who's asking is one of {', '.join(ASKERS)}, not {asker!r}")
+    applications = track.load(root)
+    a = track.find(applications, ident)
+    if a is None:
+        raise NotFound(f"no application {ident}")
+    a.setdefault("expected", []).append({"for": purpose.strip(), "asker": asker, "with": (who or "").strip(),
+                                         "noted": clock.today()})
+    a["history"].append(track._event(clock, clock.today(), event="round_expected", value=purpose.strip()))
+    track.save(root, applications)
+    return {"application": a["id"], "expected": a["expected"]}
+
+
+def thanked(root, clock, ident, on="", contact="", none=False, channel="email"):
+    """The thank-you after a round went out (to `contact`, a touch on their record), or the user said
+    there'd be none."""
+    from . import contacts
+    applications = track.load(root)
+    a = track.find(applications, ident)
+    if a is None:
+        raise NotFound(f"no application {ident}")
+    today = clock.today()
+    held = [e for e in a.get("upcoming", []) if not e.get("cancelled")
+            and (e["on"][:10] == on[:10] if on else e["on"][:10] <= today)]
+    if not held:
+        raise Refused("there's no interview held on that application" + (f" on {on}" if on else " yet"))
+    entry = held[-1]
+    if none:
+        key = "none"
+    else:
+        people = contacts.load(root)
+        c = contacts.find(people, contact) if contact else None
+        if c is None:
+            raise Refused("name who it went to, as a contact (contact add), or say there'll be none with --none")
+        key = c["id"]
+        contacts.touch(root, clock, c["id"], channel=channel, direction="out",
+                       note=f"thank-you after the {entry['on'][:10]} {entry.get('stage', 'interview')}", date=today)
+    entry.setdefault("thanked", {})[key] = today
+    track.save(root, applications)
+    return {"application": a["id"], **entry}
+
+
+def add_interviewer(root, clock, ident, on, contact_id):
+    """A contact met in the round on `on`."""
+    applications = track.load(root)
+    a = track.find(applications, ident)
+    if a is None:
+        raise NotFound(f"no application {ident}")
+    entry = next((e for e in a.get("upcoming", []) if e["on"][:10] == (on or "")[:10] and not e.get("cancelled")), None)
+    if entry is None:
+        raise Refused(f"there's no interview on {on} on that application")
+    if contact_id not in entry.setdefault("interviewers", []):
+        entry["interviewers"].append(contact_id)
+    track.save(root, applications)
+    return entry
+
+
+def thanks_due(root, clock):
+    """Rounds held in the last THANKS_DAYS days whose thank-you isn't recorded: who was met (with their
+    email if the user gave one), and who hasn't been thanked."""
+    from . import contacts
+    people = {c["id"]: c for c in contacts.load(root)}
+    out = []
+    for x in listing(root, clock, include_debriefed=True):
+        if not x["past"] or -x["days"] > THANKS_DAYS or "none" in (x.get("thanked") or {}):
+            continue
+        met = [people[i] for i in x.get("interviewers", []) if i in people]
+        waiting = [c for c in met if c["id"] not in (x.get("thanked") or {})]
+        if met and not waiting:
+            continue
+        if not met and x.get("thanked"):
+            continue
+        out.append({"application": x["application"], "num": x["num"], "company": x["company"], "on": x["on"],
+                    "stage": x.get("stage", ""), "with": x.get("with", ""),
+                    "to_thank": [{"id": c["id"], "name": c["name"], "title": c.get("title", ""),
+                                  "email": c.get("email", "")} for c in waiting],
+                    "nobody_recorded": not met})
+    return out
+
+
+def expected_rounds(root):
+    """Rounds known to be coming with no day yet, on open applications."""
+    out = []
+    for a in track.load(root):
+        if a["status"] not in ("applied", "replied", "screen", "interview", "offer"):
+            continue
+        for x in a.get("expected") or []:
+            out.append({"application": a["id"], "company": a.get("company", ""), "role_title": _clean(a.get("role", ""), 120),
+                        **x})
+    return out

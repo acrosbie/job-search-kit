@@ -119,6 +119,9 @@ def build(root, clock):
                 "estimated": bool(a.get("applied_date_estimated")), "days": st["days"], "status": a["status"],
                 "contact": a.get("contact", ""), "top_pick": a.get("top_pick"), "channel": a.get("channel", ""),
                 "followed_up": a.get("followed_up", ""), "closes_on": st["closes_on"],
+                # A posting taken down while the user is in process: when, and the copy kept in their folder.
+                "gone": p.get("gone", ""),
+                "saved_copy": f"data/postings/{p.get('file') or a.get('key', '') + '.md'}" if p else "",
                 "last": {"date": last.get("date", ""), "what": last.get("status") or last.get("event", "")}}
         apps_out.append(item)
         if st["due"]:
@@ -152,6 +155,7 @@ def build(root, clock):
                       "status": schedule.status_of(last_try)},
         # Interviews from two weeks ago (not yet gone through) to a month ahead.
         "coming_up": coming,
+        "expected": interviews.expected_rounds(root),  # rounds known to be coming, with no day yet
         "waiting": waiting_out,
         "on_hold": [job(k, v) for k, v in held],
         "todo": todo,

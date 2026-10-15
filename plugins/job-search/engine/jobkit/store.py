@@ -46,7 +46,8 @@ import re
 STATUSES = ("new", "worth_applying", "your_call", "not_a_fit", "skipped", "applied", "on_hold")
 
 SNAPSHOT_SLOTS = 30
-SNAPSHOT_FILES = ("data/applications.json", "data/postings.json", "profile/settings.toml", "profile/companies.toml",
+SNAPSHOT_FILES = ("data/applications.json", "data/postings.json", "data/contacts.json", "profile/settings.toml",
+                  "profile/companies.toml",
                   "profile/rules.md", "profile/about-me.md", "profile/what-i-want.md")
 
 

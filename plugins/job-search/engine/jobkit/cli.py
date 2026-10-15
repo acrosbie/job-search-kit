@@ -13,7 +13,7 @@ import re
 import sys
 
 from . import __fingerprint__, __version__, net, scan, settings, store
-from . import add, choices, configure, export, interviews, page, replay, resume, review, rules, schedule, titles, track, verdicts
+from . import add, choices, configure, contacts, export, interviews, page, replay, resume, review, rules, schedule, titles, track, verdicts
 from . import start as starting
 from . import summary as summary_mod
 from . import init as starter
@@ -151,7 +151,8 @@ def cmd_track(a):
         if a.status not in (None, "screen", "interview"):
             raise Refused("--on goes with screen or interview")
         _out(interviews.schedule(a.folder, _clock(a.folder), a.id, a.on, kind=a.kind or "", who=a.who or "",
-                                 minutes=a.minutes or 0, status=a.status or "", note=a.note or "", link=a.link or ""))
+                                 minutes=a.minutes or 0, status=a.status or "", note=a.note or "", link=a.link or "",
+                                 asker=a.asker or "", purpose=a.purpose or ""))
         return 0
     if a.status in ("screen", "interview") and not a.time_unknown:
         # Booked with its day and time, it gets a calendar file, a prep offer and a debrief.
@@ -170,8 +171,32 @@ def cmd_interview(a):
         _out(interviews.debriefed(a.folder, clock, a.id, on=a.on or ""))
     elif a.action == "cancel":
         _out(interviews.cancel(a.folder, clock, a.id, a.on))
+    elif a.action == "expect":
+        _out(interviews.expect(a.folder, clock, a.id, a.purpose, asker=a.asker or "", who=a.who or ""))
+    elif a.action == "thanked":
+        _out(interviews.thanked(a.folder, clock, a.id, on=a.on or "", contact=a.contact or "", none=a.none,
+                                channel=a.channel))
     else:
-        _out({"interviews": interviews.listing(a.folder, clock)})
+        _out({"interviews": interviews.listing(a.folder, clock), "expected": interviews.expected_rounds(a.folder)})
+    return 0
+
+
+def cmd_contact(a):
+    clock = _clock(a.folder)
+    if a.action == "add":
+        c = contacts.add(a.folder, clock, a.name, company=a.company or "", title=a.title or "", kind=a.kind,
+                         email=a.email or "", profile=a.profile or "", how_known=a.how_known or "", source=a.source,
+                         application=a.application or "")
+        if a.round:
+            if not a.application:
+                raise Refused("--round goes with --application: the round they were met in")
+            interviews.add_interviewer(a.folder, clock, a.application, a.round, c["id"])
+        _out(c)
+    elif a.action == "touch":
+        _out(contacts.touch(a.folder, clock, a.ident, channel=a.channel, direction=a.direction, note=a.note or "",
+                            date=a.date or ""))
+    else:
+        _out({"contacts": contacts.listing(a.folder, company=a.company or "", application=a.application or "")})
     return 0
 
 
@@ -500,6 +525,8 @@ def parser():
     s.add_argument("--with", dest="who", help="with --on: who it's with, in the user's words")
     s.add_argument("--minutes", type=int, help="with --on: how long, only if the user said")
     s.add_argument("--link", help="with --on: the video call's link, if the user gave it")
+    s.add_argument("--asker", choices=interviews.ASKERS, help="with --on: who's asking (prep follows it)")
+    s.add_argument("--for", dest="purpose", help="with --on: what the round is for, in the user's words")
     s.set_defaults(func=cmd_track)
 
     s = sub.add_parser("interview", help="interviews: list them, check a prep sheet, mark one gone through")
@@ -518,7 +545,47 @@ def parser():
     x.add_argument("--folder", required=True)
     x.add_argument("id", help="the application's id or its posting's key")
     x.add_argument("--on", help="which interview, by its date (default the last one held)")
+    x = acts.add_parser("expect", help="a round the user knows is coming, with no day yet")
+    x.add_argument("--folder", required=True)
+    x.add_argument("id")
+    x.add_argument("--for", dest="purpose", required=True, help="what it's for, in the user's words")
+    x.add_argument("--asker", choices=interviews.ASKERS)
+    x.add_argument("--with", dest="who")
+    x = acts.add_parser("thanked", help="the thank-you after a round went out, or there'll be none")
+    x.add_argument("--folder", required=True)
+    x.add_argument("id")
+    x.add_argument("--on", help="which round, by its date (default the last one held)")
+    x.add_argument("--contact", help="who it went to: a contact's id, or their name")
+    x.add_argument("--none", action="store_true", help="the user said there'll be no thank-you")
+    x.add_argument("--channel", choices=contacts.CHANNELS, default="email")
     s.set_defaults(func=cmd_interview)
+
+    s = sub.add_parser("contact", help="people the user named: add one, record a message, list them")
+    acts = s.add_subparsers(dest="action", required=True)
+    x = acts.add_parser("add", help="a person the user named, or what's new about one")
+    x.add_argument("--folder", required=True)
+    x.add_argument("--name", required=True)
+    x.add_argument("--company")
+    x.add_argument("--title", help="their job, in the user's words")
+    x.add_argument("--kind", choices=contacts.KINDS, default="other")
+    x.add_argument("--email", help="only one the user gave")
+    x.add_argument("--profile", help="a link the user gave")
+    x.add_argument("--how-known", dest="how_known")
+    x.add_argument("--source", choices=contacts.SOURCES, default="you")
+    x.add_argument("--application", help="the application they're part of")
+    x.add_argument("--round", help="with --application: the day of the round they were met in")
+    x = acts.add_parser("touch", help="a message to or from a person")
+    x.add_argument("--folder", required=True)
+    x.add_argument("ident", help="their id, or name")
+    x.add_argument("--channel", choices=contacts.CHANNELS, default="email")
+    x.add_argument("--direction", choices=("out", "in"), default="out")
+    x.add_argument("--note")
+    x.add_argument("--date")
+    x = acts.add_parser("list", help="the people kept, at a company or on an application")
+    x.add_argument("--folder", required=True)
+    x.add_argument("--company")
+    x.add_argument("--application")
+    s.set_defaults(func=cmd_contact)
 
     s = sub.add_parser("pay", help="the pay the user's saved postings state: facts, never a prediction")
     s.add_argument("--folder", required=True)
