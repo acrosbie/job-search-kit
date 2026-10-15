@@ -6,9 +6,11 @@ jobs page's clicks, bring the page up to date, offer a scan or the weekly review
 interview's time, and so on. Each skill runs it first and works down `next`; nothing else is read to
 get started.
 
-It changes nothing a user would notice. It doesn't run the day-21 close: news the user brings ("Acme
-replied") is recorded first, then `due` closes what's left, as before. It does write the jobs page's
-files, so whether the page in their Claude account is behind is judged on the records as they are.
+It changes nothing a user would notice, but one thing they asked for: a job they or Claude put on hold
+for the cooldown becomes what it was held as on the day the wait ends. It doesn't run the day-21 close:
+news the user brings ("Acme replied") is recorded first, then `due` closes what's left, as before. It
+does write the jobs page's files, so whether the page in their Claude account is behind is judged on
+the records as they are.
 
 `doctor` is the same checks in full, for when something is wrong, with `probe` if asked.
 """
@@ -18,7 +20,8 @@ import json
 import os
 import sys
 
-from . import __fingerprint__, __version__, fingerprint, interviews, news, page, resume, schedule, settings, store, track
+from . import (__fingerprint__, __version__, fingerprint, interviews, news, page, resume, schedule, settings, store,
+               track, verdicts)
 
 PROFILE = ("profile/settings.toml", "profile/companies.toml", "profile/rules.md", "profile/about-me.md",
            "profile/what-i-want.md")
@@ -139,6 +142,8 @@ def start(root, clock, expect="", plugin_version=""):
     problems, facts = checks(root)
     out["records"] = {**facts, "problems": len(problems)}
 
+    released = verdicts.release_holds(root, clock)
+    held = verdicts.hold_candidates(root, clock)
     try:  # so whether the page is behind is judged on the records as they are now
         page.refresh(root, clock)
     except Exception as e:
@@ -174,6 +179,12 @@ def start(root, clock, expect="", plugin_version=""):
                 nxt.append({"do": "push_page", "why": "the page doesn't yet show what the folder holds"})
         else:
             nxt.append({"do": "publish_page", "why": "the user has no jobs page in their Claude account yet"})
+    if released:
+        nxt.append({"do": "say_holds_over", "why": "the wait at these companies ended; they're back with your "
+                    "other jobs", "jobs": released})
+    if held:
+        nxt.append({"do": "offer_holds", "why": "Not a fit at a company you applied to in the cooldown: if the wait "
+                    "was the only reason, put each on hold until it ends", "jobs": held})
     if closing:
         nxt.append({"do": "run_due_after_news", "why": "applications reach day 21 today; record any news the user "
                     "brings first, then run due", "applications": closing})

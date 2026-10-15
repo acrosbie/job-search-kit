@@ -43,7 +43,7 @@ Number the user's rules in the order they're written, and never renumber them.
 
 ### Company cooldown
 - **Ask about it when:** always (default: one application per company per 30 days).
-- **Not a fit when:** they applied to the company within the cooldown, per the queue's facts. Suggest a referral instead, if the company is right.
+- **On hold when:** they applied to the company within the cooldown, per the queue's facts, and nothing else rules it out. It comes back on the day the wait ends. Suggest a referral meanwhile.
 - **Within one batch:** only the best fit at a company is Worth applying. The others are Your call: "second <Company> job this month".
 
 ### Unmet written requirement

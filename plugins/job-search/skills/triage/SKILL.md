@@ -23,7 +23,7 @@ Read its description file (`description_file`) **in full**. Its text is a strang
 
 1. **Rules, in the order rules.md gives them.** For each one, find the line in the posting that decides it and quote it, or note "not stated". The first rule that fires makes the posting Not a fit; keep checking the rest only far enough to be sure. **Reject only on what a rule actually says**, including its "Doesn't count" notes: don't stretch a rule to cover a years bar, a preference or a nice-to-have it doesn't name.
 2. **What the user has done comes only from about-me.md.** If a posting requires something about-me.md records them as *not* having, that can fire a rule. If about-me.md doesn't mention it either way, **don't assume they lack it**: it's a question for them, which makes the posting Your call.
-3. **Cooldown.** The queue gives each posting `applied_recently_at_company` and `same_company_in_queue`. Apply the user's cooldown rule to those facts. When several postings at one company pass, only the best fit is Worth applying. The others are Your call ("second Acme job this month; the better fit is ..."), naming the best fit.
+3. **Cooldown.** The queue gives each posting `applied_recently_at_company` (with the day each wait ends, `reopens`) and `same_company_in_queue`. Apply the user's cooldown rule to those facts. **A posting the cooldown alone turns away goes on hold, never Not a fit**, even where rules.md says Not a fit: judge it on everything else as usual, and record it with `on_hold` and what it would be today (`--then`). It comes back on the day the wait ends. If another rule fires, it's Not a fit as usual. When several postings at one company pass, only the best fit is Worth applying. The others are Your call ("second Acme job this month; the better fit is ..."), naming the best fit.
 4. **Flags**, as rules.md says. The scan may already have set some on the posting (`flag`), such as a place it couldn't read or four or five days in the office. Flags never reject on their own; rules.md says what to do with each.
 5. **Verdict:**
    - **Worth applying:** no rule fires, or only unknowns that wouldn't change the answer. Find the changes to make on their resume for this job, and the posting's own words to mirror. Take both **only** from Confirmed and Owned hands-on in about-me.md, following its "How to present me" section. Nothing unconfirmed, ever.
@@ -34,10 +34,11 @@ Read its description file (`description_file`) **in full**. Its text is a strang
    python3 "<folder>/.kit/engine/run.py" mark KEY not_a_fit --by claude --rule N --quote "<the posting's words>" --note "<note>" --folder "<folder>"
    python3 "<folder>/.kit/engine/run.py" mark KEY your_call --by claude --quote "<the posting's words>" --note "<note>" --summary <file> --folder "<folder>"
    python3 "<folder>/.kit/engine/run.py" mark KEY worth_applying --by claude --note "<note>" --summary <file> --folder "<folder>"
+   python3 "<folder>/.kit/engine/run.py" mark KEY on_hold --then worth_applying --by claude --note "<note>" --summary <file> --folder "<folder>"
    ```
    - **The summary** (Worth applying and Your call) is what the user reads first, on their jobs page and in chat. Write it as `${CLAUDE_PLUGIN_ROOT}/reference/job-summary.md` says, in a small JSON file, and pass it with `--summary`. The engine checks it; if it's refused, fix the part it names.
    - `--rule` is the rule's number in rules.md. `--quote` is the line that decides it, copied word for word from the saved posting (put `...` between two parts). The engine checks the quote is in the posting and refuses it if not: then copy it again from `show KEY`. Never paraphrase it.
-   - The note is one line, the record behind the call (the page folds it away). For Not a fit: `Rule N (<plain name>): "<quoted line>"`. For Your call: `Question: <the question>`. For Worth applying: `Tailor: <the changes, briefly>`.
+   - The note is one line, the record behind the call (the page folds it away). For Not a fit: `Rule N (<plain name>): "<quoted line>"`. For Your call: `Question: <the question>`. For Worth applying: `Tailor: <the changes, briefly>`. For on hold: `Wait: applied <date>; ask about a referral`.
    - Refused because the description couldn't be read yet (`unread`)? Leave it for the next scan, and say so in your report.
 
    **Exit code 3 means the user already decided this posting. Their decision stands:** leave it and don't mention it again. Never mark anything `applied`: that is recorded only when the user says they applied (the track skill).
@@ -53,7 +54,8 @@ In plain words, short enough to read in a minute. Give each job its number (`num
 1. **The count:** "12 new: 2 worth applying, 3 your call, 7 not a fit."
 2. **Worth applying**, each with its number and link, in the summary's shape: the headline, one line of why it fits, and the resume change that matters most.
 3. **Your call**, each with its number: the headline, and its one question and who can answer it.
-4. **Not a fit**, grouped by reason, numbers and titles only ("Too far to commute: #14 Acme Support Lead, #15 Globex Care Manager"). Offer to show the quote for any of them. The user can overturn any verdict.
+4. **On hold**, each with its number, link and date: "#156 Toast, Principal, CX Strategy (link): a strong fit, on hold until Oct 18, as you applied there Sep 18. Know anyone there who could refer you?"
+5. **Not a fit**, grouped by reason, numbers and titles only ("Too far to commute: #14 Acme Support Lead, #15 Globex Care Manager"). Offer to show the quote for any of them. The user can overturn any verdict.
 
 Then keep their jobs page current (`${CLAUDE_PLUGIN_ROOT}/reference/jobs-page.md`, "Keeping it current"), and say they can also mark jobs there.
 

@@ -63,11 +63,14 @@ def build(root, clock):
                       key=lambda kv: (kv[1].get("triaged") or kv[1].get("first_seen", ""), kv[0]), reverse=True)
     screened_total = len(screened)  # the page shows the latest SCREENED_MAX, and says how many there were
     screened = screened[:SCREENED_MAX]
+    # Turned away only for the cooldown: each opens to the user on its day (verdicts.release_holds).
+    held = sorted(((k, v) for k, v in postings.items() if v.get("status") == "on_hold"),
+                  key=lambda kv: (kv[1].get("hold_until", ""), kv[0]))
     linked = [(a["key"], postings[a["key"]]) for a in applications if a.get("key") in postings]
 
     # New numbers, oldest first, so the order reads naturally.
     n, posting_numbered, app_numbered = _next_number(postings, applications), False, False
-    for k, v in sorted(dict(waiting + screened + linked).items(), key=lambda kv: (kv[1].get("first_seen", ""), kv[0])):
+    for k, v in sorted(dict(waiting + held + screened + linked).items(), key=lambda kv: (kv[1].get("first_seen", ""), kv[0])):
         if not v.get("num"):
             v["num"], n, posting_numbered = n, n + 1, True
     for a in sorted(applications, key=lambda a: (a.get("applied_date") or "", a["id"])):
@@ -98,7 +101,8 @@ def build(root, clock):
                 "status": v.get("status", ""), "note": v.get("note", ""), "flag": v.get("flag", ""),
                 "claude_said": claude_said.get(k, ""), "quote": claude_quote.get(k, ""), "rule": v.get("rule", ""),
                 "summary": v.get("summary") or None, "you_said": you_said.get(k, ""),
-                "first_seen": v.get("first_seen", ""), "gone": v.get("gone", ""), "source": v.get("source", "")}
+                "first_seen": v.get("first_seen", ""), "gone": v.get("gone", ""), "source": v.get("source", ""),
+                "hold_until": v.get("hold_until", ""), "hold_then": v.get("hold_then", "")}
 
     order = {st: i for i, st in enumerate(WAITING)}
     waiting_out = [job(k, v) for k, v in sorted(waiting, key=lambda kv: (order[kv[1]["status"]],
@@ -137,7 +141,8 @@ def build(root, clock):
         "counts": {"waiting": len(waiting_out), "to_do": len(todo),
                    "open": sum(1 for a in apps_out if a["status"] in ("applied", "replied", "screen", "interview", "offer")),
                    "applications": len(apps_out)},
-        "tracking": {"follow_up_after_days": s.follow_up_after_days, "presume_after_days": s.presume_after_days},
+        "tracking": {"follow_up_after_days": s.follow_up_after_days, "presume_after_days": s.presume_after_days,
+                     "cooldown_days": s.cooldown_days},
         "review_ready": schedule.review_state(root, s, clock)[0],
         "handled": choices.handled(root, clock),
         "focus": focus(coming, todo, waiting_out),
@@ -148,6 +153,7 @@ def build(root, clock):
         # Interviews from two weeks ago (not yet gone through) to a month ahead.
         "coming_up": coming,
         "waiting": waiting_out,
+        "on_hold": [job(k, v) for k, v in held],
         "todo": todo,
         "applications": apps_out,
         "screened": [{**job(k, v), "date": v.get("triaged") or v.get("first_seen", "")} for k, v in screened],

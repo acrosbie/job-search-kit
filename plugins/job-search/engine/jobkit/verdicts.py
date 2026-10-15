@@ -5,9 +5,11 @@ the user marks a posting applied, and that goes through track.apply, which also 
 application, so a posting is never applied without one.
 """
 
+import datetime as dt
+import os
 import re
 
-from . import store
+from . import settings, store
 from .clock import Clock
 from . import summary as summary_mod
 from .errors import NotFound, Refused
@@ -104,8 +106,42 @@ def summarize(root, key, summary, clock=None):
     return {"key": key, "status": entry.get("status", ""), "summary": entry["summary"]}
 
 
+HOLD_THEN = ("worth_applying", "your_call")
+
+
+def hold_until(root, company, clock):
+    """The day the cooldown at `company` ends: the latest known application there within the cooldown,
+    plus cooldown_days; or "" when there is none (nothing to wait for)."""
+    from . import queue, track
+    s = settings.load(root)
+    folder = store.Folder(root)
+    today = dt.date.fromisoformat(clock.today())
+    recent = queue.recent_applications(company, [track.normalize(a) for a in folder.load_applications()],
+                                       folder.load_postings()["postings"],
+                                       today, s.cooldown_days)
+    days = [dt.date.fromisoformat(r["applied"]) for r in recent if r.get("date_known")]
+    return (max(days) + dt.timedelta(days=s.cooldown_days)).isoformat() if days else ""
+
+
+def _check_hold(root, entry, until, then, clock):
+    then = then or "worth_applying"
+    if then not in HOLD_THEN:
+        raise Refused(f"after the wait a job is worth_applying or your_call, not {then!r}")
+    until = until or hold_until(root, entry.get("company", ""), clock)
+    if not until:
+        raise Refused(f"no application to {entry.get('company', '')} in the cooldown, so nothing to wait for: "
+                      "judge it now, or give --until YYYY-MM-DD")
+    try:
+        day = dt.date.fromisoformat(until)
+    except ValueError:
+        raise Refused(f"--until is a date, YYYY-MM-DD, not {until!r}")
+    if day <= dt.date.fromisoformat(clock.today()):
+        raise Refused(f"{until} isn't after today: judge it now instead")
+    return until, then
+
+
 def mark(root, key, status, by, note="", force=False, clock=None, choice="", at="", record_only=False,
-         rule="", quote="", evidence=False, candidate_rule=False, summary=None):
+         rule="", quote="", evidence=False, candidate_rule=False, summary=None, until="", then=""):
     """Record one verdict and return the decisions.log row. `choice` is the id of a click on the jobs
     page, kept so the same click is never recorded twice, and `at` the time it was made (default now).
 
@@ -115,7 +151,11 @@ def mark(root, key, status, by, note="", force=False, clock=None, choice="", at=
     `evidence` (the command line sets it for Claude) requires a Not a fit to name its `rule` and a Not a
     fit or Your call to `quote` the posting; both are kept on the row. `candidate_rule` marks the
     user's reason as one that sounds like a rule, for the weekly review. `summary` is Claude's account
-    of the posting for the page and chat (summary.py), checked before anything is saved."""
+    of the posting for the page and chat (summary.py), checked before anything is saved.
+
+    `on_hold` is a job turned away only by the cooldown: it waits `until` the day the cooldown ends
+    (worked out from the applications when not given), then becomes `then`, Worth applying or Your
+    call (release_holds)."""
     folder = store.Folder(root)
     state = folder.load_postings()
     entry = state["postings"].get(key)
@@ -150,13 +190,20 @@ def mark(root, key, status, by, note="", force=False, clock=None, choice="", at=
     if evidence and by == "claude":
         rule_id = _check_evidence(root, folder, key, entry, status, rule, quote)
     clk = clock or Clock()
-    checked = _summary(folder, key, status, by, summary, clk.today())
+    if status == "on_hold":
+        until, then = _check_hold(root, entry, until, then, clk)
+    checked = _summary(folder, key, then if status == "on_hold" else status, by, summary, clk.today())
     reversal = ""
     if by == "user" and earlier and status in OPPOSED.get(earlier[-1].get("verdict"), set()):
         reversal = earlier[-1].get("verdict")
     at = at or clk.stamp()
     entry["status"] = status
     entry["triaged"] = at[:10]
+    if status == "on_hold":
+        entry["hold_until"], entry["hold_then"] = until, then
+    else:
+        entry.pop("hold_until", None)
+        entry.pop("hold_then", None)
     if note:
         entry["note"] = note
     if rule_id:
@@ -168,6 +215,8 @@ def mark(root, key, status, by, note="", force=False, clock=None, choice="", at=
            "verdict": status, "reason": note, "by": by}
     if reversal:
         row["reverses"] = reversal
+    if status == "on_hold":
+        row.update({"until": until, "then": then})
     if choice:
         row["choice"] = choice
     row.update({k: v for k, v in (("rule", rule_id), ("quote", quote), ("summary", checked)) if v})
@@ -175,3 +224,62 @@ def mark(root, key, status, by, note="", force=False, clock=None, choice="", at=
         row["candidate_rule"] = True
     folder.log_decision(row)
     return row
+
+
+def release_holds(root, clock):
+    """Jobs whose wait ended by today become what they were held as, decided by whoever held them.
+    Returns them, for Claude to say in a line."""
+    folder = store.Folder(root)
+    state = folder.load_postings()
+    today = clock.today()
+    due = [(k, v) for k, v in state["postings"].items()
+           if v.get("status") == "on_hold" and (v.get("hold_until") or "9999") <= today]
+    if not due:
+        return []
+    held_by = {}
+    for d in folder.read_decisions():
+        if d.get("verdict") == "on_hold":
+            held_by[d.get("key")] = d.get("by", "claude")
+    out, at = [], clock.stamp()
+    for k, v in due:
+        then, until = v.get("hold_then") or "worth_applying", v.get("hold_until", "")
+        v["status"], v["triaged"] = then, at[:10]
+        v.pop("hold_until", None)
+        v.pop("hold_then", None)
+        folder.log_decision({"at": at, "date": at[:10], "key": k, "company": v.get("company", ""),
+                             "title": v.get("title", ""), "verdict": then, "by": held_by.get(k, "claude"),
+                             "reason": f"the wait at {v.get('company', '')} ended on {until}", "released": until})
+        out.append({"key": k, "num": v.get("num"), "company": v.get("company", ""), "title": v.get("title", ""),
+                    "url": v.get("url", ""), "now": then, "gone": v.get("gone", "")})
+    folder.save_postings(state)
+    return out
+
+
+def hold_candidates(root, clock):
+    """Claude's Not a fit at a company whose cooldown hasn't ended yet, still on its board: turned away,
+    perhaps, only for the wait, from before on_hold existed. Each is offered once (data/kit.json)."""
+    from . import queue, track
+    s = settings.load(root)
+    folder = store.Folder(root)
+    postings = folder.load_postings()["postings"]
+    applications = [track.normalize(a) for a in folder.load_applications()]
+    today = dt.date.fromisoformat(clock.today())
+    path = os.path.join(folder.data, "kit.json")
+    kit = folder.read_json(path) or {}
+    offered = set(kit.get("holds_offered", []))
+    last_by = {}
+    for d in folder.read_decisions():
+        if not d.get("record_only"):
+            last_by[d.get("key")] = d.get("by", "")
+    out = []
+    for k, v in postings.items():
+        if v.get("status") != "not_a_fit" or last_by.get(k) != "claude" or v.get("gone") or k in offered:
+            continue
+        recent = queue.recent_applications(v.get("company", ""), applications, postings, today, s.cooldown_days)
+        reopens = max((r["reopens"] for r in recent if r.get("reopens")), default="")
+        if reopens and reopens > today.isoformat():
+            out.append({"key": k, "num": v.get("num"), "company": v.get("company", ""), "title": v.get("title", ""),
+                        "url": v.get("url", ""), "note": v.get("note", ""), "reopens": reopens})
+    if out:
+        folder.write_json(path, {**kit, "holds_offered": sorted(offered | {x["key"] for x in out})})
+    return out

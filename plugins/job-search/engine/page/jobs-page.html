@@ -652,6 +652,7 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
       (href(j.url) ? '<a class="row-title" href="' + href(j.url) + '" target="_blank" rel="noopener">' + esc(t.title) + "</a>" : '<span class="row-title">' + esc(t.title) + "</span>") +
       '<span class="row-meta">' + esc(j.company) + " · " + esc(t.place || "place not stated") +
       (j.salary ? ' · <span class="pay">' + esc(j.salary) + "</span>" : "") + "</span>" +
+      (j.hold_until ? '<span class="row-note">On hold until ' + day(j.hold_until) + ": you applied to " + esc(j.company) + " recently.</span>" : "") +
       (j.summary && j.summary.headline ? '<span class="row-note">' + esc(j.summary.headline) + "</span>"
         : (j.claude_said != null ? j.claude_said : j.note) ? '<span class="row-note">' + esc(plainReason(j.claude_said != null ? j.claude_said : j.note)) + "</span>" : "") +
       (j.you_said ? '<span class="row-note">You said: \u201c' + esc(j.you_said) + "\u201d</span>" : "") +
@@ -758,6 +759,7 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
     var look = waiting.filter(function (j) { return j.status !== "new"; });
     var fresh = waiting.filter(function (j) { return j.status === "new"; });
     var screened = data.screened;
+    var held = data.on_hold || [];
     var todo = data.todo;
     var apps = data.applications;
     var openApps = apps.filter(function (a) { return ["applied", "replied", "screen", "interview", "offer"].indexOf(a.status) >= 0; }).length;
@@ -765,10 +767,11 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
 
     var coming = data.coming_up || [];
     var parts = [["yours", "Your choices", mineCount], ["coming", "Coming up", coming.length], ["todo", "To do", todo.length], ["look", "Worth a look", look.length],
-                 ["apps", "Applications", apps.length], ["new", "New", fresh.length + (data.more_waiting || 0)], ["out", "Screened out", Math.max(screened.length, data.screened_total || 0)]];
+                 ["hold", "On hold", held.length], ["apps", "Applications", apps.length], ["new", "New", fresh.length + (data.more_waiting || 0)], ["out", "Screened out", Math.max(screened.length, data.screened_total || 0)]];
     jump.hidden = false;
     jump.innerHTML = parts.filter(function (p) { return (p[0] !== "yours" && p[0] !== "coming") || p[2]; }).map(function (p) {
       var hot = (p[0] === "yours" || p[0] === "coming" || p[0] === "todo" || p[0] === "look") && p[2];
+      if (p[0] === "hold" && !p[2]) return "";
       return '<button type="button" data-jump="' + p[0] + '" class="' + (hot ? "hot" : p[2] ? "" : "zero") + '">' + esc(p[1]) + " <b>" + p[2] + "</b></button>";
     }).join("");
 
@@ -788,6 +791,12 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
       look.length ? "The jobs Claude thinks are worth applying to, the ones that need your call, and the ones you want." : "") +
       (look.length ? '<div class="stack">' + look.map(jobCard).join("") + "</div>"
         : '<p class="empty">Nothing here yet. Ask Claude to go through the new ones.</p>') + "</section>");
+    if (held.length) {
+      html.push('<section id="s-hold" aria-labelledby="h-hold">' + head("hold", "On hold", held.length,
+        "Good fits at companies you applied to in the last " + ((data.tracking || {}).cooldown_days || 30) + " days. Each comes back to you on its date. " +
+        "Asking someone there about a referral first is the better way in.") +
+        '<ul class="rows">' + held.map(function (j) { return jobRow(j, "hold"); }).join("") + "</ul></section>");
+    }
     html.push('<section id="s-apps" aria-labelledby="h-apps">' + head("apps", "Applications", apps.length,
       apps.length ? openApps + " open of " + apps.length + ". Press Update when you hear back." : "") +
       (apps.length ? appsControls(apps.length, openApps) + appsList(apps)
@@ -975,7 +984,7 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
   // ---------------------------------------------------------------- saving
 
   function labelFor(kind, ref) {
-    var list = kind === "job" ? data.waiting.concat(data.screened) : data.applications;
+    var list = kind === "job" ? data.waiting.concat(data.on_hold || [], data.screened) : data.applications;
     var x = list.filter(function (i) { return (kind === "job" ? i.key : i.id) === ref; })[0] || {};
     var title = kind === "job" ? cleanTitle(x).title : x.role;
     return { num: x.num || null, label: (x.company || "") + ", " + (title || "") };

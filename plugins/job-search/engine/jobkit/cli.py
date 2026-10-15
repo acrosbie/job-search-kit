@@ -110,7 +110,7 @@ def cmd_mark(a):
                       "they applied and whether it's a top pick")
     _out(verdicts.mark(a.folder, a.key, a.status, a.by, note=a.note, force=a.force, clock=_clock(a.folder),
                        record_only=a.record_only, rule=a.rule or "", quote=a.quote or "", evidence=a.by == "claude",
-                       candidate_rule=a.candidate_rule,
+                       candidate_rule=a.candidate_rule, until=a.until or "", then=a.then or "",
                        summary=summary_mod.read_file(a.summary) if a.summary else None))
     return 0
 
@@ -448,6 +448,8 @@ def parser():
     s.add_argument("--record-only", action="store_true",
                    help="log Claude's verdict without changing the posting (a job the user already applied to)")
     s.add_argument("--summary", metavar="FILE", help="Claude's summary of the posting, a JSON file (headline, fits, watch, ...)")
+    s.add_argument("--until", metavar="YYYY-MM-DD", help="on_hold: the day the cooldown ends (worked out when left out)")
+    s.add_argument("--then", choices=("worth_applying", "your_call"), help="on_hold: what the job becomes on that day")
     s.set_defaults(func=cmd_mark)
 
     s = sub.add_parser("summarize", help="write Claude's summary of a posting again, with no new verdict")

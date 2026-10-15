@@ -7,7 +7,7 @@ to its company and the other postings from that company waiting in the same queu
 
 import datetime as dt
 
-from . import settings, store
+from . import settings, store, track
 
 
 def _date(s):
@@ -31,12 +31,14 @@ def recent_applications(company, applications, postings, today, days):
             found.append({"role": a.get("role", ""), "applied": a.get("applied", ""), "date_known": False})
         elif 0 <= (today - d).days <= days:
             found.append({"role": a.get("role", ""), "applied": d.isoformat(), "date_known": True,
-                          "estimated": bool(a.get("applied_date_estimated"))})
+                          "estimated": bool(a.get("applied_date_estimated")),
+                          "reopens": (d + dt.timedelta(days=days)).isoformat()})
     for k, v in postings.items():
         if v.get("status") == "applied" and v.get("company", "").casefold() == name:
             d = _date(v.get("triaged"))
             if d and 0 <= (today - d).days <= days and not any(f["role"] == v["title"] for f in found):
-                found.append({"role": v["title"], "applied": d.isoformat(), "date_known": True, "key": k})
+                found.append({"role": v["title"], "applied": d.isoformat(), "date_known": True, "key": k,
+                              "reopens": (d + dt.timedelta(days=days)).isoformat()})
     return found
 
 
@@ -54,7 +56,7 @@ def queue(root, clock, limit=0):
     s = settings.load(root)
     folder = store.Folder(root)
     postings = folder.load_postings()["postings"]
-    applications = folder.load_applications()
+    applications = [track.normalize(a) for a in folder.load_applications()]  # older shapes too; nothing written
     today = dt.date.fromisoformat(clock.today())
     waiting = sorted(((k, v) for k, v in postings.items() if v.get("status") == "new"), key=_newest)
     by_company = {}

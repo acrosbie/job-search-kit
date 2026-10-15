@@ -41,6 +41,8 @@ Quote every path. The answer's `next` lists what only you can do now, in order. 
 | `tell_about_records` | For each of `problems`, its `fix`, in plain words. Ask the user what only they can say |
 | `read_clicks` | Record their clicks on the jobs page: `jobs-page.md`, "Reading the user's clicks" |
 | `publish_page`, `republish_page`, `push_page` | `jobs-page.md`: "Making the page", or "Keeping it current". Quietly |
+| `say_holds_over` | In one line per job, with its number and link: "Toast #156 is open to you again today: <link>. Apply, or ask someone there first?" |
+| `offer_holds` | Once: these were turned away while a wait at the company was on. Read each `note`; if the wait was the only reason, ask "Put Toast #156 on hold until Oct 18 instead of turning it away?" On a yes, `mark KEY on_hold --then worth_applying --by user --note "<their words>"` |
 | `run_due_after_news` | Record any news the user brings first ("Acme replied": the track or interview skill), then run `due`. If `closed_now` lists any: "No reply from Acme in three weeks, so I've moved it to no reply. Tell me if you hear from them." |
 | `offer_scan` | In scan and triage, run a scan first: "Your morning check didn't run, so I'm checking now; it takes a few minutes." Elsewhere, offer it in one line |
 | `say_last_scan_failed` | "Your last check couldn't reach your job boards; the last one that did was Tuesday morning." In the scan skill, just scan |
@@ -61,7 +63,7 @@ Quote every path. The answer's `next` lists what only you can do now, in order. 
 | `start`, `doctor`, `probe` | The start of every conversation; every check in full; can boards be reached from here |
 | `scan` | Read every watched board and save what's new. Its `status` is `ok`, `partial`, `failed` or `blocked` |
 | `queue`, `show KEY` | The postings waiting for triage; one saved posting |
-| `mark KEY STATUS --by claude\|user --note "..."` | A verdict. Claude's Not a fit adds `--rule N --quote "..."`, and Your call `--quote "..."`: the posting's own words, checked |
+| `mark KEY STATUS --by claude\|user --note "..."` | A verdict. Claude's Not a fit adds `--rule N --quote "..."`, and Your call `--quote "..."`: the posting's own words, checked. `on_hold --then worth_applying\|your_call`: until the company's wait ends |
 | `add-link URL`, `add FILE` | Save a posting the user found |
 | `apply KEY`, `track ID STATUS`, `due`, `applications` | Applications (the track skill) |
 | `record-choices FILE`, `page` | The jobs page |

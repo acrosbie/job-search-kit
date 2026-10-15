@@ -64,6 +64,9 @@ document.getElementById("f").addEventListener("load", function () {
     if (add) add.click();
     out.contact_form = n(".people .panel #f-contact");
     out.time_not_set = d.body.textContent.indexOf("time not set") >= 0;
+    out.hold_rows = n("#s-hold li.row");
+    out.hold_note = (d.querySelector("#s-hold .row-note") || {}).textContent || "";
+    out.hold_jump = n('#jump [data-jump="hold"]');
   } catch (e) { out.error = String(e); }
   document.getElementById("out").textContent = JSON.stringify(out);
 });
@@ -126,6 +129,7 @@ class BrowserTest(ScanBase):
         verdicts.mark(self.root, "greenhouse-acme-1", "worth_applying", "claude", note="Tailor: lead with the team",
                       clock=on(10), summary={"headline": "A close match, near home.",
                                              "fits": ["You'd lead the Denver team."], "tailor": ["Lead with the team."]})
+        verdicts.mark(self.root, "greenhouse-acme-9", "on_hold", "claude", clock=on(10))  # Acme applied 09-01
         page.refresh(self.root, on(10))
 
     def run_page(self, harness_text=HARNESS):
@@ -155,6 +159,8 @@ class BrowserTest(ScanBase):
         self.assertEqual(got["people"], 1)
         self.assertIn("linkedin.com/search/results/people/?keywords=Initech", got["linkedin"])
         self.assertEqual(got["contact_form"], 1)
+        self.assertEqual((got["hold_rows"], got["hold_jump"]), (1, 1))  # on hold, apart from the rejects
+        self.assertIn("On hold until", got["hold_note"])
 
     def test_a_click_lands_on_the_job_and_nothing_moves(self):
         """Found in real use (2026-10-12): every click moved the job up into Your choices and scrolled the
