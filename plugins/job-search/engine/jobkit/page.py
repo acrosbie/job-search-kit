@@ -20,7 +20,7 @@ import json
 import os
 import re
 
-from . import __version__, choices, export, interviews, schedule, settings, store, track
+from . import __version__, choices, contacts, export, interviews, schedule, settings, store, track
 
 TEMPLATE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "page", "jobs-page.html")
 DATA_SLOT = "__JOBS_DATA__"
@@ -33,6 +33,22 @@ MAX_BYTES = 200_000
 DOCUMENT = ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>\n'
             '{content}\n</body></html>\n')
+
+
+PEOPLE_MAX = 12
+
+
+def _people(rows, clock):
+    """The people to act on, for the page: follow-ups due first, then the most recently in touch."""
+    out = []
+    for c in rows:
+        last_out, last_in = contacts.last_touch(c, "out"), contacts.last_touch(c, "in")
+        out.append({"id": c["id"], "name": c["name"], "company": c.get("company", ""), "title": c.get("title", ""),
+                    "kind": c.get("kind", ""), "last_out": last_out, "last_in": last_in,
+                    "touched": max(last_out, last_in), "source": c.get("source", "")})
+    out = [p for p in out if p["touched"] or p["source"] != "connections"]  # not every connection, only people in play
+    out.sort(key=lambda p: p["touched"] or "", reverse=True)
+    return {"shown": out[:PEOPLE_MAX], "total": len(rows)}
 
 
 def _offer_line(o):
@@ -105,6 +121,12 @@ def build(root, clock):
         elif d.get("by") == "user":
             you_said[k] = d.get("reason", "")
 
+    people = contacts.load(root)
+
+    def known(company):
+        names, n = contacts.known_at(people, company)
+        return {"names": names, "count": n} if n else None
+
     def job(k, v):
         # `summary` is Claude's account for the user (summary.py); the note, rule and quote are the
         # audit trail, which the page folds away as "Behind the call".
@@ -114,7 +136,8 @@ def build(root, clock):
                 "claude_said": claude_said.get(k, ""), "quote": claude_quote.get(k, ""), "rule": v.get("rule", ""),
                 "summary": v.get("summary") or None, "you_said": you_said.get(k, ""),
                 "first_seen": v.get("first_seen", ""), "gone": v.get("gone", ""), "source": v.get("source", ""),
-                "hold_until": v.get("hold_until", ""), "hold_then": v.get("hold_then", "")}
+                "hold_until": v.get("hold_until", ""), "hold_then": v.get("hold_then", ""),
+                "known": known(v.get("company", ""))}
 
     order = {st: i for i, st in enumerate(WAITING)}
     waiting_out = [job(k, v) for k, v in sorted(waiting, key=lambda kv: (order[kv[1]["status"]],
@@ -134,6 +157,7 @@ def build(root, clock):
                 # A posting taken down while the user is in process: when, and the copy kept in their folder.
                 "gone": p.get("gone", ""),
                 "offer": _offer_line(a.get("offer")),
+                "known": known(a.get("company", "")),
                 "saved_copy": f"data/postings/{p.get('file') or a.get('key', '') + '.md'}" if p else "",
                 "last": {"date": last.get("date", ""), "what": last.get("status") or last.get("event", "")}}
         apps_out.append(item)
@@ -168,6 +192,8 @@ def build(root, clock):
                       "status": schedule.status_of(last_try)},
         # Interviews from two weeks ago (not yet gone through) to a month ahead.
         "coming_up": coming,
+        "outreach": contacts.outreach(root, clock, **s.outreach) if s.outreach["per_day"] else None,
+        "people": _people(people, clock),
         "expected": interviews.expected_rounds(root),  # rounds known to be coming, with no day yet
         "waiting": waiting_out,
         "on_hold": [job(k, v) for k, v in held],
@@ -192,7 +218,10 @@ def contact_search(company, role, s):
     title = re.sub(r"\s*\(.*$", "", role or "")
     parts = [" ".join(_LEVEL.sub(" ", p).split()) for p in title.split(",")]
     field = next((p for p in parts if p), "")
-    leaders = (s.page.get("contact_search") or "").strip() or "director OR head OR VP"
+    named = (s.page.get("contact_search") or "").strip()
+    if '"' in named:  # the field pack's leaders by their real titles (decision 4): those alone, not the role's words
+        return f"{company} ({named})"
+    leaders = named or "director OR head OR VP"  # otherwise the head of the job's own function
     return f'{company} "{field}" ({leaders})' if field else f"{company} ({leaders})"
 
 

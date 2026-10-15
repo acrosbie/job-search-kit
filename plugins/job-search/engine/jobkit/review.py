@@ -27,7 +27,7 @@ import os
 import random
 import re
 
-from . import changes, health, resume, rules, settings, store, titles, track
+from . import changes, contacts, health, resume, rules, settings, store, titles, track
 
 WINDOW_DAYS = 28
 SPOT_CHECK = 10
@@ -240,6 +240,7 @@ def build(root, clock, monthly=None):
         "pipeline": track.due(root, clock),
         "scan_health": health.boards(folder.load_postings()["boards"], settings.load_companies(root), s, today.isoformat()),
         "monthly": monthly,
+        "outreach": {**contacts.week(root, clock), "per_day": s.outreach["per_day"]},
     }
     if monthly:
         tailored = {r.get("for") for r in resume.records(root) if r.get("for")}

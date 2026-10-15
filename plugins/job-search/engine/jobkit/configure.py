@@ -25,6 +25,7 @@ KNOWN = {
     "pay": {"reject_if_top_below": NUMBER},
     "workday": {"country_facet": PATTERN, "max_total": NUMBER},
     "triage": {"cooldown_days": NUMBER},
+    "outreach": {"per_day": NUMBER, "follow_up_days": NUMBER},
     "tracking": {"follow_up_after_days": NUMBER, "presume_after_days": NUMBER},
     "page": {"url": TEXT, "version": TEXT, "route": ("", "storage", "republish", "file"), "pushed": TEXT,
              "contact_search": TEXT},

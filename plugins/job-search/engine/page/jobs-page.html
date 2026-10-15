@@ -609,6 +609,12 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
   }
 
   // Top picks with nobody to follow up with: one card, each with a search to open and a name to add.
+  function knownText(k) {
+    if (!k || !k.count) return "";
+    var names = k.names.map(function (p) { return esc(p.name) + (p.title ? " (" + esc(p.title) + ")" : ""); }).join(", ");
+    return "You know " + names + (k.count > k.names.length ? " and " + (k.count - k.names.length) + " more" : "") + " there.";
+  }
+
   function peopleCard(list) {
     var rows = list.map(function (t) {
       var q = "https://www.linkedin.com/search/results/people/?keywords=" + encodeURIComponent(t.search || t.company);
@@ -642,6 +648,7 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
       '<p class="where"><b>' + esc(j.company) + "</b> · " + esc(t.place || "place not stated") + (j.salary ? "" : " · pay not stated") + "</p>" +
       (summary || (oldQuestion(j) + (j.by !== "user" ? '<p class="muted">Claude writes this one up for you the next time you go through your jobs.</p>' : ""))) +
       yourWords(j) +
+      (j.known ? '<p class="row-note">' + knownText(j.known) + " Ask about a referral before applying?</p>" : "") +
       (j.flag ? '<p class="flag">' + esc(j.flag) + "</p>" : "") +
       (j.gone ? '<p class="flag">No longer on the company\'s job board since ' + day(j.gone) + ".</p>" : "") +
       behind(j) +
@@ -665,6 +672,7 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
       (j.summary && j.summary.headline ? '<span class="row-note">' + esc(j.summary.headline) + "</span>"
         : (j.claude_said != null ? j.claude_said : j.note) ? '<span class="row-note">' + esc(plainReason(j.claude_said != null ? j.claude_said : j.note)) + "</span>" : "") +
       (j.you_said ? '<span class="row-note">You said: \u201c' + esc(j.you_said) + "\u201d</span>" : "") +
+      (j.known ? '<span class="row-note">' + knownText(j.known) + "</span>" : "") +
       (j.flag ? '<span class="row-note flag">' + esc(j.flag) + "</span>" : "") +
       (j.gone ? '<span class="row-note flag">No longer on the company\'s job board since ' + day(j.gone) + ".</span>" : "") +
       "</div>" +
@@ -704,6 +712,7 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
       (href(a.url) ? '<a href="' + href(a.url) + '" target="_blank" rel="noopener">' + esc(a.role) + "</a>" : esc(a.role)) + "</span>" +
       '<span class="app-meta">' + meta + "</span>" +
       (a.offer && live ? '<span class="row-note">' + esc(a.offer) + "</span>" : "") +
+      (a.known && live ? '<span class="row-note">' + knownText(a.known) + "</span>" : "") +
       (a.gone && live ? '<span class="row-note flag">Posting pulled on ' + day(a.gone) + ". " +
         (location.protocol === "file:" && a.saved_copy ? '<a href="' + esc(a.saved_copy) + '">Your saved copy</a> is in your folder. '
           : "Your saved copy is in your folder; ask Claude for it. ") +
@@ -820,6 +829,16 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
       apps.length ? openApps + " open of " + apps.length + ". Press Update when you hear back." : "") +
       (apps.length ? appsControls(apps.length, openApps) + appsList(apps)
         : '<p class="empty">No applications yet. When you apply, tell Claude or press I applied on the job.</p>') + "</section>");
+    var ppl = (data.people || {}).shown || [];
+    if (ppl.length) {
+      html.push('<section id="s-people" aria-labelledby="h-people">' + head("people", "People", ppl.length,
+        "The people in your search, most recently in touch first. Say “who do I know at …” or “I messaged …” to Claude.") +
+        '<ul class="rows">' + ppl.map(function (p) {
+          return '<li class="row"><div class="row-main"><span class="row-title">' + esc(p.name) + (p.title ? ", " + esc(p.title) : "") + "</span>" +
+            '<span class="row-meta">' + [esc(p.company), p.last_out ? "you wrote " + day(p.last_out) : "", p.last_in ? "they wrote " + day(p.last_in) : ""].filter(Boolean).join(" · ") +
+            "</span></div></li>";
+        }).join("") + "</ul></section>");
+    }
     html.push('<section id="s-new" aria-labelledby="h-new">' + head("new", "New", fresh.length,
       fresh.length ? "Claude hasn’t gone through these yet. Say “go through the new ones” and they’ll be sorted, or mark any here." : "") +
       (fresh.length ? '<div class="filter"><input type="search" id="filter-new" placeholder="Filter by title, company or place" value="' + esc(filter) + '" aria-label="Filter the new jobs">' +
@@ -874,6 +893,13 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
       blocks.push('<div class="focus-block"><span class="k">Next interview</span><p><b>' + esc(e.company) + "</b>, " + esc(e.role) +
         '<span class="sub">' + whenText(e.on) + (whoLine(e) ? " · " + whoLine(e) : "") + (e["for"] ? " · " + esc(e["for"]) : "") + " · " +
         (e.prep ? "prep sheet ready" : "no prep sheet yet") + "</span></p></div>");
+    }
+    var o = data.outreach;
+    if (o && o.per_day) {
+      var due = o.follow_ups_due || [];
+      blocks.push('<div class="focus-block"><span class="k">People</span><p><b>' + o.sent_today + " of " + o.per_day + "</b> messages to people today" +
+        '<span class="sub">' + (due.length ? "Follow up with " + due.slice(0, 2).map(function (p) { return esc(p.name) + " (" + esc(p.company) + ")"; }).join(", ") +
+          (due.length > 2 ? " and " + (due.length - 2) + " more" : "") + ". Ask Claude to draft it." : "Say who you messaged, and Claude keeps count.") + "</span></p></div>");
     }
     if (f.actions && f.actions.length) {
       blocks.push('<div class="focus-block"><span class="k">To do now</span><ul class="focus-list">' +

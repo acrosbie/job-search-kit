@@ -7,7 +7,7 @@ to its company and the other postings from that company waiting in the same queu
 
 import datetime as dt
 
-from . import settings, store, track
+from . import contacts, settings, store, track
 
 
 def _date(s):
@@ -59,6 +59,7 @@ def queue(root, clock, limit=0):
     applications = [track.normalize(a) for a in folder.load_applications()]  # older shapes too; nothing written
     today = dt.date.fromisoformat(clock.today())
     waiting = sorted(((k, v) for k, v in postings.items() if v.get("status") == "new"), key=_newest)
+    people = contacts.load(root)
     by_company = {}
     for k, v in waiting:
         by_company.setdefault(v.get("company", "").casefold(), []).append(k)
@@ -81,6 +82,7 @@ def queue(root, clock, limit=0):
             "applied_recently_at_company": recent_applications(v.get("company", ""), applications, postings,
                                                                today, s.cooldown_days),
             "same_company_in_queue": [x for x in by_company[v.get("company", "").casefold()] if x != k],
+            "known_at_company": contacts.known_at(people, v.get("company", ""))[0],
         })
     return {"count": len(waiting), "shown": len(out), "more": len(waiting) - len(out), "cooldown_days": s.cooldown_days,
             "today": today.isoformat(), "postings": out}

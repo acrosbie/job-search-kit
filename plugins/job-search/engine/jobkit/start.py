@@ -20,8 +20,8 @@ import json
 import os
 import sys
 
-from . import (__fingerprint__, __version__, fingerprint, interviews, news, page, resume, schedule, settings, store,
-               track, verdicts)
+from . import (__fingerprint__, __version__, contacts, fingerprint, interviews, news, page, resume, schedule, settings,
+               store, track, verdicts)
 
 PROFILE = ("profile/settings.toml", "profile/companies.toml", "profile/rules.md", "profile/about-me.md",
            "profile/what-i-want.md")
@@ -184,6 +184,14 @@ def start(root, clock, expect="", plugin_version=""):
                 nxt.append({"do": "push_page", "why": "the page doesn't yet show what the folder holds"})
         else:
             nxt.append({"do": "publish_page", "why": "the user has no jobs page in their Claude account yet"})
+    people_due = contacts.outreach(root, clock, **s.outreach)["follow_ups_due"] if s.outreach["per_day"] else []
+    if people_due:
+        nxt.append({"do": "offer_people_follow_ups", "why": "a message with no reply for a few days",
+                    "people": people_due[:3], "more": max(0, len(people_due) - 3)})
+    refer = _referrals(root, clock)
+    if refer:
+        nxt.append({"do": "offer_referral_ask", "why": "a job on hold at a company where you know someone",
+                    "jobs": refer})
     if pulled:
         nxt.append({"do": "say_posting_pulled", "why": "a posting taken down while the user is in process there",
                     "applications": pulled})
@@ -210,9 +218,9 @@ def start(root, clock, expect="", plugin_version=""):
         nxt.append({"do": "offer_prep", "why": "an interview in the next few days", "interview": _short(x)})
     for x in debrief:
         nxt.append({"do": "offer_debrief", "why": "an interview held and not gone through", "interview": _short(x)})
-    for x in thanks:
-        nxt.append({"do": "ask_thank_you", "why": "a round held in the last few days, its thank-you not recorded",
-                    "interview": x})
+    if thanks:  # one question for all of them: a phone screen holds about five lines
+        nxt.append({"do": "ask_thank_you", "why": "rounds held in the last few days, their thank-yous not recorded",
+                    "rounds": thanks})
     if open_no_channel:
         nxt.append({"do": "ask_channels", "why": "how these were sent isn't known, so outcomes can't be counted by it",
                     "applications": [track.brief(a) for a in open_no_channel[:ASK_CHANNELS]],
@@ -223,6 +231,29 @@ def start(root, clock, expect="", plugin_version=""):
     if lines:
         nxt.append({"do": "say_whats_new", "why": "the kit was updated since this folder last used it", "lines": lines})
     out["next"] = nxt
+    return out
+
+
+def _referrals(root, clock):
+    """Jobs on hold for the cooldown at a company where the user knows someone, each offered once
+    (data/kit.json): the referral window (decision 4)."""
+    folder = store.Folder(root)
+    people = contacts.load(root)
+    if not people:
+        return []
+    path = os.path.join(folder.data, "kit.json")
+    kit = folder.read_json(path) or {}
+    said = set(kit.get("referrals_offered", []))
+    out = []
+    for k, v in folder.load_postings()["postings"].items():
+        if v.get("status") != "on_hold" or k in said:
+            continue
+        names, n = contacts.known_at(people, v.get("company", ""))
+        if n:
+            out.append({"key": k, "num": v.get("num"), "company": v.get("company", ""), "title": v.get("title", ""),
+                        "url": v.get("url", ""), "until": v.get("hold_until", ""), "known": names})
+    if out:
+        folder.write_json(path, {**kit, "referrals_offered": sorted(said | {x["key"] for x in out})})
     return out
 
 

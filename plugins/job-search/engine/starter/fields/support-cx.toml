@@ -32,5 +32,11 @@ reason = "Not a fit: this reads as an account-management job carrying renewals o
 "systems owner" = "\\bsystems? owner\\b|platform owner|service owner"
 "strategy and operations" = "strategy (and|&) operations|strategy & ops\\b"
 
+# Who "find a person" looks for at a company with no contact yet: the leaders this field's roles report
+# up to, by the titles they really use, never the role's own words ("Support Technology"). Decision 4,
+# answered 2026-10-14: it depends on the field, so each field pack names its own.
+[page]
+contact_search = '"Director of Customer Support" OR "Head of Support" OR "Senior Manager, Customer Support" OR "Director of Customer Experience" OR "VP of Customer Experience"'
+
 [aggregator]
 queries = ["support operations", "customer support", "technical support", "customer experience operations", "cx operations", "support systems", "knowledge management", "escalation manager", "contact center", "workforce management", "customer care", "head of support", "support technology", "cx systems", "customer experience technology", "ai agent", "conversational ai", "service desk", "self-service", "support enablement"]

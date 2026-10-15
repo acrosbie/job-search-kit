@@ -69,6 +69,8 @@ document.getElementById("f").addEventListener("load", function () {
     out.hold_jump = n('#jump [data-jump="hold"]');
     out.coming_text = (d.querySelector("#s-coming") || {}).textContent || "";
     out.today_text = (d.querySelector("#s-today") || {}).textContent || "";
+    out.look_text = (d.querySelector("#s-look") || {}).textContent || "";
+    out.people_rows = n("#s-people li.row");
   } catch (e) { out.error = String(e); }
   document.getElementById("out").textContent = JSON.stringify(out);
 });
@@ -134,6 +136,9 @@ class BrowserTest(ScanBase):
                       clock=on(10), summary={"headline": "A close match, near home.",
                                              "fits": ["You'd lead the Denver team."], "tailor": ["Lead with the team."]})
         verdicts.mark(self.root, "greenhouse-acme-9", "on_hold", "claude", clock=on(10))  # Acme applied 09-01
+        from jobkit import contacts
+        contacts.add(self.root, on(10), "Dana Example", company="Acme, Inc.", title="Director of Support")
+        contacts.touch(self.root, on(10), "Dana Example", note="referral ask")
         page.refresh(self.root, on(10))
 
     def run_page(self, harness_text=HARNESS):
@@ -169,6 +174,9 @@ class BrowserTest(ScanBase):
         self.assertIn("For: a first screen", got["coming_text"])
         self.assertIn("final round with the CEO", got["coming_text"])  # still to come, no day yet
         self.assertIn("a first screen", got["today_text"])
+        self.assertIn("You know Dana Example (Director of Support) there.", got["look_text"])
+        self.assertIn("1 of 2 messages to people today", got["today_text"])
+        self.assertEqual(got["people_rows"], 1)
 
     def test_a_click_lands_on_the_job_and_nothing_moves(self):
         """Found in real use (2026-10-12): every click moved the job up into Your choices and scrolled the

@@ -248,7 +248,7 @@ flowchart LR
 ```
 
 - **The engine** (`plugins/job-search/engine`) does the mechanical work: fetching boards, the filters and automatic rejects, the records, the jobs page. Python standard library only, Python 3.10 or later, and it never deletes a file.
-- **The skills** (`plugins/job-search/skills`) are what Claude follows for anything that needs judgment or a conversation: setup, screening, tracking, the weekly review, rule changes, resumes and interviews.
+- **The skills** (`plugins/job-search/skills`) are what Claude follows for anything that needs judgment or a conversation: setup, screening, tracking, the people in your search, the weekly review, rule changes, resumes and interviews.
 - **Your folder** holds everything about you: your profile, your rules, every job found, every decision and application. It's yours; the kit only ever adds to it.
 
 Where the engine can check something itself rather than trust the instructions, it does, because instructions get skipped: a quoted line really is in the posting; a rule change was tried on your saved jobs; a resume line traces to something you confirmed; a debrief is written down before it counts.

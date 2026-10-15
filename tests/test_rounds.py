@@ -92,7 +92,9 @@ class ThanksTest(InterviewBase):
     def test_the_day_after_a_round_the_thank_you_is_asked_about(self):
         due = interviews.thanks_due(self.root, at("09-26"))
         self.assertEqual([t["email"] for t in due[0]["to_thank"]], ["hannah@acme.example"])
-        self.assertIn("ask_thank_you", dos(start.start(self.root, at("09-26"))))
+        step = [n for n in start.start(self.root, at("09-26"))["next"] if n["do"] == "ask_thank_you"]
+        self.assertEqual(len(step), 1)  # one question, however many rounds
+        self.assertEqual(step[0]["rounds"][0]["to_thank"][0]["name"], "Hannah")
         self.assertEqual(interviews.thanks_due(self.root, at("09-30")), [])  # four days on, let it go
 
     def test_once_sent_it_is_a_touch_and_not_asked_again(self):

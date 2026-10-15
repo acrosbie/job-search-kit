@@ -56,7 +56,9 @@ Quote every path. The answer's `next` lists what only you can do now, in order. 
 | `say_last_scan_failed` | "Your last check couldn't reach your job boards; the last one that did was Tuesday morning." In the scan skill, just scan |
 | `offer_review` | "Your weekly review is ready; want to go through it?" Only on a yes (the review skill) |
 | `ask_interview_time` | "Do you know what time your Acme interview on Tuesday is yet?" Record it with the interview skill's step 1 |
-| `ask_thank_you` | Once: "Did your thank-you to Hannah go out?" (`to_thank`); with `nobody_recorded`, "Who did you meet at Acme? With their email I can draft the thank-you." The interview skill, step 4 |
+| `ask_thank_you` | Once, one line for all its `rounds`: "Did your thank-yous to Hannah and Jennifer go out?" (`to_thank`); for a round with `nobody_recorded`, "who did you meet at Acme? With their email I can draft the thank-you." The interview skill, step 4 |
+| `offer_people_follow_ups` | One line: "Dana hasn't written back since Tuesday; want a short follow-up to send?" The network skill |
+| `offer_referral_ask` | Once: "You know Dana at Toast, where #156 is on hold until Oct 18. Want me to draft a referral ask?" The network skill |
 | `say_posting_pulled` | One line: "Acme took the posting down on Tuesday. Your saved copy is in your folder, and that doesn't end your application on its own." |
 | `offer_prep`, `offer_debrief` | "Your Acme screen is tomorrow at 10:00. Want to go through your prep?" / "How did your Acme screen go? Two minutes now, while it's fresh, helps the next one." Only on a yes (the interview skill) |
 | `ask_channels` | "How did you apply to Acme?" for each listed (on their site, through LinkedIn, through someone they know, some other way), as the track skill asks. Record each with `track <id> --channel ...`. Once per conversation; `more` waits for next time |
@@ -80,6 +82,7 @@ Quote every path. The answer's `next` lists what only you can do now, in order. 
 | `review`; `replay`, `rule-evidence`, `change-rule`, `decline`, `requeue` | The weekly review; changing a rule (the tune skill) |
 | `resume check FILE`, `resume render FILE` | Only when they ask (the resume skill) |
 | `track ID screen --on WHEN`, `interview ...`, `contact ...`, `pay` | Interviews and the people in them (the interview skill) |
+| `contact known COMPANY`, `contact import FILE`, `contact outreach`, `contact check-sender EMAIL` | Who they know there; their LinkedIn connections; the day's messages and follow-ups due; a recruiter's address (the network skill) |
 | `offer ID ...`, `offers --ask N --walk-away N` | Pay a company said or wrote; every offer side by side (the track skill) |
 | `export worklog --from --to` | The weekly work-search log (the track skill) |
 | `snapshots`, `restore SLOT --file PATH` | The records as they were before each command; put one back, only on a yes |

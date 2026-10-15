@@ -21,6 +21,8 @@ pattern matches nothing, so a half-written file can't wave every job through.
                    current, and the fingerprint of the data last sent to it
     [schedule]     scan (daily, weekdays, weekly), scan_at (HH:MM), review (weekly): what the scheduled
                    checks are and when the morning one runs, so a conversation can catch up on one missed
+    [outreach]     per_day (messages to people a day, 2 unless the user changes it; 0 stops the count),
+                   follow_up_days (a message with no reply this long is a follow-up due, 5)
     [labels]       wording for every flag and reason (defaults below)
 """
 
@@ -95,6 +97,7 @@ class Settings:
     presume_after_days: int
     page: dict
     schedule: dict
+    outreach: dict
     labels: dict
 
     def label(self, name, **values):
@@ -125,6 +128,8 @@ def parse(raw):
         presume_after_days=int(tr.get("presume_after_days", 21)),
         page={"url": "", "version": "", "route": "", "pushed": "", "contact_search": "", **raw.get("page", {})},
         schedule={"scan": "", "review": "", **raw.get("schedule", {})},
+        outreach={"per_day": int(raw.get("outreach", {}).get("per_day", 2)),
+                  "follow_up_days": int(raw.get("outreach", {}).get("follow_up_days", 5))},
         labels={**DEFAULT_LABELS, **raw.get("labels", {})},
     )
 

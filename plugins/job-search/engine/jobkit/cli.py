@@ -198,6 +198,16 @@ def cmd_contact(a):
     elif a.action == "touch":
         _out(contacts.touch(a.folder, clock, a.ident, channel=a.channel, direction=a.direction, note=a.note or "",
                             date=a.date or ""))
+    elif a.action == "import":
+        _out(contacts.import_connections(a.folder, clock, a.file))
+    elif a.action == "known":
+        names, n = contacts.known_at(contacts.load(a.folder), a.company, limit=a.limit)
+        _out({"company": a.company, "known": names, "count": n})
+    elif a.action == "outreach":
+        s = settings.load(a.folder)
+        _out(contacts.outreach(a.folder, clock, **s.outreach))
+    elif a.action == "check-sender":
+        _out(contacts.check_sender(a.email, a.company or ""))
     else:
         _out({"contacts": contacts.listing(a.folder, company=a.company or "", application=a.application or "")})
     return 0
@@ -605,6 +615,19 @@ def parser():
     x.add_argument("--folder", required=True)
     x.add_argument("--company")
     x.add_argument("--application")
+    x = acts.add_parser("import", help="people from the LinkedIn connections file the user downloaded (no emails)")
+    x.add_argument("--folder", required=True)
+    x.add_argument("file", help="Connections.csv")
+    x = acts.add_parser("known", help="who the user knows at a company")
+    x.add_argument("--folder", required=True)
+    x.add_argument("company")
+    x.add_argument("--limit", type=int, default=5)
+    x = acts.add_parser("outreach", help="messages sent today against the daily target, and follow-ups due to people")
+    x.add_argument("--folder", required=True)
+    x = acts.add_parser("check-sender", help="signs of a fake recruiter in where a message was sent from")
+    x.add_argument("--folder", required=True)
+    x.add_argument("email")
+    x.add_argument("--company", help="the company they say they're from")
     s.set_defaults(func=cmd_contact)
 
     s = sub.add_parser("offer", help="what a company said or wrote about pay, kept on its application")
