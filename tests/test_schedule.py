@@ -59,6 +59,29 @@ class ScheduleTest(ScanBase):
         clock = Clock("America/Denver", fixed=dt.datetime.fromisoformat(when))  # the times below are Denver's
         return schedule.scan_overdue(settings.load(self.root), self.folder.read_runs(limit=1), clock)
 
+    def missed(self, when, at=""):
+        configure.set_value(self.root, "schedule.scan", "weekdays")
+        if at:
+            configure.set_value(self.root, "schedule.scan_at", at)
+        clock = Clock("America/Denver", fixed=dt.datetime.fromisoformat(when))
+        return schedule.missed(settings.load(self.root), self.folder.read_runs(), clock)
+
+    def test_the_mornings_missed_are_named(self):
+        # Found in real use (2026-10-13 and 14): the 06:50 run couldn't reach the computer two days running.
+        if Clock("America/Denver").tz is None:
+            self.skipTest("no time zone data on this machine")  # the hours below are Denver's
+        self.assertEqual(self.missed("2026-09-30T08:00:00-06:00"), ["2026-09-28", "2026-09-29", "2026-09-30"])
+        # With its time saved, today's run isn't missed until it has had its chance.
+        self.assertEqual(self.missed("2026-09-30T06:55:00-06:00", at="06:50"), ["2026-09-28", "2026-09-29"])
+        self.assertEqual(self.missed("2026-09-30T07:30:00-06:00", at="06:50"), ["2026-09-28", "2026-09-29", "2026-09-30"])
+        self.assertEqual(self.missed("2026-09-28T06:00:00-06:00", at="06:50"), [])  # Monday before 6:50: the weekend didn't count
+
+    def test_the_time_is_checked(self):
+        from jobkit.errors import Refused
+        with self.assertRaises(Refused):
+            configure.set_value(self.root, "schedule.scan_at", "7am")
+        configure.set_value(self.root, "schedule.scan_at", "06:50")
+
     def test_scan_overdue(self):
         self.assertFalse(self.overdue("daily", "2026-09-25T20:00:00-06:00"))
         self.assertTrue(self.overdue("daily", "2026-09-26T20:00:00-06:00"))
@@ -104,6 +127,10 @@ class ScheduleTest(ScanBase):
         self.assertIn("<LogonType>InteractiveToken</LogonType>", xml)       # no password kept
         self.assertIn(f'scan --folder "{folder}" --out', xml)
         self.assertIn("scan-latest.json", xml)
+        # A run that reaches no board exits 4 (--fail-if-unreached), and Windows tries again.
+        self.assertIn("--fail-if-unreached", xml)
+        self.assertIn(f"<Interval>PT{wintask.RETRY_MINUTES}M</Interval>", xml)
+        self.assertIn(f"<Count>{wintask.RETRIES}</Count>", xml)
         self.assertIn("<ScheduleByDay>", wintask.task_xml(r"C:\Sam", "07:00", today=dt.date(2026, 10, 13)))
         with self.assertRaises(configure.Refused):
             wintask._check_time("7am")

@@ -59,11 +59,53 @@ def status_of(run):
     return "failed" if not good(run) else ("partial" if run.get("failed") else "ok")  # rows from before 0.9.0
 
 
+GRACE = dt.timedelta(minutes=30)  # a scheduled run this late is still "running", not missed
+
+
+def _not_yet(s, clock):
+    """Today's run hasn't come round yet: [schedule] scan_at (HH:MM) is later than now, give or take
+    GRACE. With no time saved, a day is due from midnight, as before."""
+    at = s.schedule.get("scan_at", "")
+    try:
+        hh, mm = (int(x) for x in at.split(":"))
+    except ValueError:
+        return False
+    now = clock.now()
+    return now < now.replace(hour=hh, minute=mm, second=0, microsecond=0) + GRACE
+
+
+def _due_days(every, start, end):
+    """The days from start to end (both included) a scan was due on."""
+    out, d = [], start
+    while d <= end:
+        if every == "daily" or (every == "weekdays" and d.weekday() < 5):
+            out.append(d)
+        d += dt.timedelta(days=1)
+    return out
+
+
+def missed(s, runs, clock, limit=7):
+    """The days a scheduled daily or weekday scan was due and no scan that read boards ran, since the
+    last good one, oldest first (at most `limit` days back). Today counts once its time has passed.
+    Found in real use (2026-10-13 and 14): the 06:50 run couldn't reach the computer two days running."""
+    every = s.schedule.get("scan", "")
+    if every not in ("daily", "weekdays"):
+        return []
+    last_ok, _ = last_scans(runs)
+    last = _local_day(last_ok.get("at", ""), clock)
+    today = clock.now().date()
+    start = max(last + dt.timedelta(days=1) if last else today, today - dt.timedelta(days=limit))
+    end = today - dt.timedelta(days=1) if _not_yet(s, clock) else today
+    return [d.isoformat() for d in _due_days(every, start, end)]
+
+
 def scan_overdue(s, runs, clock):
     """True when the schedule says a scan should have run since the last one that read boards."""
     every = s.schedule.get("scan", "")
     if every not in SCAN_DAYS:
         return False
+    if every in ("daily", "weekdays"):
+        return bool(missed(s, runs, clock))
     last_ok, _ = last_scans(runs)
     last = _local_day(last_ok.get("at", ""), clock)
     if last is None:

@@ -22,6 +22,8 @@ from .clock import Clock
 from .discover import discover
 from .errors import BadFile, NotFound, Refused
 
+UNREACHED = 4  # scan --fail-if-unreached: no board could be reached
+
 
 def _utf8_out():
     """Windows pipes default to the ANSI code page, which can't print "→" or a name like "Zoë"."""
@@ -68,6 +70,7 @@ def cmd_scan(a):
     summary["closed_day_21"] = due["closed_now"]
     summary["follow_ups_due"] = {k: len(due[k]) for k in ("send", "find_person", "closing")}
     summary["due"] = due  # everything catching up needs (running-the-engine.md, 5a), so the scan skill needn't run due
+    unreached = summary.get("status") in ("blocked", "failed")
     # The page gives each job its number, so every job the scan names can be said with it and its link.
     try:
         page.refresh(a.folder, clock)
@@ -77,7 +80,7 @@ def cmd_scan(a):
     except Exception as e:  # the scan itself is saved; the page catches up next time
         summary["page_error"] = f"{type(e).__name__}: {e}"
     _out(summary, a.out)
-    return 0
+    return UNREACHED if (a.fail_if_unreached and unreached) else 0
 
 
 def cmd_start(a):
@@ -456,6 +459,8 @@ def parser():
     g.add_argument("--replay", metavar="DIR", help="read board answers from this cassette folder, not the network")
     s.add_argument("--as-of", metavar="TIME", help="pretend it is this time (ISO, with offset); for replays")
     s.add_argument("--out", metavar="FILE", help="write the result (or what went wrong) to this file, as UTF-8, instead of printing it")
+    s.add_argument("--fail-if-unreached", action="store_true",
+                   help="exit 4 when no board could be reached, so a Windows task tries again")
     s.set_defaults(func=cmd_scan)
 
     s = sub.add_parser("start", help="the start of every conversation: what's wrong, what's due, and what to do next")

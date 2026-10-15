@@ -21,6 +21,9 @@ from xml.sax.saxutils import escape
 from .errors import Refused
 
 NAME = "Job search morning scan"
+# A run that reaches no board (the network not up yet after the computer wakes, say) exits with
+# UNREACHED, and Windows tries again this often, this many times.
+RETRY_MINUTES, RETRIES = 20, 3
 DAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
 
 
@@ -35,7 +38,7 @@ def command(folder):
     folder = os.path.abspath(folder)
     run = os.path.join(folder, ".kit", "engine", "run.py")
     out = os.path.join(folder, "data", "scan-latest.json")
-    return _python(), f'-B "{run}" scan --folder "{folder}" --out "{out}"'
+    return _python(), f'-B "{run}" scan --folder "{folder}" --out "{out}" --fail-if-unreached'
 
 
 def task_xml(folder, at, weekdays=False, today=None):
@@ -69,6 +72,10 @@ def task_xml(folder, at, weekdays=False, today=None):
     <StartWhenAvailable>true</StartWhenAvailable>
     <RunOnlyIfNetworkAvailable>true</RunOnlyIfNetworkAvailable>
     <ExecutionTimeLimit>PT30M</ExecutionTimeLimit>
+    <RestartOnFailure>
+      <Interval>PT{RETRY_MINUTES}M</Interval>
+      <Count>{RETRIES}</Count>
+    </RestartOnFailure>
     <Enabled>true</Enabled>
   </Settings>
   <Actions Context="Author">
@@ -127,7 +134,9 @@ def show():
         k, sep, v = line.partition(":")
         if sep and k.strip() in ("Next Run Time", "Last Run Time", "Last Result", "Status", "Task To Run"):
             fields[k.strip().lower().replace(" ", "_")] = v.strip()
-    return {"task": NAME, "exists": True, **fields}
+    # Made before 0.16.0, it doesn't try again after a run that reached no board: make it again.
+    outdated = "--fail-if-unreached" not in fields.get("task_to_run", "--fail-if-unreached")
+    return {"task": NAME, "exists": True, **fields, "outdated": outdated}
 
 
 def remove():

@@ -19,8 +19,8 @@ pattern matches nothing, so a half-written file can't wave every job through.
                    and when one with no reply becomes presumed rejected
     [page]         url, version, route, pushed: the user's jobs page artifact, which Claude makes and keeps
                    current, and the fingerprint of the data last sent to it
-    [schedule]     scan (daily, weekdays, weekly), review (weekly): what the scheduled checks are, so a
-                   conversation can catch up on one that was missed
+    [schedule]     scan (daily, weekdays, weekly), scan_at (HH:MM), review (weekly): what the scheduled
+                   checks are and when the morning one runs, so a conversation can catch up on one missed
     [labels]       wording for every flag and reason (defaults below)
 """
 

@@ -268,6 +268,15 @@ class BlockedScanTest(ScanBase):
         self.assertEqual(self.folder.load_postings()["boards"], boards)
         self.assertEqual(self.folder.read_runs()[-1]["status"], "blocked")
 
+    def test_a_windows_task_hears_it_failed_so_it_tries_again(self):
+        fake = Fake({})
+        fake.request = self.blocked
+        self.addCleanup(net.use, net.use(fake))
+        target = os.path.join(self.root, "data", "scan-latest.json")
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(cli.main(["scan", "--folder", self.root, "--out", target]), 0)  # a conversation reads the JSON
+            self.assertEqual(cli.main(["scan", "--folder", self.root, "--out", target, "--fail-if-unreached"]), cli.UNREACHED)
+
     def test_some_boards_unreachable_is_partial_and_not_held_against_them(self):
         a = answers()
         a[f"{GH}/globex/jobs"] = urllib.error.URLError("Tunnel connection failed: 403 Forbidden")

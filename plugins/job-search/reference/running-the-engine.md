@@ -52,7 +52,7 @@ Quote every path. The answer's `next` lists what only you can do now, in order. 
 | `say_holds_over` | In one line per job, with its number and link: "Toast #156 is open to you again today: <link>. Apply, or ask someone there first?" |
 | `offer_holds` | Once: these were turned away while a wait at the company was on. Read each `note`; if the wait was the only reason, ask "Put Toast #156 on hold until Oct 18 instead of turning it away?" On a yes, `mark KEY on_hold --then worth_applying --by user --note "<their words>"` |
 | `run_due_after_news` | Record any news the user brings first ("Acme replied": the track or interview skill), then run `due`. If `closed_now` lists any: "No reply from Acme in three weeks, so I've moved it to no reply. Tell me if you hear from them." |
-| `offer_scan` | In scan and triage, run a scan first: "Your morning check didn't run, so I'm checking now; it takes a few minutes." Elsewhere, offer it in one line |
+| `offer_scan` | Run the scan first, in any skill, without asking: "Your morning check didn't run on Tuesday or Wednesday (`missed`), so I'm checking now; it takes a few minutes." Then go on with what they asked. If Claude's own permission card stops it, say so in one line |
 | `say_last_scan_failed` | "Your last check couldn't reach your job boards; the last one that did was Tuesday morning." In the scan skill, just scan |
 | `offer_review` | "Your weekly review is ready; want to go through it?" Only on a yes (the review skill) |
 | `ask_interview_time` | "Do you know what time your Acme interview on Tuesday is yet?" Record it with the interview skill's step 1 |

@@ -19,12 +19,14 @@ Setup offers both (its step 7). Use this page whenever the user asks for one lat
    - the approval option that doesn't stop to ask, if there is one.
 
    Use your scheduling tool if you have one. Otherwise, walk them through **Scheduled** in the sidebar → **New task** → **Set up manually**, giving them each field to fill in.
-4. **Record it**, so a missed check is noticed:
+4. **Record it**, with its time, so a missed check is noticed and today's isn't counted missed before it has run:
    ```
    run.py settings set schedule.scan daily --folder "<folder>"      (or weekdays, or weekly)
+   run.py settings set schedule.scan_at 06:50 --folder "<folder>"   (the morning run's time)
    run.py settings set schedule.review weekly --folder "<folder>"
    ```
-5. **Tell them in two sentences:** it runs while their computer is on and Claude is open, and a missed one is caught up the next time they talk to Claude. For the morning run, add that every verdict is yours and theirs to overturn, and nothing is applied for or sent. For the review, that it's only prepared: nothing changes until they go through it.
+5. **A catch-up for the morning run:** a second task with the same prompt, **do my morning job search**, about three hours later. If the first one ran, the catch-up finds nothing to do and leaves no note; if the computer was asleep or Claude couldn't reach it, the catch-up does the morning. Found in real use (2026-10-13 and 14): the 06:50 run missed two days running, and a run at 10:37 worked.
+6. **Tell them in two sentences:** it runs while their computer is on and Claude is open, and a missed one is caught up the next time they talk to Claude. For the morning run, add that every verdict is yours and theirs to overturn, and nothing is applied for or sent. For the review, that it's only prepared: nothing changes until they go through it.
 
 ## When Claude's workspace can't reach job boards
 
@@ -36,7 +38,7 @@ Some computers' Claude workspaces are refused by a proxy on every board, even wi
    python "<folder>\.kit\engine\run.py" windows-task create --at 06:45 --folder "<folder>"      (add --weekdays for Monday to Friday)
    ```
    It runs only while they're signed in, with no window, and catches up when the computer wakes after the time it was due. Each scan's result goes to `data/scan-latest.json`.
-3. **Check it:** `windows-task show` gives when it runs next and how the last run went (`last_result` 0 is fine).
+3. **Check it:** `windows-task show` gives when it runs next and how the last run went (`last_result` 0 is fine). A run that reaches no board (the network not up yet as the computer wakes) tries again every 20 minutes, three times. `outdated` means it was made before it could try again: make it again, with the same time, after the folder's engine is current.
 4. **Tell them in one sentence:** "Your computer will check your job boards at 6:45 each morning, and Claude goes through what it finds at 7:00."
 
 ## Stopping one

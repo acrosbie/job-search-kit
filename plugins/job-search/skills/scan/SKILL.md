@@ -35,7 +35,8 @@ Usually a scheduled task sends this at the time they chose, with nobody there. D
 2. **The jobs.** If `start`'s `scan.fresh` is true, a scan ran in the last few hours, usually the Windows task on their computer (`schedules.md`): don't scan again. What it found is in `data/scan-latest.json`. Otherwise scan (step 2). If nothing could be reached, note it and go on: jobs from earlier may still be waiting.
 3. **Go through the new ones** as the triage skill says, its first batch of 15, with nobody to ask. Every verdict is yours, with its summary, and they can overturn any. Never mark anything applied, change a rule, or judge again a job they decided.
 4. **Keep the jobs page current** (`jobs-page.md`): it's what they look at first.
-5. **Leave a short note**, at most five lines: how many new jobs, how many worth applying, with the best one as its link and its headline, any Your call questions, and anything that went wrong (no boards reached, the page not updated).
+5. **Already done today?** The same prompt runs again later in the morning as a catch-up (`schedules.md`). If the scan was fresh, nothing was waiting to go through and the page was current, stop without a note.
+6. **Leave a short note**, at most five lines: how many new jobs, how many worth applying, with the best one as its link and its headline, any Your call questions, and anything that went wrong (no boards reached, the page not updated).
 
 If they typed it themselves, do the same, then report as the triage skill does.
 

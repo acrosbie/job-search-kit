@@ -28,7 +28,7 @@ KNOWN = {
     "tracking": {"follow_up_after_days": NUMBER, "presume_after_days": NUMBER},
     "page": {"url": TEXT, "version": TEXT, "route": ("", "storage", "republish", "file"), "pushed": TEXT,
              "contact_search": TEXT},
-    "schedule": {"scan": ("", "daily", "weekdays", "weekly"), "review": ("", "weekly")},
+    "schedule": {"scan": ("", "daily", "weekdays", "weekly"), "review": ("", "weekly"), "scan_at": TEXT},
     "labels": {k: TEXT for k in settings.DEFAULT_LABELS},
 }
 
@@ -103,6 +103,8 @@ def coerce(key, raw_value):
             check_pattern(new)
         if section == "labels":
             check_label(name, new)
+        if key == "schedule.scan_at" and new and not re.fullmatch(r"([01]?\d|2[0-3]):[0-5]\d", new):
+            raise Refused("schedule.scan_at is the time the morning run starts, as HH:MM, for example 06:50")
     return section, name, new
 
 

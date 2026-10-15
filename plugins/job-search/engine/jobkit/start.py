@@ -153,7 +153,8 @@ def start(root, clock, expect="", plugin_version=""):
     last_ok, last_try = schedule.last_scans(runs)
     out["scan"] = {"last_good_at": last_ok.get("at", ""), "last_attempt_at": last_try.get("at", ""),
                    "last_status": schedule.status_of(last_try), "overdue": schedule.scan_overdue(s, runs, clock),
-                   "scheduled": s.schedule.get("scan", ""), "fresh": schedule.fresh(last_ok, clock)}
+                   "scheduled": s.schedule.get("scan", ""), "scheduled_at": s.schedule.get("scan_at", ""),
+                   "missed": schedule.missed(s, runs, clock), "fresh": schedule.fresh(last_ok, clock)}
     ready, review_due = schedule.review_state(root, s, clock)
     soon = interviews.soon(root, clock)
     no_time = [x for x in interviews.listing(root, clock)
@@ -196,7 +197,8 @@ def start(root, clock, expect="", plugin_version=""):
         nxt.append({"do": "run_due_after_news", "why": "applications reach day 21 today; record any news the user "
                     "brings first, then run due", "applications": closing})
     if out["scan"]["overdue"]:
-        nxt.append({"do": "offer_scan", "why": "a scheduled check didn't run", "last_good_at": out["scan"]["last_good_at"]})
+        nxt.append({"do": "offer_scan", "why": "a scheduled check didn't run", "last_good_at": out["scan"]["last_good_at"],
+                    "missed": out["scan"]["missed"]})
     if out["scan"]["last_status"] in ("blocked", "failed"):
         nxt.append({"do": "say_last_scan_failed", "why": "the last check reached no job board",
                     "status": out["scan"]["last_status"], "last_good_at": out["scan"]["last_good_at"]})
