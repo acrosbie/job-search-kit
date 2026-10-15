@@ -1,6 +1,6 @@
 # 4. Contacts, referrals and outreach
 
-- **Status:** accepted 2026-10-14. The user answered the four questions below.
+- **Status:** accepted 2026-10-14. The user answered the four questions below. Built: contact records and interviewers in 0.14.0, the rest in 0.17.0 (2026-10-15).
 - **Date:** 2026-10-09
 - **Evidence:** the search the kit was built from (phase 6), as of 2026-10-09, and its own outreach playbook.
 

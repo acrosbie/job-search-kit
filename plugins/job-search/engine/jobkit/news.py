@@ -29,6 +29,8 @@ NEWS = {
               "against your ask and your walk-away number.",
     "0.16.0": "I now find many more companies' job boards (Workday and Gem among them), check each one works before "
               "adding it, and offer to fix ones that stop. A morning check that misses is caught up later that morning.",
+    "0.17.0": "Say \"import my LinkedIn connections\" and I'll show who you know at each company you're looking at, "
+              "count your messages to people (2 a day to start), and draft referral asks and replies to recruiters.",
 }
 
 

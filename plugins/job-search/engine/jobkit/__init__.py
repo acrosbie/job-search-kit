@@ -1,6 +1,6 @@
 """The job-search-kit engine: fetches job boards, screens postings against the user's settings,
 and keeps the records in the user's folder. Ported from a working personal job-search scanner."""
 
-__version__ = "0.16.0"
+__version__ = "0.17.0"
 # Every other engine file, hashed (fingerprint.py). A user's copy is refreshed when this differs.
-__fingerprint__ = "998aa95e7a4dcf94"
+__fingerprint__ = "97d59ea84ae8b98a"
