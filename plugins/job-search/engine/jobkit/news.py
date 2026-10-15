@@ -27,6 +27,8 @@ NEWS = {
               "still to come show on your jobs page.",
     "0.15.0": "Tell me what a company said about pay, and say \"compare my offers\" to see them side by side "
               "against your ask and your walk-away number.",
+    "0.16.0": "I now find many more companies' job boards (Workday and Gem among them), check each one works before "
+              "adding it, and offer to fix ones that stop. A morning check that misses is caught up later that morning.",
 }
 
 
