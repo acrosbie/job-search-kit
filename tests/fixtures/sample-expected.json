@@ -53,7 +53,7 @@
  "postings": {
   "ashby-notion-8bb5da67-0b4d-4894-83eb-56d31e9bc662": {
    "description": "081aa3e51c98",
-   "flag": "",
+   "flag": "listed as remote, but the description never says so",
    "location": "New York, New York; San Francisco, California; Remote",
    "reason": "",
    "rule": "",
@@ -63,7 +63,7 @@
   },
   "ashby-ramp-1285aefc-d2c4-4f7c-8357-6e8f97fb22d4": {
    "description": "55e5f309a40f",
-   "flag": "",
+   "flag": "listed as remote, but the description never says so",
    "location": "New York, NY (HQ); San Francisco, CA; Remote (US); Remote",
    "reason": "",
    "rule": "",

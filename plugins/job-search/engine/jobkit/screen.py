@@ -15,6 +15,7 @@ IN_COUNTRY = "in_country"        # somewhere else in the country: needs remote w
 REMOTE_ONLY = "remote_only"      # near enough to visit, too far to commute: needs remote wording
 COUNTRY_WIDE = "country_wide"    # the country with no city
 UNKNOWN = "unknown"              # no usable place
+REMOTE_UNSAID = "remote_unsaid"  # the place says remote; the description never does (a flag, never a reason)
 
 _NONALNUM = re.compile(r"[^A-Za-z0-9]+")
 ONSITE_WINDOW = 90
@@ -94,6 +95,20 @@ def location_ok(location, s):
 
 def remote_ok(description, s):
     return _has(s.remote_language, description or "")
+
+
+def remote_unsaid(location, description, s):
+    """An office and "Remote" both listed, and nothing in the description says the job is remote.
+    Found in real use (2026-10-12): Clay's "San Francisco; Remote" was taken as remote, though its
+    description never says so. "Remote" alone, or with only the country, is the board's own word."""
+    if not description or remote_ok(description, s):
+        return False
+    places = [norm_loc(p) for p in re.split(r"\s*[;|]\s*", location or "") if p.strip()]
+    if not any(_has(s.remote, p) for p in places):
+        return False
+    country_only = lambda p: _has(s.country_wide, p) and not (_has(s.in_country, p) or _has(s.hybrid_ok, p)
+                                                             or _has(s.remote_only, p))
+    return any(not _has(s.remote, p) and not country_only(p) for p in places)
 
 
 def phrase_hits(description, rule):
@@ -225,6 +240,8 @@ def assess(location, location_code, body, s):
     flags = []
     if location_code:
         flags.append((location_code, location_flag(location_code, s)))
+    elif remote_unsaid(location, body, s):
+        flags.append((REMOTE_UNSAID, s.label("flag_remote_unsaid")))
     ctr = contract_hit(body, s)
     if ctr:
         flags.append(("contract", s.label("flag_contract", phrase=ctr)))

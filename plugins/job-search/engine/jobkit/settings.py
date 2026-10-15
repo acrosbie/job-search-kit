@@ -36,6 +36,7 @@ DEFAULT_LABELS = {
     "flag_remote_only": "near you, but only if it's remote",
     "flag_country_wide": "in the country, no city named",
     "flag_unknown": "location not stated",
+    "flag_remote_unsaid": "listed as remote, but the description never says so",
     "flag_contract": "contract or temporary ({phrase})",
     "flag_onsite": 'in the office 4 or 5 days a week ("{quote}")',
     "flag_applied": "you already applied here on {applied}",

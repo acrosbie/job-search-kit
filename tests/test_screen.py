@@ -120,6 +120,20 @@ class PlaceTest(unittest.TestCase):
 
 
 class AssessTest(unittest.TestCase):
+    def test_remote_from_the_place_alone_is_flagged(self):
+        # Found in real use (2026-10-12): Clay's "San Francisco; Remote" was called remote, though its
+        # description never says so. On the user's saved jobs, 29 of 349 read like that.
+        s = example()
+        codes = lambda loc, body: [c for c, _ in screen.assess(loc, "", body, s)[3]]
+        self.assertIn(screen.REMOTE_UNSAID, codes("Denver; Remote", "Lead the support team in our office."))
+        self.assertNotIn(screen.REMOTE_UNSAID, codes("Denver; Remote", "This role is remote."))
+        self.assertNotIn(screen.REMOTE_UNSAID, codes("Remote", "Lead the support team."))  # the board's own word
+        self.assertNotIn(screen.REMOTE_UNSAID, codes("United States; Remote", "Lead the support team."))
+        self.assertNotIn(screen.REMOTE_UNSAID, codes("Denver; Remote", ""))  # nothing read yet
+        flags = screen.assess("Denver; Remote", "", "In our office.", s)[3]
+        self.assertEqual(screen.assess("Denver; Remote", "", "In our office.", s)[0], "new")  # a flag, never a reason
+        self.assertIn("never says so", dict(flags)[screen.REMOTE_UNSAID])
+
     def test_location_rejects_need_remote_wording(self):
         s = example()
         st, rule, reason, flags = screen.assess("Austin, TX", screen.IN_COUNTRY, "Hybrid, three days in Austin.", s)
