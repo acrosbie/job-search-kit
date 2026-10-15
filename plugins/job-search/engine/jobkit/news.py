@@ -19,6 +19,9 @@ NEWS = {
     "0.12.0": "Tapping a job on your jobs page keeps your place, and the morning check now goes through the new jobs "
               "and updates your page. Roles you'd take without managing anyone, such as a product manager in your "
               "field, can now reach you: say \"change my rules\" to add them.",
+    "0.13.0": "A good job at a company you applied to recently is now on hold until the wait ends, not turned away, "
+              "and comes back on its day. Every job I mention comes with its link, and a job listed as remote "
+              "whose posting never says so is flagged.",
 }
 
 
