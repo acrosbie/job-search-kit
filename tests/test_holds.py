@@ -71,6 +71,19 @@ class HoldTest(TrackBase):
         verdicts.mark(self.root, "greenhouse-acme-4", "not_a_fit", "claude", note="cooldown", clock=on(24))
         self.assertNotIn("offer_holds", dos(start.start(self.root, on("10-11"))))
 
+    def test_only_the_cooldown_rules_rejects_are_offered_when_rules_md_names_it(self):
+        import os
+        with open(os.path.join(self.root, "profile", "rules.md"), "w", encoding="utf-8") as f:
+            f.write("# Rules\n\n### Rule 1: Commute\n- **Not a fit when:** far.\n\n"
+                    "### Rule 2: Company cooldown\n- **Not a fit when:** applied in 30 days.\n")
+        verdicts.mark(self.root, "greenhouse-acme-1", "not_a_fit", "claude", note="far", clock=on(24))
+        verdicts.mark(self.root, "greenhouse-acme-4", "not_a_fit", "claude", note="wait", clock=on(24))
+        state = self.folder.load_postings()  # the rule each rests on, as mark --rule keeps it
+        state["postings"]["greenhouse-acme-1"]["rule"], state["postings"]["greenhouse-acme-4"]["rule"] = "rule 1", "rule 2"
+        self.folder.save_postings(state)
+        step = next(n for n in start.start(self.root, on(24))["next"] if n["do"] == "offer_holds")
+        self.assertEqual([j["key"] for j in step["jobs"]], ["greenhouse-acme-4"])
+
     def test_the_queue_says_when_the_wait_ends(self):
         from jobkit import queue
         q = queue.queue(self.root, on(24))

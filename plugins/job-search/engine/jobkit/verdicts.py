@@ -271,9 +271,19 @@ def hold_candidates(root, clock):
     for d in folder.read_decisions():
         if not d.get("record_only"):
             last_by[d.get("key")] = d.get("by", "")
+    # Only those Claude turned away by the cooldown rule itself (setup names it "Company cooldown"), when
+    # rules.md has one: a job turned away for its commute stays turned away.
+    try:
+        from . import rules
+        cooldown = {f"rule {n}" for n, (name, _, _) in rules.sections(rules.read(root).splitlines()).items()
+                    if "cooldown" in name.lower()}
+    except FileNotFoundError:
+        cooldown = set()
     out = []
     for k, v in postings.items():
         if v.get("status") != "not_a_fit" or last_by.get(k) != "claude" or v.get("gone") or k in offered:
+            continue
+        if cooldown and v.get("rule") not in cooldown:
             continue
         recent = queue.recent_applications(v.get("company", ""), applications, postings, today, s.cooldown_days)
         reopens = max((r["reopens"] for r in recent if r.get("reopens")), default="")
