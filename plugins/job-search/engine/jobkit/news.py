@@ -25,6 +25,8 @@ NEWS = {
     "0.14.0": "Say \"cheat sheet for this round\" for one phone-length page per interview. Prep now follows who's "
               "asking, the people you meet are kept with their emails so thank-yous go straight to them, and rounds "
               "still to come show on your jobs page.",
+    "0.15.0": "Tell me what a company said about pay, and say \"compare my offers\" to see them side by side "
+              "against your ask and your walk-away number.",
 }
 
 
