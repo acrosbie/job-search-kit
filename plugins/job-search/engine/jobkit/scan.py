@@ -297,6 +297,19 @@ def probe(root, workers=PROBE):
             "network": "blocked" if blocked else ("ok" if reached == len(rows) else "some"), "boards": rows}
 
 
+def check_board(root, entry):
+    """Read one board before it's saved or changed, and save nothing: {"ok", "jobs", "titles", "kind",
+    "error"}. Found in real use (2026-10-12): two boards added that day answered 404 on the next scan."""
+    s = settings.load(root)
+    ctx = Context(workday=s.workday, watched=watched_names(settings.load_companies(root)))
+    try:
+        rows = READERS[entry["ats"]](entry, ctx)
+    except Exception as e:
+        return {"ok": False, "jobs": 0, "titles": [], "kind": net.failure_kind(e), "error": f"{type(e).__name__}: {e}"[:200]}
+    return {"ok": bool(rows), "jobs": len(rows), "titles": [r["title"] for r in rows[:4]], "kind": "",
+            "error": "" if rows else "the board answered, but lists no jobs"}
+
+
 def read_description(r):
     """(description, place, posted date, failed) for one record a reader returned. Some boards need a
     second call for the description, made only now; it can also return the real place and date ("" if

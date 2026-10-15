@@ -77,9 +77,13 @@ class ReaderTest(unittest.TestCase):
         # Found in an audit: setup ran discover with a name; "Acme Health" built a broken address and,
         # its errors swallowed, found nothing.
         from jobkit.discover import discover
-        fake = self.use({"https://boards-api.greenhouse.io/v1/boards/acmehealth/jobs": {"jobs": [{"id": 1}, {"id": 2}]}})
+        fake = self.use({"https://boards-api.greenhouse.io/v1/boards/acmehealth/jobs":
+                         {"jobs": [{"id": 1, "title": "Support Lead"}, {"id": 2, "title": "Care Manager"}]}})
         found = discover("Acme Health")
-        self.assertEqual(found["boards"], [{"ats": "greenhouse", "token": "acmehealth", "jobs": 2}])
+        # with titles to read before adding it: the same name can be another company's
+        self.assertEqual(found["boards"], [{"ats": "greenhouse", "token": "acmehealth", "jobs": 2,
+                                            "titles": ["Support Lead", "Care Manager"]}])
+        self.assertFalse(found["blocked"])
         self.assertFalse(any(" " in str(url) for url in fake.asked))
 
     def test_smartrecruiters_pages_through(self):

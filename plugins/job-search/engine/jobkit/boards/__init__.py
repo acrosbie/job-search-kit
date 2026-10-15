@@ -5,7 +5,7 @@ records (see common.make_record). The `ats` value in companies.toml picks the re
 "manual" entries have none and are checked by hand.
 """
 
-from . import ashby, atlassian, careers_api, greenhouse, himalayas, lever, rippling, smartrecruiters, talentbrew, workday
+from . import ashby, atlassian, careers_api, gem, greenhouse, himalayas, lever, rippling, smartrecruiters, talentbrew, workday
 from .common import Context, make_record, watched_names
 
 READERS = {
@@ -19,6 +19,7 @@ READERS = {
     "atlassian": atlassian.read,
     "talentbrew": talentbrew.read,
     "himalayas": himalayas.read,
+    "gem": gem.read,
 }
 
 __all__ = ["READERS", "Context", "make_record", "watched_names"]

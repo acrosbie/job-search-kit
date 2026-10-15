@@ -8,7 +8,7 @@ refused change leaves the file exactly as it was.
 import os
 import re
 
-from . import changes, settings, store, tomlwrite
+from . import changes, net, settings, store, tomlwrite
 from .boards import READERS
 from .clock import Clock
 from .errors import Refused
@@ -41,7 +41,7 @@ LABEL_FIELDS = {
 
 # What each board system needs in its companies.toml entry.
 NEEDS = {"greenhouse": ("token",), "ashby": ("token",), "lever": ("token",), "smartrecruiters": ("token",),
-         "rippling": ("token",), "workday": ("host", "tenant", "site"), "careers_api": ("host",),
+         "rippling": ("token",), "gem": ("token",), "workday": ("host", "tenant", "site"), "careers_api": ("host",),
          "talentbrew": ("host",), "atlassian": (), "himalayas": ("queries",), "manual": ("careers_url",)}
 
 
@@ -178,7 +178,23 @@ def list_companies(folder):
     return settings.load_companies(folder)
 
 
-def add_company(folder, entry):
+def _checked(entry, check):
+    """`check` reads the board (scan.check_board); a board that can't be read isn't saved."""
+    if check is None or entry.get("ats") in ("manual",):
+        return None
+    got = check(entry)
+    if got["ok"]:
+        return got
+    if got["kind"] and net.is_network_block(got["kind"]):
+        raise Refused(f"couldn't reach {entry.get('name', 'the board')} from here to check it ({got['error']}); "
+                      "check it from a place that reaches job boards, or save it unchecked with --unchecked")
+    raise Refused(f"{entry.get('name', 'the board')} didn't work, so nothing was saved: {got['error']}. "
+                  "Look for its board again with discover, giving its careers page")
+
+
+def add_company(folder, entry, check=None):
+    """Add a company to watch. With `check`, its board is read first, and one that answers 404 or lists
+    no jobs isn't saved; the result carries the board's `checked` titles."""
     entry = {k: v for k, v in entry.items() if v not in (None, "", [])}
     ats = entry.get("ats", "")
     if ats not in NEEDS:
@@ -194,12 +210,14 @@ def add_company(folder, entry):
     if any(c["slug"] == entry["slug"] for c in companies):
         raise Refused(f"{entry['slug']} is already on the list")
     order = ("name", "slug", "ats", "token", "host", "tenant", "site", "queries", "careers_url")
-    companies.append({k: entry[k] for k in order if k in entry})
+    new = {k: entry[k] for k in order if k in entry}
+    got = _checked(new, check)
+    companies.append(new)
     _write(path, tomlwrite.companies_text(companies, tomlwrite.header_of(text)))
-    return companies[-1]
+    return {**new, "checked": got} if got else new
 
 
-def edit_company(folder, slug, fields=None, add_queries=(), drop_queries=()):
+def edit_company(folder, slug, fields=None, add_queries=(), drop_queries=(), check=None):
     """Change a watched company in place: its search phrases (an aggregator's), or where its board is
     (a board found again after it moved). Everything else on the entry stays as it was."""
     fields = {k: v for k, v in (fields or {}).items() if v not in (None, "")}
@@ -231,9 +249,11 @@ def edit_company(folder, slug, fields=None, add_queries=(), drop_queries=()):
     lacking = [k for k in NEEDS[ats] if not entry.get(k)]
     if lacking:
         raise Refused(f"a {ats} board needs {', '.join(lacking)}")
+    moved = any(k in fields for k in ("ats", "token", "host", "tenant", "site"))
+    got = _checked(entry, check) if moved else None  # where the board is changed: read it there first
     _write(path, tomlwrite.companies_text(companies, tomlwrite.header_of(text)))
     return {"company": entry, "added": added, "dropped": list(drop_queries),
-            "already_there": [q for q in add_queries if q.strip() and q.strip() not in added]}
+            "already_there": [q for q in add_queries if q.strip() and q.strip() not in added], "checked": got}
 
 
 def drop_company(folder, slug):

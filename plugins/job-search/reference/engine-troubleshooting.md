@@ -27,7 +27,7 @@ Run the engine straight from `${CLAUDE_PLUGIN_ROOT}/engine` in a shell on Anthro
 
 Never show a raw error. Say what happened and what it means for them, in one or two sentences.
 
-- **One board failed** (the scan summary's `failures`): "Acme's job board didn't answer today; your saved jobs from it are still here." If the scan's `health` lists it under `failing` (three scans in a row), offer to look for the company's board again with `discover`.
+- **One board failed** (the scan summary's `failures`): "Acme's job board didn't answer today; your saved jobs from it are still here." If the scan's `health` lists it under `failing`, look for the company's board again as the scan skill's board health says.
 - **A scan with `status` `blocked` or `failed`:** nothing was checked, and nothing in the folder changed. Lead with that, then the cause from `failures_by_kind`, then one fix:
   - `proxy`: Claude's network access is off, or doesn't allow job boards. "I can't reach your job boards from here, so nothing was checked. In Claude, open Settings, then Capabilities, and turn on network access (Allow network egress). Then ask me again." If another place in the table in `running-the-engine.md` is open to you, try it first.
   - `offline`: "This computer doesn't seem to be online right now, so nothing was checked."

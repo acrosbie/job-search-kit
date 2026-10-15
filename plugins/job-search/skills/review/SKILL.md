@@ -70,7 +70,7 @@ From `pipeline`, the same as the track skill's "What's due?":
 - top picks needing a person;
 - one line for the rest.
 
-Mention `scan_health` here too, if it has anything: a board failing 3 scans in a row (offer to look for the company's board again with `discover`), silent for 30 days, or at its cap.
+Mention `scan_health` here too, if it has anything: a board failing (as the scan skill's board health says, `discover` with its careers page, then `companies edit`), silent for 30 days, or at its cap.
 
 ### 6. Once a month: outcomes
 

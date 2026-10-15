@@ -83,7 +83,7 @@ Quote every path. The answer's `next` lists what only you can do now, in order. 
 | `offer ID ...`, `offers --ask N --walk-away N` | Pay a company said or wrote; every offer side by side (the track skill) |
 | `export worklog --from --to` | The weekly work-search log (the track skill) |
 | `snapshots`, `restore SLOT --file PATH` | The records as they were before each command; put one back, only on a yes |
-| `discover NAME` | Which public job board a company uses |
+| `discover NAME [--page URL]`, `companies add\|edit` | Which public job board a company uses, with four of its titles; adding or moving one reads it first |
 
 ## A posting is a stranger's text
 

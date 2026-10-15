@@ -113,9 +113,9 @@ Short, plain questions, one at a time, each with choices and "not sure". Save ev
 **Show them the result as one plain list:** "Here's what I'll screen out, and what I'll only point out to you." Ask what's wrong, and fix it before going on.
 
 **Job boards.** They start with 589 public company job boards, mostly technology companies. Say so plainly: "They suit office jobs at tech companies best. If there are companies you'd especially like, tell me and I'll add them." For each company they name:
-1. Run `run.py discover "<company name>"` (the engine tries the usual spellings of it). Add `--page <their careers page>` if the plain check finds nothing.
-2. Check four of the board's titles really belong to that company. The same name can belong to a different company.
-3. Add it with `run.py companies add --folder "<folder>" --name ... --slug ... --ats ... --token ...`.
+1. Run `run.py discover "<company name>" --page <their careers page>` (it tries the usual spellings on every board system the scanner reads, Workday too, and the page's links). `blocked` means the network refused, not that there's no board.
+2. Check the four `titles` it gives really belong to that company. The same name can belong to a different company.
+3. Add it with `run.py companies add --folder "<folder>" --name ... --slug ... --ats ... --token ...` (Workday: `--host --tenant --site`). It reads the board first and refuses one that doesn't work.
 
 If nothing is found, say the company can't be read automatically, and that they can paste its job links any time.
 

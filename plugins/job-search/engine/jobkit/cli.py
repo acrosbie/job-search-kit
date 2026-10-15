@@ -338,11 +338,13 @@ def cmd_companies(a):
     elif a.action == "add":
         entry = {"name": a.name, "slug": a.slug, "ats": a.ats, "token": a.token, "host": a.host, "tenant": a.tenant,
                  "site": a.site, "queries": a.query or [], "careers_url": a.careers_url}
-        _out(configure.add_company(a.folder, entry))
+        check = None if a.unchecked else (lambda e: scan.check_board(a.folder, e))
+        _out(configure.add_company(a.folder, entry, check=check))
     elif a.action == "edit":
         fields = {"name": a.name, "ats": a.ats, "token": a.token, "host": a.host, "tenant": a.tenant, "site": a.site,
                   "careers_url": a.careers_url}
-        _out(configure.edit_company(a.folder, a.slug, fields, a.add_query or [], a.drop_query or []))
+        check = None if a.unchecked else (lambda e: scan.check_board(a.folder, e))
+        _out(configure.edit_company(a.folder, a.slug, fields, a.add_query or [], a.drop_query or [], check=check))
     else:
         _out({"dropped": a.slug, "companies_left": configure.drop_company(a.folder, a.slug)})
     return 0
@@ -756,6 +758,7 @@ def parser():
     for opt in ("--token", "--host", "--tenant", "--site", "--careers-url"):
         x.add_argument(opt)
     x.add_argument("--query", action="append", help="a search phrase, for an aggregator; repeat for several")
+    x.add_argument("--unchecked", action="store_true", help="save it without reading the board first (only when it can't be reached from here)")
     x = acts.add_parser("edit", help="change a watched company in place: its search phrases, or where its board is")
     x.add_argument("--folder", required=True)
     x.add_argument("slug")
@@ -763,6 +766,7 @@ def parser():
         x.add_argument(opt)
     x.add_argument("--add-query", action="append", help="a search phrase to add; repeat for several")
     x.add_argument("--drop-query", action="append", help="a search phrase to take off; repeat for several")
+    x.add_argument("--unchecked", action="store_true", help="change where it is without reading the board first")
     x = acts.add_parser("drop")
     x.add_argument("--folder", required=True)
     x.add_argument("slug")

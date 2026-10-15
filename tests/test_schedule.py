@@ -18,11 +18,22 @@ class HealthTest(ScanBase):
         self.addCleanup(net.use, net.use(Fake(answers())))
         return scan.run(self.root, clock=at(days), workers=2)
 
-    def test_a_board_failing_three_scans_in_a_row(self):
-        self.assertEqual(self.scan_on(0)["health"]["failing"], [])
+    def test_a_board_that_never_worked_is_named_at_once(self):
+        # Found in real use (2026-10-14): two boards added on 10-12 answered 404 from their first scan.
+        out = self.scan_on(0)["health"]["failing"]
+        self.assertEqual([(b["board"], b["fails"], b["never_worked"]) for b in out], [("Broken", 1, True)])
         self.scan_on(1)
         out = self.scan_on(2)
         self.assertEqual([(b["board"], b["fails"]) for b in out["health"]["failing"]], [("Broken", 3)])
+
+    def test_one_that_worked_is_named_after_three_failures_in_a_row(self):
+        s = settings.load(self.root)
+        companies = [{"slug": "acme", "name": "Acme", "careers_url": "https://acme.example/careers"}]
+        two = health.boards({"acme": {"fails": 2, "last_ok": "2026-09-01", "error": "404"}}, companies, s, "2026-09-24")
+        self.assertEqual(two["failing"], [])
+        three = health.boards({"acme": {"fails": 3, "last_ok": "2026-09-01", "error": "404"}}, companies, s, "2026-09-24")
+        self.assertEqual((three["failing"][0]["never_worked"], three["failing"][0]["careers_url"]),
+                         (False, "https://acme.example/careers"))
 
     def test_a_board_silent_for_30_days(self):
         self.assertEqual(self.scan_on(0)["health"]["silent"], [])

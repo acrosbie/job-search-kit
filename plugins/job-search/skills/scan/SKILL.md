@@ -18,7 +18,7 @@ Fetch, then report. Judging fit is the triage skill's job; the morning run (belo
    - **What was screened out automatically:** the count from `rejected_postings`, with the reasons grouped ("3 are outside where you'd commute, 1 pays below your line"). Don't list them unless asked.
    - **Boards that failed:** each by company name, in plain words, as `engine-troubleshooting.md` says. Say their saved jobs are still there.
    - **Board health** (`health`):
-     - `failing`: a board that failed 3 scans in a row. Offer to look for the company's board again with `discover`.
+     - `failing`: a board that failed 3 scans in a row, or has failed and never worked (`never_worked`: "Mistral AI's board hasn't worked since it was added"). Look for it again: `run.py discover "<name>" --page <its `careers_url`>`. Show what it finds, with its four titles; on their yes, `run.py companies edit <slug> --ats ... --token ...` (or `--host --tenant --site`), which reads the board first and refuses one that doesn't work. Nothing found: say it can't be read automatically, and offer to drop it.
      - `silent`: no jobs listed for 30 days. Mention it once; the company may have moved its jobs elsewhere.
      - `at_cap`: some of the board's jobs weren't read, because it's so large. Mention it once.
    - **Check by hand:** if `check_by_hand` isn't empty, mention once that some companies can't be read automatically, and offer the list.
