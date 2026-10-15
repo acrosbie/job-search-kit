@@ -703,6 +703,7 @@ details.out .rows { border: 0; border-radius: 0 0 10px 10px; margin-top: 8px; }
       '<div class="app-main"><span class="app-name"><b>' + esc(a.company) + "</b>, " +
       (href(a.url) ? '<a href="' + href(a.url) + '" target="_blank" rel="noopener">' + esc(a.role) + "</a>" : esc(a.role)) + "</span>" +
       '<span class="app-meta">' + meta + "</span>" +
+      (a.offer && live ? '<span class="row-note">' + esc(a.offer) + "</span>" : "") +
       (a.gone && live ? '<span class="row-note flag">Posting pulled on ' + day(a.gone) + ". " +
         (location.protocol === "file:" && a.saved_copy ? '<a href="' + esc(a.saved_copy) + '">Your saved copy</a> is in your folder. '
           : "Your saved copy is in your folder; ask Claude for it. ") +

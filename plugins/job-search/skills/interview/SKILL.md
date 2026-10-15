@@ -82,7 +82,7 @@ The method comes from the reference search:
      - one or two questions about the work itself.
    - **Gaps:** each gap the posting will find, named plainly, then bridged to something true. Traced.
    - **Caveats:** anything they should raise themselves, such as a number with a catch (`about-me.md` says when). Traced.
-   - **Comp:** their ask (`what-i-want.md`), the posting's range if it states one, the pay facts above, and the one sentence to say.
+   - **Comp:** their ask (`what-i-want.md`), the posting's range if it states one, anything this company already said (record it with `offer`, the track skill), the pay facts above, and the one sentence to say.
    - **Logistics:** start date, where they'd work, and anything `what-i-want.md` says to raise only at the offer stage (time off, say).
    - **Questions to ask:** four to six, specific to this posting.
    - **Do not say:** the old versions of every correction, anything worked alongside said as owned, and anything their notes mark never to say.

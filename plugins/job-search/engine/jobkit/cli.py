@@ -13,7 +13,7 @@ import re
 import sys
 
 from . import __fingerprint__, __version__, net, scan, settings, store
-from . import add, choices, configure, contacts, export, interviews, page, replay, resume, review, rules, schedule, titles, track, verdicts
+from . import add, choices, configure, contacts, export, interviews, offers, page, replay, resume, review, rules, schedule, titles, track, verdicts
 from . import start as starting
 from . import summary as summary_mod
 from . import init as starter
@@ -197,6 +197,19 @@ def cmd_contact(a):
                             date=a.date or ""))
     else:
         _out({"contacts": contacts.listing(a.folder, company=a.company or "", application=a.application or "")})
+    return 0
+
+
+def cmd_offer(a):
+    _out(offers.record(a.folder, _clock(a.folder), a.id, stage="written" if a.written else "said", base=a.base or 0,
+                       base_low=a.base_low or 0, base_high=a.base_high or 0, bonus=a.bonus or 0, equity=a.equity or "",
+                       equity_yearly=a.equity_yearly or 0, k401=a.k401 or "", k401_yearly=a.k401_yearly or 0,
+                       travel=a.travel or "", deadline=a.deadline or "", note=a.note or ""))
+    return 0
+
+
+def cmd_offers(a):
+    _out(offers.compare(a.folder, ask=a.ask or 0, walk_away=a.walk_away or 0, last_base=a.last_base or 0))
     return 0
 
 
@@ -586,6 +599,30 @@ def parser():
     x.add_argument("--company")
     x.add_argument("--application")
     s.set_defaults(func=cmd_contact)
+
+    s = sub.add_parser("offer", help="what a company said or wrote about pay, kept on its application")
+    s.add_argument("--folder", required=True)
+    s.add_argument("id", help="the application's id or its posting's key")
+    s.add_argument("--written", action="store_true", help="the offer itself, not a number said on a call")
+    s.add_argument("--base", type=int, help="the yearly base, one number")
+    s.add_argument("--base-low", type=int)
+    s.add_argument("--base-high", type=int)
+    s.add_argument("--bonus", type=int, help="the yearly target bonus, in dollars")
+    s.add_argument("--equity", help="in the user's words")
+    s.add_argument("--equity-yearly", type=int, help="its yearly value, only if the company said")
+    s.add_argument("--k401", help="the 401(k), in the user's words")
+    s.add_argument("--k401-yearly", type=int)
+    s.add_argument("--travel", help="in the user's words")
+    s.add_argument("--deadline", help="YYYY-MM-DD, the day to answer by")
+    s.add_argument("--note")
+    s.set_defaults(func=cmd_offer)
+
+    s = sub.add_parser("offers", help="every offer and number said, side by side, against the ask and walk-away")
+    s.add_argument("--folder", required=True)
+    s.add_argument("--ask", type=int, help="the user's ask, a yearly base, from what-i-want.md")
+    s.add_argument("--walk-away", type=int, help="the base below which they'd say no, in their words")
+    s.add_argument("--last-base", type=int, help="their last job's base, from about-me.md")
+    s.set_defaults(func=cmd_offers)
 
     s = sub.add_parser("pay", help="the pay the user's saved postings state: facts, never a prediction")
     s.add_argument("--folder", required=True)

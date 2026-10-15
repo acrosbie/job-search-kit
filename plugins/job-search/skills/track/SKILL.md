@@ -1,6 +1,6 @@
 ---
 name: track
-description: Record what happens with applications and say what's due. Use for "I applied to ...", "X replied", "X turned me down", "I withdrew from ...", "the recruiter at X is ...", "I followed up with ...", "what's due?", "where do things stand?", "open my jobs page" or "my work search log". Needs their Job Search folder.
+description: Record what happens with applications, offers, and what's due. Use for "I applied to ...", "X replied", "X turned me down", "I withdrew from ...", "the recruiter at X is ...", "I followed up with ...", "an offer", "what's due?", "where do things stand?", "open my jobs page" or "my work search log". Needs their Job Search folder.
 ---
 
 # Track: applications, and what happens next
@@ -67,6 +67,15 @@ python3 "<folder>/.kit/engine/run.py" track <id> <status> [--date YYYY-MM-DD] [-
 - **A person they name**, such as "the recruiter is Dana Smith": add `--contact "Dana Smith"`. On its own: `track <id> --contact "<name>"`. Keep them as a person too: `contact add --name "Dana Smith" --company <company> --kind recruiter --application <id>`, with a title or email only if they gave one. Only a name the user gave you. Never guess one, and never look one up.
 - **A reply after the day-21 close** is good news, and fine to record. It replaces "no reply".
 - Put the user's own words in `--note` when they add anything ("they want to talk about the hybrid days").
+
+## Pay a company gave, and offers
+
+"The recruiter said $130K, maybe $145K", "BCM One's top is $150K plus a 401(k) match", "they made me an offer", "compare my offers":
+
+1. **Record what they said, as they said it:** `run.py offer <id> [--base N | --base-low N --base-high N] [--bonus N] [--equity "<their words>"] [--equity-yearly N] [--k401 "<their words>"] [--k401-yearly N] [--travel "<their words>"] [--deadline YYYY-MM-DD] [--note "<their words>"] --folder "<folder>"`. A written offer adds `--written` (and `track <id> offer`). Only numbers the user gave; a yearly value only if the company said one.
+2. **Their numbers:** the ask from `what-i-want.md`, their last base from `about-me.md` if confirmed there. **The walk-away number is theirs alone:** ask once ("Below what base would you say no?") and save it in `what-i-want.md` in their words, dated.
+3. **Side by side:** `run.py offers --ask N --walk-away N [--last-base N] --folder "<folder>"` writes `interviews/offers.md`. Say it in about 5 lines: each company's base against the ask and the walk-away line, the first year all in, the next deadline.
+4. **When to push**, from the facts, never odds: name a number at the offer, not on a screen ("I'm focused on fit; happy to talk numbers once we both know it's right"). Once there's a written offer, counter once, before its deadline, with one number at or above the ask, and the reason: their posting's range, the saved postings' pay facts (`pay`), what the role holds. If base is fixed, ask about the bonus, equity, start date or time off. Below the walk-away line even at the top: say so plainly; it's their call.
 
 ## "What's due?"
 

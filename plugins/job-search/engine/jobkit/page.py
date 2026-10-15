@@ -35,6 +35,18 @@ DOCUMENT = ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
             '{content}\n</body></html>\n')
 
 
+def _offer_line(o):
+    """What a company said or wrote about pay, in one line for the page: "$150K base said, 401(k) match"."""
+    if not o:
+        return ""
+    k = lambda n: f"${round(n / 1000)}K"
+    lo, hi = o.get("base_low", 0), o.get("base_high", 0)
+    base = (k(hi or lo) if not (lo and hi) or lo == hi else f"{k(lo)} to {k(hi)}") if (lo or hi) else ""
+    parts = [f"{base} base" if base else "", o.get("bonus") and f"{k(o['bonus'])} bonus", o.get("equity"), o.get("k401"),
+             o.get("deadline") and f"answer by {o['deadline']}"]
+    return ("Offer: " if o.get("stage") == "written" else "Said: ") + ", ".join(p for p in parts if p)
+
+
 def _date(s):
     try:
         return dt.date.fromisoformat((s or "")[:10])
@@ -121,6 +133,7 @@ def build(root, clock):
                 "followed_up": a.get("followed_up", ""), "closes_on": st["closes_on"],
                 # A posting taken down while the user is in process: when, and the copy kept in their folder.
                 "gone": p.get("gone", ""),
+                "offer": _offer_line(a.get("offer")),
                 "saved_copy": f"data/postings/{p.get('file') or a.get('key', '') + '.md'}" if p else "",
                 "last": {"date": last.get("date", ""), "what": last.get("status") or last.get("event", "")}}
         apps_out.append(item)

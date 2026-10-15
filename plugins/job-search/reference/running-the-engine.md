@@ -80,6 +80,7 @@ Quote every path. The answer's `next` lists what only you can do now, in order. 
 | `review`; `replay`, `rule-evidence`, `change-rule`, `decline`, `requeue` | The weekly review; changing a rule (the tune skill) |
 | `resume check FILE`, `resume render FILE` | Only when they ask (the resume skill) |
 | `track ID screen --on WHEN`, `interview ...`, `contact ...`, `pay` | Interviews and the people in them (the interview skill) |
+| `offer ID ...`, `offers --ask N --walk-away N` | Pay a company said or wrote; every offer side by side (the track skill) |
 | `export worklog --from --to` | The weekly work-search log (the track skill) |
 | `snapshots`, `restore SLOT --file PATH` | The records as they were before each command; put one back, only on a yes |
 | `discover NAME` | Which public job board a company uses |
