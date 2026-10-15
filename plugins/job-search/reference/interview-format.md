@@ -6,10 +6,23 @@ The interview skill writes these in the user's folder, under `interviews/`:
 |---|---|
 | `interviews/<Company> - <Role>/prep.md` | The prep sheet for one interview, with its debrief added afterwards |
 | `interviews/<Company> - <Role>/<date> <screen\|interview>.ics` | The calendar file the engine writes when an interview is recorded |
-| `interviews/stories.md` | The story bank |
+| `interviews/<Company> - <Role>/company.md` | The company brief, every line with its source and date |
+| `interviews/<Company> - <Role>/<date> <stage> cheat sheet.md` | One round's cheat sheet, at most 60 lines |
+| `interviews/stories.md` | The story bank, each story with its `tags:` |
 | `interviews/quick-reference.md` | One page to have open during a call |
 
 The interview itself is kept on its application (`run.py track <id> screen --on …`). One that moved: `run.py interview cancel <id> --on <old date>`, then record it again on its new day; one called off: just the cancel. Its calendar file is written again as the same event, cancelled: tell the user to double-click it to take the interview off their calendar. `run.py interview list` lists every interview not yet gone through. `due` says which are soon (`interviews_soon`) and which are waiting for a debrief (`debrief_due`).
+
+## Who's asking
+
+| Asker | What they probe |
+|---|---|
+| recruiter | Fit, pay, logistics, why this role and why now; one or two questions on the work |
+| hiring_manager | How you'd do the job: "how would you...", the gaps, the first 90 days |
+| head_of_function | Whether you've done their kind of work: their own field from the inside (for a head of CX, the frontline years), how you lead, and how you'd work with them |
+| executive | Judgment and the business: why this matters to the company, trade-offs, a short version of each story |
+| peer | Working together day to day: hand-offs, disagreements, what you'd change |
+| panel | Each person's own angle; one story told several ways |
 
 ## The format
 

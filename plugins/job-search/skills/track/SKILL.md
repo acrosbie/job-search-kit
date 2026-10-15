@@ -64,7 +64,7 @@ python3 "<folder>/.kit/engine/run.py" track <id> <status> [--date YYYY-MM-DD] [-
 | "They cancelled the job", "it's been filled" | `closed` |
 | "I followed up", "I sent a note" | `followed_up` |
 
-- **A person they name**, such as "the recruiter is Dana Smith": add `--contact "Dana Smith"`. On its own: `track <id> --contact "<name>"`. Only a name the user gave you. Never guess one, and never look one up.
+- **A person they name**, such as "the recruiter is Dana Smith": add `--contact "Dana Smith"`. On its own: `track <id> --contact "<name>"`. Keep them as a person too: `contact add --name "Dana Smith" --company <company> --kind recruiter --application <id>`, with a title or email only if they gave one. Only a name the user gave you. Never guess one, and never look one up.
 - **A reply after the day-21 close** is good news, and fine to record. It replaces "no reply".
 - Put the user's own words in `--note` when they add anything ("they want to talk about the hybrid days").
 
