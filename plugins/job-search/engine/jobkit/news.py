@@ -22,6 +22,9 @@ NEWS = {
     "0.13.0": "A good job at a company you applied to recently is now on hold until the wait ends, not turned away, "
               "and comes back on its day. Every job I mention comes with its link, and a job listed as remote "
               "whose posting never says so is flagged.",
+    "0.14.0": "Say \"cheat sheet for this round\" for one phone-length page per interview. Prep now follows who's "
+              "asking, the people you meet are kept with their emails so thank-yous go straight to them, and rounds "
+              "still to come show on your jobs page.",
 }
 
 
