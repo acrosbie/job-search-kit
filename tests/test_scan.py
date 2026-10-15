@@ -229,7 +229,12 @@ class ScanOutTest(ScanBase):
         with open(target, "rb") as f:
             raw = f.read()
         self.assertTrue(raw.startswith(b"{"))  # no byte-order mark
-        self.assertEqual(json.loads(raw.decode("utf-8"))["new"], 3)
+        got = json.loads(raw.decode("utf-8"))
+        self.assertEqual(got["new"], 3)
+        # Every job the scan names carries its number and link (found in real use, 2026-10-14: "what's
+        # the link to this one?").
+        for p in got["new_postings"] + got["rejected_postings"]:
+            self.assertTrue(p["num"] and p["url"].startswith("https://"), p)
 
     def test_what_went_wrong_goes_to_the_file(self):
         os.remove(os.path.join(self.root, "profile", "settings.toml"))

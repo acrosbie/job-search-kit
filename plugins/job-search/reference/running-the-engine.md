@@ -2,6 +2,14 @@
 
 The engine is the Python program in this plugin (`${CLAUDE_PLUGIN_ROOT}/engine`) that reads job boards and keeps the user's records. The user never sees it and shouldn't hear about it. Every skill starts with these four steps; mention them only if something fails, and then read `${CLAUDE_PLUGIN_ROOT}/reference/engine-troubleshooting.md`.
 
+## Replies
+
+The user mostly reads on a phone. In every skill, unless a step says otherwise:
+- **About 5 lines.** Detail goes in their folder (the jobs page, a prep sheet), named in a line, not pasted into chat. More only when they ask.
+- **Every job named carries its link, inline:** its number and name as one link, `[#165 Pantheon, Senior Manager, Technical Support](<url>)`, from the job's `url`. Never a job without its link, never a bare address.
+- **Plain words:** no "engine", "JSON", "status", "key", file paths or error messages.
+- At most one question, at the end.
+
 ## 1. The folder
 
 The user connects a folder, usually called `Job Search`. It's theirs if it contains `profile/settings.toml`.

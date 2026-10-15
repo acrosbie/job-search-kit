@@ -383,7 +383,7 @@ def save_new(folder, r, code, desc, s, applications, postings, today, stamp, rej
         entry["unread"] = True
     postings[r["key"]] = entry
     summary = {"key": r["key"], "company": r["company"], "title": r["title"], "location": r["location"],
-               "flag": entry["flag"], "salary": entry["salary"]}
+               "flag": entry["flag"], "salary": entry["salary"], "url": r["url"]}
     if reason:
         entry.update({"note": reason, "rule": rule, "triaged": today})
         folder.log_decision({"at": stamp, "date": today, "key": r["key"], "company": r["company"],

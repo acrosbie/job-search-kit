@@ -149,4 +149,3 @@ Check both with `run.py interview check`.
 - **Don't invent:** no fact about the company, no person, no number.
 - **Don't put in an answer** anything that isn't confirmed in `about-me.md`, and never say something worked alongside was owned.
 - **Don't send anything,** or contact anyone. The user does.
-- **Don't use technical words with the user:** no "trace", "from:", "engine" or "JSON". Say "what you've confirmed", "your prep sheet".

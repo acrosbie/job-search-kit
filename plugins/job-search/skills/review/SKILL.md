@@ -99,4 +99,3 @@ run.py review --done [--monthly] --folder "<folder>"
 - Don't raise a change they turned down in the last four weeks.
 - Don't predict odds, applicant numbers, response rates or how long anything will take.
 - Don't turn the review into a lecture. One part at a time, short.
-- Don't use technical words with the user: no "disagreements", "rule_activity", "JSON" or "engine". Say "rules you've overturned", "how your rules are working".

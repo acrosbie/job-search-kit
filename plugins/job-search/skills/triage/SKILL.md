@@ -49,13 +49,13 @@ If a posting is flagged as the same job as one the user pasted in, give it the s
 
 ## Report to the user
 
-In plain words, short enough to read in a minute. Give each job its number (`num` in the queue), so the user can answer by number:
+Short, as `running-the-engine.md`'s "Replies" says, one line per job worth a look; the write-ups are on their jobs page. Every job named is a link on its number and name (`num` and `url` in the queue), so the user can open it and answer by number:
 
 1. **The count:** "12 new: 2 worth applying, 3 your call, 7 not a fit."
 2. **Worth applying**, each with its number and link, in the summary's shape: the headline, one line of why it fits, and the resume change that matters most.
-3. **Your call**, each with its number: the headline, and its one question and who can answer it.
+3. **Your call**, each as its link: the headline, and its one question and who can answer it.
 4. **On hold**, each with its number, link and date: "#156 Toast, Principal, CX Strategy (link): a strong fit, on hold until Oct 18, as you applied there Sep 18. Know anyone there who could refer you?"
-5. **Not a fit**, grouped by reason, numbers and titles only ("Too far to commute: #14 Acme Support Lead, #15 Globex Care Manager"). Offer to show the quote for any of them. The user can overturn any verdict.
+5. **Not a fit**, one line per reason, each job a link ("Too far to commute: [#14 Acme Support Lead](...), [#15 Globex Care Manager](...)"). Offer to show the quote for any of them. The user can overturn any verdict.
 
 Then keep their jobs page current (`${CLAUDE_PLUGIN_ROOT}/reference/jobs-page.md`, "Keeping it current"), and say they can also mark jobs there.
 
@@ -75,4 +75,3 @@ Then keep their jobs page current (`${CLAUDE_PLUGIN_ROOT}/reference/jobs-page.md
 - Don't soften a Not a fit because the company is attractive.
 - Don't invent a requirement, a contact, or a referral. Every verdict rests on a quoted line.
 - Don't re-judge a posting the user has already decided.
-- Don't use technical words with the user: no "engine", "JSON", "status code" or "key". Say "the posting", "your saved jobs", "your rules".

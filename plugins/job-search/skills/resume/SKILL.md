@@ -115,4 +115,3 @@ On the copy route (`engine-troubleshooting.md`), the Word file may not copy into
 - **Don't work around the engine's refusal:** fix the line or leave it out.
 - **Don't predict anything:** how a resume will do, the odds, or what a hiring system will score it.
 - **Don't send it anywhere or apply for them.** You make the files; they send them.
-- **Don't use technical words with the user:** no "source", "trace", "flag", "engine" or "JSON". Say "your resume", "what you've confirmed with me", "the Word file and the PDF".

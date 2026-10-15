@@ -109,4 +109,3 @@ Then keep the jobs page current (`${CLAUDE_PLUGIN_ROOT}/reference/jobs-page.md`,
 - Don't save any change without the user's explicit yes, and don't change two rules in one go.
 - Don't make a rule from something they didn't say, or about age, family, health or anything not about the job.
 - Don't stretch a rule past its "Doesn't count" notes to make the replay look better.
-- Don't use technical words with the user: no "regex", "settings.toml", "replay file" or "key". Say "your rules", "the jobs it would change", "your saved jobs".

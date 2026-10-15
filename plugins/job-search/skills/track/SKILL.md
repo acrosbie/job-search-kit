@@ -107,4 +107,3 @@ Keep the jobs page current (`jobs-page.md`, "Keeping it current").
 - Don't send, email or message anyone. You draft; they send.
 - Don't guess, search for or invent a contact's name.
 - Don't predict replies, odds, or how long anything will take.
-- Don't use technical words with the user: no "status", "ID", "track" or "route". Say "your applications", "what's due", "no reply after three weeks".

@@ -68,6 +68,14 @@ def cmd_scan(a):
     summary["closed_day_21"] = due["closed_now"]
     summary["follow_ups_due"] = {k: len(due[k]) for k in ("send", "find_person", "closing")}
     summary["due"] = due  # everything catching up needs (running-the-engine.md, 5a), so the scan skill needn't run due
+    # The page gives each job its number, so every job the scan names can be said with it and its link.
+    try:
+        page.refresh(a.folder, clock)
+        saved = store.Folder(a.folder).load_postings()["postings"]
+        for p in summary.get("new_postings", []) + summary.get("rejected_postings", []):
+            p["num"] = saved.get(p["key"], {}).get("num")
+    except Exception as e:  # the scan itself is saved; the page catches up next time
+        summary["page_error"] = f"{type(e).__name__}: {e}"
     _out(summary, a.out)
     return 0
 

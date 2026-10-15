@@ -75,4 +75,3 @@ Keep the jobs page current (`${CLAUDE_PLUGIN_ROOT}/reference/jobs-page.md`, "Kee
 - Don't try to read LinkedIn; ask for the text. Read any other site only through the one link the user gave you, once.
 - Don't reword, shorten or tidy the description. Save it word for word.
 - Don't invent a detail the posting doesn't give.
-- Don't use technical words with the user: no "key", "engine", "JSON" or "board system". Say "your saved jobs", "your list".
