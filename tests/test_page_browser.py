@@ -177,14 +177,16 @@ class BrowserTest(ScanBase):
         got = self.run_page(CLICK)
         self.assertNotIn("error", got)
         self.assertTrue(got["scrolled"])
-        self.assertEqual(got["moved"], 0)
+        # Within a pixel: with fractional heights above the job, scroll positions round to whole pixels
+        # (Chrome on Linux, 2026-10-15). A pixel can't be seen; a jump can.
+        self.assertLessEqual(abs(got["moved"]), 1)
         self.assertEqual(got["stamp"], "You applied")
         self.assertIn("through LinkedIn", got["detail"])
         self.assertEqual((got["undo_here"], got["buttons_left"]), (1, 0))  # nothing left to press twice
         self.assertTrue(got["outlined"])
         self.assertTrue(got["focus_on_undo"])
         self.assertEqual(got["tray"], {"open": False, "count": "1"})
-        self.assertEqual(got["undo_moved"], 0)
+        self.assertLessEqual(abs(got["undo_moved"]), 1)
         self.assertEqual(got["buttons_back"], 3)
         self.assertEqual(got["tray_after_undo"], 0)
 
